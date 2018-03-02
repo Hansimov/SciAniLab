@@ -1,0 +1,130 @@
+Foreword
+Introduction
+1 Scope
+2 Conformance
+3 Normative references
+4 Terms and definitions, mathematical and logical symbols, abbreviations and conventions
+4.1 Terms and definitions
+4.2 Mathematical and logical symbols
+4.3 Abbreviations
+4.4 Conventions
+4.4.1 Module positions
+4.4.2 Byte notation
+4.4.3 Version references
+5 Symbol description
+5.1 Basic characteristics
+5.2 Summary of additional features
+5.3 Symbol structure
+5.3.1 Symbol Versions and sizes
+5.3.2 Finder pattern
+5.3.3 Separator
+5.3.4 Timing pattern
+5.3.5 Alignment patterns
+5.3.6 Encoding region
+5.3.7 Quiet zone
+6 Requirements
+6.1 Encode procedure overview
+6.2 Data analysis
+6.3 Modes
+6.3.1 Extended Channel Interpretation (ECI) mode
+6.3.2 Numeric mode
+6.3.3 Alphanumeric mode
+6.3.4 Byte mode
+6.3.5 Kanji mode
+6.3.6 Mixing modes
+6.3.7 Structured Append mode
+6.3.8 FNC1 mode
+6.4 Data encoding
+6.4.1 Sequence of data
+6.4.2 Extended Channel Interpretation (ECI) mode
+6.4.3 Numeric mode
+6.4.4 Alphanumeric mode
+6.4.5 Byte mode
+6.4.6 Kanji mode
+6.4.7 Mixing modes
+6.4.8 FNC1 modes
+6.4.9 Terminator
+6.4.10 Bit stream to codeword conversion
+6.5 Error correction
+6.5.1 Error correction capacity
+6.5.2 Generating the error correction codewords
+6.6 Constructing the final message codeword sequence
+6.7 Codeword placement in matrix
+6.7.1 Symbol character representation
+6.7.2 Function pattern placement
+6.7.3 Symbol character placement
+6.8 Data masking
+6.8.1 Data mask patterns
+6.8.2 Evaluation of data masking results
+6.9 Format information
+6.9.1 QR Code symbols
+6.9.2 Micro QR Code symbols
+6.10 Version information
+7 Structured Append
+7.1 Basic principles
+7.2 Symbol Sequence Indicator
+7.3 Parity Data
+8 Symbol printing and marking
+8.1 Dimensions
+8.2 Human-readable interpretation
+8.3 Marking guidelines
+9 Symbol quality
+9.1 Methodology
+9.2 Symbol quality parameters
+9.2.1 Fixed pattern damage
+9.2.2 Scan grade and overall symbol grade
+9.2.3 Grid non-uniformity
+9.3 Process control measurements
+10 Decoding procedure overview
+11 Reference decode algorithm for QR Code 2005
+12 Autodiscrimination capability
+12 Autodiscrimination capability
+13 Transmitted data
+13.1 General principles
+13.2 Symbology Identifier
+13.3 Extended Channel Interpretations
+13.4 FNC1
+Annex A (normative) Error detection and correction generator polynomials
+Annex B (normative) Error correction decoding steps
+Annex C (normative) Format information
+C.1 Error correction bit calculation
+C.2 Error correction decoding steps
+Annex D (normative) Version information
+D.1 Error correction bit calculation
+D.2 Error correction decoding steps
+Annex E (normative) Position of alignment patterns
+Annex F (normative) Symbology Identifier
+Annex G (normative) QR Code 2005 print quality – symbology-specific aspects
+G.1 Fixed Pattern damage
+G.1.1 Features to be assessed
+G.1.2 Fixed Pattern Damage grading
+G.2 Grading of additional parameters
+G.2.1 Grading of format information
+G.2.2 Grading of version information (QR Code symbols)
+G.3 Scan grade
+Annex H (informative) JIS8 and Shift JIS character sets
+Annex I (informative) Symbol encoding examples
+I.1 General
+I.2 Encoding a QR Code symbol
+I.3 Encoding a Micro QR Code symbol
+Annex J (informative) Optimisation of bit stream length
+J.1 General
+J.2 Optimisation for QR Code symbols
+J.3 Optimisation for Micro QR Code symbols
+J.3.1 Optimisation principles
+J.3.2 Capacity of Micro QR Code symbols
+Annex K (informative) User guidelines for printing and scanning of QR Code 2005 symbols
+K.1 General
+K.2 User selection of error correction level
+Annex L (informative) Autodiscrimination
+Annex M (informative) Process control techniques
+M.1 Symbol Contrast
+M.2 Assessing Axial Nonuniformity
+M.3 Visual inspection for symbol distortion and defects
+M.4 Assessing print growth
+Annex N (informative) Characteristics of Model 1 symbols
+N.1 Model 1 QR Code symbols
+N.1.1 Model 1 overall characteristics
+N.1.2 Symbol versions and sizes
+N.2 Detailed specifications
+Bibliography
