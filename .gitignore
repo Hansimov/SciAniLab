@@ -1,2 +1,4 @@
 *.rar
+*.zip
 *.csv
+*/__pycache__/*
