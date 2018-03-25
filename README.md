@@ -1,6 +1,11 @@
 # SciAni
 科普动画制作
 
-【本项目孵化自 [idea #11](https://github.com/orgs/uupers/teams/daily-idea/discussions/11)】
+目前正在进行的项目有：
 
-系列文章，请戳链接：[SciAni/issues](https://github.com/uupers/SciAni/issues)
+* [QR 码原理讲解](https://github.com/uupers/SciAni/tree/master/qr-code)
+
+* [B 站用户数增长历史](https://github.com/uupers/SciAni/tree/master/bili-user-spider)
+
+
+相关讨论，请访问：[SciAni/issues](https://github.com/uupers/SciAni/issues)
