@@ -9,10 +9,12 @@ def getUserInfo(mem_data):
         mem_json = mem_req.json()
         mem_json_data = mem_json.get('data')
     except: # requests error
-        user_mid            = mem_data.get('mid')
-        user_regtime_local  = '******** **********'
-        user_regtime_stamp  = '**********'
-        user_name           = '*'
+        # sleep(15)
+        # return or retry
+        # user_mid            = mem_data.get('mid')
+        # user_regtime_local  = '******** **********'
+        # user_regtime_stamp  = '**********'
+        # user_name           = '*'
     else:
         try:
             user_mid           = mem_json_data.get('mid')
