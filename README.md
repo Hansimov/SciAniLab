@@ -1,4 +1,4 @@
-# Scientific Animations Lab 9000
+# Scientific Animations Lab 9000 (SAL 9000)
 
 科学动画实验室
 
@@ -10,4 +10,4 @@
 
 * [片头动画制作](https://github.com/uupers/SciAniLab/issues/8)
 
-相关讨论，请访问：[SciAni/issues](https://github.com/uupers/SciAniLab/issues)
+相关讨论，请访问：[SciAniLab/issues](https://github.com/uupers/SciAniLab/issues)
