@@ -1,5 +1,6 @@
-# SciAni
-科普动画制作
+# Scientific Animations Lab 9000
+
+科学动画实验室
 
 目前正在进行的项目有：
 
@@ -7,5 +8,6 @@
 
 * [B 站用户数增长历史](https://github.com/uupers/SciAni/tree/master/bili-user-spider)
 
+* [片头动画制作](https://github.com/uupers/SciAni/issues/8)
 
 相关讨论，请访问：[SciAni/issues](https://github.com/uupers/SciAni/issues)
