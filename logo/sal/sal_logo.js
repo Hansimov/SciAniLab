@@ -3,22 +3,22 @@ function preload() {
 }
 
 function setup(){
-    // createCanvas(440, 440);
+    createCanvas(480, 270);
     // createCanvas(256,256);
-    createCanvas(350,380);
+    // createCanvas(350,380);
     background(20);
     noLoop();
 }
 
 function draw() {
 
-    cx = 220;
+    cx = 240;
     cy = 120;
     rmax = 160;
-    // outerCircle();
-    // innerCircle();
-    
-    sbTable();
+    outerCircle();
+    innerCircle();
+
+    // sbTable();
 }
 
 function outerCircle() {
