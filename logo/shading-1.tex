@@ -1,0 +1,41 @@
+\RequirePackage{luatex85}
+\documentclass{standalone}
+\usepackage{tikz}
+\begin{document}
+
+% \begin{tikzpicture}
+%     \shade (0,0) rectangle (2,1) (3,0.5) circle (0.5cm);
+% \end{tikzpicture}
+
+% \pgfdeclarehorizontalshading{myshadingA}
+% {1cm}{rgb(0cm)=(1,0,0); color(2cm)=(green); color(4cm)=(blue)}
+% \pgfuseshading{myshadingA}
+
+% \pgfdeclareradialshading{sphere}{\pgfpoint{0.5cm}{0.5cm}}%
+% {rgb(0cm)=(0.9,0,0);
+% rgb(0.7cm)=(0.7,0,0);
+% rgb(1cm)=(0.5,0,0);
+% rgb(1.05cm)=(1,1,1)}
+% \pgfuseshading{sphere}
+
+\pgfdeclarefunctionalshading{twospots}
+{\pgfpointorigin}{\pgfpoint{4cm}{4cm}}{}{
+% Save coordinates for later
+2 copy
+% Compute distance from (40bp,45bp), with x doubled
+45 sub dup mul exch
+40 sub dup mul 0.5 mul add sqrt
+% exponential decay
+dup mul neg 1.0005 exch exp 1.0 exch sub
+% Compute distance from (70bp,70bp) from stored coordinate, scaled
+3 1 roll
+70 sub dup mul .5 mul exch
+70 sub dup mul add sqrt
+% Decay
+dup mul neg 1.002 exch exp 1.0 exch sub
+% red component
+1.0 3 1 roll
+}
+\pgfuseshading{twospots}
+
+\end{document}

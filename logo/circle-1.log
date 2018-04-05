@@ -1,0 +1,508 @@
+This is LuaTeX, Version 1.07.0 (MiKTeX 2.9.6650 64-bit)  (format=lualatex 2018.4.3)  4 APR 2018 00:42
+ restricted system commands enabled.
+**F:/Sources/git/SciAniLab/logo/circle-1.tex
+(F:/Sources/git/SciAniLab/logo/circle-1.tex
+LaTeX2e <2017-04-15>
+Lua module: luaotfload-main 2017/01/29 2.80001 OpenType layout system.
+Lua module: lualibs 2017-02-01 2.5 ConTeXt Lua standard libraries.
+Lua module: lualibs-extended 2017-02-01 2.5 ConTeXt Lua libraries -- extended co
+llection.(using cache: C:/Users/yuzeh/AppData/Local/MiKTeX/2.9/luatex-cache/gene
+ric)
+luaotfload | conf : Root cache directory is C:/Users/yuzeh/AppData/Local/MiKTeX/
+2.9/luatex-cache/generic/names.
+luaotfload | init : Loading fontloader “fontloader-2017-02-11.lua” from kpse
+-resolved path “D:/MiKTeX/tex/luatex/luaotfload/fontloader-2017-02-11.lua”.
+Lua-only attribute luaotfload@state = 1
+Lua-only attribute luaotfload@noligature = 2
+Lua-only attribute luaotfload@syllabe = 3
+luaotfload | init : Context OpenType loader version “3.027”
+Inserting `luaotfload.node_processor' at position 1 in `pre_linebreak_filter'.
+Inserting `luaotfload.node_processor' at position 1 in `hpack_filter'.
+Inserting `luaotfload.define_font' at position 1 in `define_font'.
+Lua-only attribute luaotfload_color_attribute = 4
+luaotfload | conf : Root cache directory is C:/Users/yuzeh/AppData/Local/MiKTeX/
+2.9/luatex-cache/generic/names.
+Inserting `luaotfload.aux.set_sscale_dimens' at position 1 in `luaotfload.patch_
+font'.
+Inserting `luaotfload.aux.patch_cambria_domh' at position 2 in `luaotfload.patch
+_font'.
+Inserting `luaotfload.aux.fixup_fontdata' at position 1 in `luaotfload.patch_fon
+t_unsafe'.
+Inserting `luaotfload.aux.set_capheight' at position 3 in `luaotfload.patch_font
+'.
+Inserting `luaotfload.rewrite_fontname' at position 4 in `luaotfload.patch_font'
+.
+luaotfload | main : initialization completed in 0.655 seconds
+Babel <3.18> and hyphenation patterns for 1 language(s) loaded.
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/luatex85/luatex85.sty
+Package: luatex85 2016/06/15 v1.4 pdftex aliases for luatex
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/standalone/standalone.cls
+Document Class: standalone 2015/07/15 v1.2 Class to compile TeX sub-files standa
+lone
+(D:/MiKTeX/tex/generic/oberdiek/ifluatex.sty
+Package: ifluatex 2016/05/16 v1.4 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX detected.
+)
+(D:/MiKTeX/tex/generic/oberdiek/ifpdf.sty
+Package: ifpdf 2017/03/15 v3.2 Provides the ifpdf switch
+)
+(D:/MiKTeX/tex/generic/ifxetex/ifxetex.sty
+Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
+)
+(D:/MiKTeX/tex/latex/xkeyval/xkeyval.sty
+Package: xkeyval 2014/12/03 v2.7a package option processing (HA)
+
+(D:/MiKTeX/tex/generic/xkeyval/xkeyval.tex
+(D:/MiKTeX/tex/generic/xkeyval/xkvutils.tex
+\XKV@toks=\toks14
+\XKV@tempa@toks=\toks15
+
+(D:/MiKTeX/tex/generic/xkeyval/keyval.tex))
+\XKV@depth=\count79
+File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
+))
+\sa@internal=\count80
+\c@sapage=\count81
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/standalone/standalone.cfg
+File: standalone.cfg 2015/07/15 v1.2 Default configuration file for 'standalone'
+ class
+) (D:/MiKTeX/tex/latex/base/article.cls
+Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
+(D:/MiKTeX/tex/latex/base/size10.clo
+File: size10.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
+luaotfload | db : Font names database loaded from C:/Users/yuzeh/AppData/Local/M
+iKTeX/2.9/luatex-cache/generic/names/luaotfload-names.luc(load luc: C:/Users/yuz
+eh/AppData/Local/MiKTeX/2.9/luatex-cache/generic/fonts/otl/lmroman10-regular.luc
+))
+\c@part=\count82
+\c@section=\count83
+\c@subsection=\count84
+\c@subsubsection=\count85
+\c@paragraph=\count86
+\c@subparagraph=\count87
+\c@figure=\count88
+\c@table=\count89
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+\sa@box=\box26
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/frontendlayer/tikz.sty
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/basiclayer/pgf.sty
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/utilities/pgfrcs.sty
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/utilities/pgfutil-co
+mmon.tex
+\pgfutil@everybye=\toks16
+\pgfutil@tempdima=\dimen103
+\pgfutil@tempdimb=\dimen104
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/utilities/pgfutil-co
+mmon-lists.tex))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/utilities/pgfutil-la
+tex.def
+\pgfutil@abb=\box27
+ (C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/ms/everyshi.sty
+Package: everyshi 2001/05/15 v3.00 EveryShipout Package (MS)
+))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/utilities/pgfrcs.cod
+e.tex
+Package: pgfrcs 2015/08/07 v3.0.1a (rcs-revision 1.31)
+))
+Package: pgf 2015/08/07 v3.0.1a (rcs-revision 1.15)
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/basiclayer/pgfcore.sty
+(D:/MiKTeX/tex/latex/graphics/graphicx.sty
+Package: graphicx 2017/06/01 v1.1a Enhanced LaTeX Graphics (DPC,SPQR)
+
+(D:/MiKTeX/tex/latex/graphics/graphics.sty
+Package: graphics 2017/06/25 v1.2c Standard LaTeX Graphics (DPC,SPQR)
+
+(D:/MiKTeX/tex/latex/graphics/trig.sty
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
+)
+(D:/MiKTeX/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: luatex.def on input line 99.
+
+(D:/MiKTeX/tex/latex/graphics-def/luatex.def
+File: luatex.def 2018/01/08 v1.0l Graphics/color driver for luatex
+))
+\Gin@req@height=\dimen105
+\Gin@req@width=\dimen106
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/systemlayer/pgfsys.sty
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/systemlayer/pgfsys.c
+ode.tex
+Package: pgfsys 2014/07/09 v3.0.1a (rcs-revision 1.48)
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/utilities/pgfkeys.co
+de.tex
+\pgfkeys@pathtoks=\toks17
+\pgfkeys@temptoks=\toks18
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/utilities/pgfkeysfil
+tered.code.tex
+\pgfkeys@tmptoks=\toks19
+))
+\pgf@x=\dimen107
+\pgf@y=\dimen108
+\pgf@xa=\dimen109
+\pgf@ya=\dimen110
+\pgf@xb=\dimen111
+\pgf@yb=\dimen112
+\pgf@xc=\dimen113
+\pgf@yc=\dimen114
+\w@pgf@writea=\write3
+\r@pgf@reada=\read1
+\c@pgf@counta=\count90
+\c@pgf@countb=\count91
+\c@pgf@countc=\count92
+\c@pgf@countd=\count93
+\t@pgf@toka=\toks20
+\t@pgf@tokb=\toks21
+\t@pgf@tokc=\toks22
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/systemlayer/pgf.cfg
+File: pgf.cfg 2008/05/14  (rcs-revision 1.7)
+)
+Driver file for pgf: pgfsys-luatex.def
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/systemlayer/pgfsys-l
+uatex.def
+File: pgfsys-luatex.def 2014/10/11  (rcs-revision 1.35)
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/systemlayer/pgfsys-c
+ommon-pdf.def
+File: pgfsys-common-pdf.def 2013/10/10  (rcs-revision 1.13)
+)))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/systemlayer/pgfsysso
+ftpath.code.tex
+File: pgfsyssoftpath.code.tex 2013/09/09  (rcs-revision 1.9)
+\pgfsyssoftpath@smallbuffer@items=\count94
+\pgfsyssoftpath@bigbuffer@items=\count95
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/systemlayer/pgfsyspr
+otocol.code.tex
+File: pgfsysprotocol.code.tex 2006/10/16  (rcs-revision 1.4)
+))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/xcolor/xcolor.sty
+Package: xcolor 2016/05/11 v2.12 LaTeX color extensions (UK)
+
+(D:/MiKTeX/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: luatex.def on input line 225.
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1348.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1352.
+Package xcolor Info: Model `RGB' extended on input line 1364.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1366.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1367.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1370.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1371.
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcore.c
+ode.tex
+Package: pgfcore 2010/04/11 v3.0.1a (rcs-revision 1.7)
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmath.code.te
+x
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathcalc.cod
+e.tex
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathutil.cod
+e.tex)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathparser.c
+ode.tex
+\pgfmath@dimen=\dimen115
+\pgfmath@count=\count96
+\pgfmath@box=\box28
+\pgfmath@toks=\toks23
+\pgfmath@stack@operand=\toks24
+\pgfmath@stack@operation=\toks25
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.code.tex
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.basic.code.tex)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.trigonometric.code.tex)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.random.code.tex)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.comparison.code.tex)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.base.code.tex)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.round.code.tex)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.misc.code.tex)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfunction
+s.integerarithmetics.code.tex)))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmathfloat.co
+de.tex
+\c@pgfmathroundto@lastzeros=\count97
+))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcorepo
+ints.code.tex
+File: pgfcorepoints.code.tex 2013/10/07  (rcs-revision 1.27)
+\pgf@picminx=\dimen116
+\pgf@picmaxx=\dimen117
+\pgf@picminy=\dimen118
+\pgf@picmaxy=\dimen119
+\pgf@pathminx=\dimen120
+\pgf@pathmaxx=\dimen121
+\pgf@pathminy=\dimen122
+\pgf@pathmaxy=\dimen123
+\pgf@xx=\dimen124
+\pgf@xy=\dimen125
+\pgf@yx=\dimen126
+\pgf@yy=\dimen127
+\pgf@zx=\dimen128
+\pgf@zy=\dimen129
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcorepa
+thconstruct.code.tex
+File: pgfcorepathconstruct.code.tex 2013/10/07  (rcs-revision 1.29)
+\pgf@path@lastx=\dimen130
+\pgf@path@lasty=\dimen131
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcorepa
+thusage.code.tex
+File: pgfcorepathusage.code.tex 2014/11/02  (rcs-revision 1.24)
+\pgf@shorten@end@additional=\dimen132
+\pgf@shorten@start@additional=\dimen133
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcoresc
+opes.code.tex
+File: pgfcorescopes.code.tex 2015/05/08  (rcs-revision 1.46)
+\pgfpic=\box29
+\pgf@hbox=\box30
+\pgf@layerbox@main=\box31
+\pgf@picture@serial@count=\count98
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcoregr
+aphicstate.code.tex
+File: pgfcoregraphicstate.code.tex 2014/11/02  (rcs-revision 1.12)
+\pgflinewidth=\dimen134
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcoretr
+ansformations.code.tex
+File: pgfcoretransformations.code.tex 2015/08/07  (rcs-revision 1.20)
+\pgf@pt@x=\dimen135
+\pgf@pt@y=\dimen136
+\pgf@pt@temp=\dimen137
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcorequ
+ick.code.tex
+File: pgfcorequick.code.tex 2008/10/09  (rcs-revision 1.3)
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcoreob
+jects.code.tex
+File: pgfcoreobjects.code.tex 2006/10/11  (rcs-revision 1.2)
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcorepa
+thprocessing.code.tex
+File: pgfcorepathprocessing.code.tex 2013/09/09  (rcs-revision 1.9)
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcorear
+rows.code.tex
+File: pgfcorearrows.code.tex 2015/05/14  (rcs-revision 1.43)
+\pgfarrowsep=\dimen138
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcoresh
+ade.code.tex
+File: pgfcoreshade.code.tex 2013/07/15  (rcs-revision 1.15)
+\pgf@max=\dimen139
+\pgf@sys@shading@range@num=\count99
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcoreim
+age.code.tex
+File: pgfcoreimage.code.tex 2013/07/15  (rcs-revision 1.18)
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcoreex
+ternal.code.tex
+File: pgfcoreexternal.code.tex 2014/07/09  (rcs-revision 1.21)
+\pgfexternal@startupbox=\box32
+))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcorela
+yers.code.tex
+File: pgfcorelayers.code.tex 2013/07/18  (rcs-revision 1.7)
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcoretr
+ansparency.code.tex
+File: pgfcoretransparency.code.tex 2013/09/30  (rcs-revision 1.5)
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/basiclayer/pgfcorepa
+tterns.code.tex
+File: pgfcorepatterns.code.tex 2013/11/07  (rcs-revision 1.5)
+)))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/modules/pgfmodulesha
+pes.code.tex
+File: pgfmoduleshapes.code.tex 2014/03/21  (rcs-revision 1.35)
+\pgfnodeparttextbox=\box33
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/modules/pgfmoduleplo
+t.code.tex
+File: pgfmoduleplot.code.tex 2015/08/03  (rcs-revision 1.13)
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/compatibility/pgfcomp-
+version-0-65.sty
+Package: pgfcomp-version-0-65 2007/07/03 v3.0.1a (rcs-revision 1.7)
+\pgf@nodesepstart=\dimen140
+\pgf@nodesepend=\dimen141
+)
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/compatibility/pgfcomp-
+version-1-18.sty
+Package: pgfcomp-version-1-18 2007/07/23 v3.0.1a (rcs-revision 1.1)
+))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/utilities/pgffor.sty
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/utilities/pgfkeys.sty
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/utilities/pgfkeys.co
+de.tex))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/latex/pgf/math/pgfmath.sty
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmath.code.te
+x))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/utilities/pgffor.cod
+e.tex
+Package: pgffor 2013/12/13 v3.0.1a (rcs-revision 1.25)
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/math/pgfmath.code.te
+x)
+\pgffor@iter=\dimen142
+\pgffor@skip=\dimen143
+\pgffor@stack=\toks26
+\pgffor@toks=\toks27
+))
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/frontendlayer/tikz/t
+ikz.code.tex
+Package: tikz 2015/08/07 v3.0.1a (rcs-revision 1.151)
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/libraries/pgflibrary
+plothandlers.code.tex
+File: pgflibraryplothandlers.code.tex 2013/08/31 v3.0.1a (rcs-revision 1.20)
+\pgf@plot@mark@count=\count100
+\pgfplotmarksize=\dimen144
+)
+\tikz@lastx=\dimen145
+\tikz@lasty=\dimen146
+\tikz@lastxsaved=\dimen147
+\tikz@lastysaved=\dimen148
+\tikzleveldistance=\dimen149
+\tikzsiblingdistance=\dimen150
+\tikz@figbox=\box34
+\tikz@figbox@bg=\box35
+\tikz@tempbox=\box36
+\tikz@tempbox@bg=\box37
+\tikztreelevel=\count101
+\tikznumberofchildren=\count102
+\tikznumberofcurrentchild=\count103
+\tikz@fig@count=\count104
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/modules/pgfmodulemat
+rix.code.tex
+File: pgfmodulematrix.code.tex 2013/09/17  (rcs-revision 1.8)
+\pgfmatrixcurrentrow=\count105
+\pgfmatrixcurrentcolumn=\count106
+\pgf@matrix@numberofcolumns=\count107
+)
+\tikz@expandcount=\count108
+
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/generic/pgf/frontendlayer/tikz/l
+ibraries/tikzlibrarytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2008/06/17 v3.0.1a (rcs-revision 1.2)
+))) (./circle-1.aux)
+\openout1 = circle-1.aux
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+
+ABD: EveryShipout initializing macros
+(C:/Users/yuzeh/AppData/Roaming/MiKTeX/2.9/tex/context/base/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count109
+\scratchdimen=\dimen151
+\scratchbox=\box38
+\nofMPsegments=\count110
+\nofMParguments=\count111
+\everyMPshowfont=\toks28
+\MPscratchCnt=\count112
+\MPscratchDim=\dimen152
+\MPnumerator=\count113
+\makeMPintoPDFobject=\count114
+\everyMPtoPDFconversion=\toks29
+) (D:/MiKTeX/tex/latex/oberdiek/epstopdf-base.sty
+Package: epstopdf-base 2016/05/15 v2.6 Base part for package epstopdf
+
+(D:/MiKTeX/tex/generic/oberdiek/infwarerr.sty
+Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
+)
+(D:/MiKTeX/tex/latex/oberdiek/grfext.sty
+Package: grfext 2016/05/16 v1.2 Manage graphics extensions (HO)
+
+(D:/MiKTeX/tex/generic/oberdiek/kvdefinekeys.sty
+Package: kvdefinekeys 2016/05/16 v1.4 Define keys (HO)
+
+(D:/MiKTeX/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
+)))
+(D:/MiKTeX/tex/latex/oberdiek/kvoptions.sty
+Package: kvoptions 2016/05/16 v3.12 Key value format for package options (HO)
+
+(D:/MiKTeX/tex/generic/oberdiek/kvsetkeys.sty
+Package: kvsetkeys 2016/05/16 v1.17 Key value parser (HO)
+
+(D:/MiKTeX/tex/generic/oberdiek/etexcmds.sty
+Package: etexcmds 2016/05/16 v1.6 Avoid name clashes with e-TeX commands (HO)
+)))
+(D:/MiKTeX/tex/generic/oberdiek/pdftexcmds.sty
+Package: pdftexcmds 2018/01/30 v0.27 Utility functions of pdfTeX for LuaTeX (HO)
+
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+\pdftexcmds@toks=\toks30
+)
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 43
+8.
+Package grfext Info: Graphics extension search list:
+(grfext)             [.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG
+,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 456.
+) [1
+
+] (./circle-1.aux))
+
+Here is how much of LuaTeX's memory you used:
+ 12126 strings out of 494447
+ 100000,319454 words of node,token memory allocated
+ 917 words of node memory still in use:
+   11 hlist, 1 vlist, 2 rule, 24 glue, 51 attribute, 45 glue_spec, 51 attribute_
+list, 1 write, 37 pdf_literal, 4 pdf_colorstack nodes
+   avail lists: 2:25,3:39,4:9,5:22,6:1,7:35,8:2,9:17
+ 15793 multiletter control sequences out of 65536+200000
+ 15 fonts using 723239 bytes
+ 55i,5n,56p,434b,498s stack positions out of 5000i,500n,10000p,200000b,50000s
+Output written on circle-1.pdf (1 page, 1928 bytes).
+
+PDF statistics: 11 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 131072)
+ 26 words of extra memory for PDF output out of 10000 (max. 100000000)
+
