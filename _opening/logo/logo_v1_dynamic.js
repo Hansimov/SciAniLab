@@ -4,20 +4,26 @@ sin = Math.sin;
 floor = Math.floor;
 
 function setup(){
-    cnvs = createCanvas(480, 270); // used in logo
-    frameRate(30);
+    mycanvas_parent = createCanvas(480,270);
+    mycanvas_parent.parent('mycanvasdiv');
+    mycanvas = mycanvas_parent.canvas;
+    mycontext = mycanvas.getContext('2d');
+    background(20);
+    setEncoder();
     // noLoop();
 }
 
 function draw() {
     fc = frameCount;
     console.log(fc);
-    calcStage();
     changeBrightnessRatio();
-    if (fc<=65){
+    if (fc<=80){
         drawLogo();
+        myencoder.addFrame(mycontext);
     } else {
         noLoop();
+        myencoder.finish();
+        document.getElementById('myimg').src = 'data:image/gif;base64,'+encode64(myencoder.stream().getData());
     }
 }
 
@@ -25,7 +31,6 @@ function drawLogo() {
     cx = 240;
     cy = 120;
     rmax = 160;
-    background(20);
     outerCircle();
     innerCircle();
 }
@@ -67,18 +72,6 @@ function innerCircle () {
     }
 }
 
-function calcStage() {
-    if (fc<=30) {
-        stage = 1;
-    } else if (fc<=60){
-        stage = 2;
-    } else if (fc<=90) {
-        stage = 3;
-    } else {
-        stage = 4;
-    }
-}
-
 function changeBrightnessRatio() {
     if (fc<=30){
         ratio_gray = fc/30;
@@ -109,4 +102,11 @@ function changeBrightnessRatio() {
         ratio_blue = 1;
     }
     
+}
+
+function setEncoder(){
+    myencoder = new GIFEncoder();
+    myencoder.setRepeat(0);
+    myencoder.setDelay(50);
+    console.log(myencoder.start());
 }
