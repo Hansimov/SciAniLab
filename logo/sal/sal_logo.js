@@ -1,76 +1,146 @@
-function preload() {
-    // fontHybrid = loadFont('Yahei_Consolas_Hybrid.ttf');
-}
+pi = Math.PI;
+cos = Math.cos;
+sin = Math.sin;
+floor = Math.floor;
+
+
 
 function setup(){
-    createCanvas(480, 270);
-    // createCanvas(256,256);
-    // createCanvas(350,380);
-    background(20);
+    cnvs = createCanvas(480, 270); // used in logo
     noLoop();
 }
 
-function draw() {
 
+function draw() {
     cx = 240;
     cy = 120;
     rmax = 160;
+    drawLogo();
+    // drawSBTable();
+    // drawGrayTable();
+
+}
+
+function drawLogo() {
+    background(20);
     outerCircle();
     innerCircle();
-
-    // sbTable();
 }
 
 function outerCircle() {
-    colorMode(RGB,255);
-    stroke(165);
+    colorMode(HSB,255);
+
+    stroke(170,10,105);
     strokeWeight(20);
     ellipse(cx,cy,rmax-1,rmax-1);
+    stroke(170,10,165);
+    strokeWeight(13);
+    ellipse(cx,cy,rmax-1,rmax-1);
+
+
+    // stroke(170,10,225);
+    // strokeWeight(10);
+    // noFill();
+    // arclen = pi/20;
+    // for (var i=1; i<=3; i++){
+    //     arc(cx,cy,rmax+4,rmax+4,i*pi/3-arclen,i*pi/3+arclen,OPEN);
+    // }
+
+
+    // stroke(170,10,205);
+    // strokeWeight(10);
+    // ellipse(cx,cy,rmax-1,rmax-1);
+
+    // for (var i=25; i>=0; i--){
+    //     if (i>=15){
+    //         stroke(170, 20, 200);
+    //     } else {
+    //         stroke(170, 20, 100);
+    //     }
+    //     ellipse(cx,cy,rmax+i,rmax+i);
+    // }
+    // strokeWeight(10);
+    // stroke(170, 20, 100);
+    // ellipse(cx,cy,rmax+25,rmax+25);
+    // stroke(170, 20, 150);
+    // strokeWeight(5);
+    // ellipse(cx,cy,rmax+15,rmax+15);
+    // strokeWeight(1);
+
 }
 
 function innerCircle () {
     ratio = rmax/255;
     noStroke();
     colorMode(HSB,255);
-    for (r = 255; r >= 0; r--){
-        changeFill();
+    for (var r = 255; r >= 0; r--){
+        changeFill(r);
         ellipse(cx, cy, r*ratio, r*ratio);
+    }
+
+    function changeFill(r) {
+        // Hue, Saturation, Brightness, alpha
+
+        var k = 400;
+        var theta = (255-r)/255*(pi/2);
+        var sat = floor(k*cos(theta));
+        var bri = floor(k*sin(theta));
+        if (r>=130){
+            fill(170, sat, bri-70);
+        } else if (r>=30) {
+            fill(170, sat, bri);
+        } else {
+            fill(170, sat-6, bri);
+        }
     }
 }
 
-function changeFill() {
-    // Hue, Saturation, Brightness, alpha
-    r_inv = invR(r);
-    saturation = r;
-    brightness = r_inv;
-
-    fill(170, saturation, brightness);
-}
 
 function invR(r,max=255){
-    r_inv = max - r;
+    var r_inv = max - r;
     return r_inv;
 }
 
-function sbTable(){
+function drawSBTable(){
+    createCanvas(350,380); // used in sbtable
     var px = 60;
     var py = 40;
-    background(255);
     colorMode(HSB,255);
+    background(255);
+
     for (var s=0; s<=255; s++) {
         for (var b=0; b<=255; b++){
             stroke(170,s,255-b);
             point(px+s,py+b);
         }
     }
-    // textFont('Monospaced');
-    textAlign(RIGHT,CENTER);
-    text('255', px-10,      py);
-    text('0',   px-10,      py+256);
-    text('亮',px-35,py+120);
-    text('度',px-35,py+140);
-    textAlign(CENTER);
-    text('0',   px,     py+270);
-    text('255', px+256, py+270);
-    text('饱 和 度',px+128,py+295);
+    addText();
+
+    function addText(){
+        // textFont('Monospaced');
+        textAlign(RIGHT,CENTER);
+        text('255', px-10,      py);
+        text('0',   px-10,      py+256);
+        text('亮',px-35,py+120);
+        text('度',px-35,py+140);
+        textAlign(CENTER);
+        text('0',   px,     py+270);
+        text('255', px+256, py+270);
+        text('饱 和 度',px+128,py+295);
+    }
+}
+
+function drawGrayTable(){
+    createCanvas(350,380); // used in graytable
+    var px = 60;
+    var py = 40;
+    colorMode(RGB,255);
+    background(255);
+
+    for (var row=0; row<=255; row++){
+        for (var col=0; col<=50; col++){
+            stroke(row);
+            point(px+row,py+col);
+        }
+    }
 }
