@@ -3,13 +3,10 @@ cos = Math.cos;
 sin = Math.sin;
 floor = Math.floor;
 
-
-
 function setup(){
     cnvs = createCanvas(480, 270); // used in logo
     noLoop();
 }
-
 
 function draw() {
     cx = 240;
@@ -18,7 +15,6 @@ function draw() {
     drawLogo();
     // drawSBTable();
     // drawGrayTable();
-
 }
 
 function drawLogo() {
@@ -36,37 +32,6 @@ function outerCircle() {
     stroke(170,10,165);
     strokeWeight(13);
     ellipse(cx,cy,rmax-1,rmax-1);
-
-
-    // stroke(170,10,225);
-    // strokeWeight(10);
-    // noFill();
-    // arclen = pi/20;
-    // for (var i=1; i<=3; i++){
-    //     arc(cx,cy,rmax+4,rmax+4,i*pi/3-arclen,i*pi/3+arclen,OPEN);
-    // }
-
-
-    // stroke(170,10,205);
-    // strokeWeight(10);
-    // ellipse(cx,cy,rmax-1,rmax-1);
-
-    // for (var i=25; i>=0; i--){
-    //     if (i>=15){
-    //         stroke(170, 20, 200);
-    //     } else {
-    //         stroke(170, 20, 100);
-    //     }
-    //     ellipse(cx,cy,rmax+i,rmax+i);
-    // }
-    // strokeWeight(10);
-    // stroke(170, 20, 100);
-    // ellipse(cx,cy,rmax+25,rmax+25);
-    // stroke(170, 20, 150);
-    // strokeWeight(5);
-    // ellipse(cx,cy,rmax+15,rmax+15);
-    // strokeWeight(1);
-
 }
 
 function innerCircle () {
@@ -79,8 +44,6 @@ function innerCircle () {
     }
 
     function changeFill(r) {
-        // Hue, Saturation, Brightness, alpha
-
         var k = 400;
         var theta = (255-r)/255*(pi/2);
         var sat = floor(k*cos(theta));
@@ -94,7 +57,6 @@ function innerCircle () {
         }
     }
 }
-
 
 function invR(r,max=255){
     var r_inv = max - r;
