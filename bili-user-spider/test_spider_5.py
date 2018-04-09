@@ -105,7 +105,7 @@ def fetchUser(mid):
 def guessMid():
     global user_left, user_righ, target_day, guess_step, guess_mid, invalid_mids, guessed_mids
 
-    is_guess_valid = True
+    is_today_has_user = True
     # guess_mid_tmp = guess_mid
     if user_righ.day < target_day:
         guess_step = 4 * max(guess_step, user_righ.mid - user_left.mid)
@@ -115,7 +115,7 @@ def guessMid():
         #     if guess_mid == user_righ.mid:
         #         guess_mid = user_left.mid
         #     elif guess_mid == user_left.mid:
-        #         is_guess_valid = False
+        #         is_today_has_user = False
         #     else:
         #         guess_mid = user_righ.mid
         # else:
@@ -123,19 +123,20 @@ def guessMid():
 
     orient = 1
     while (guess_mid in invalid_mids) or (guess_mid in guessed_mids):
+        # if (guess_mid>=user_left.mid) and (guess_mid<=user_righ.mid):
         guess_mid = guess_mid + orient
         if guess_mid > user_righ.mid:
             orient = -1
-            continue
+            guess_mid = guess_mid + orient
         elif guess_mid < user_left.mid:
-            is_guess_valid = False
+            is_today_has_user = False
             break
 
     guessed_mids.append(guess_mid)
 
     printLog('[{} {} ~ {} {}]'.format('guess_mid:',guess_mid,'target_day',target_day))
 
-    return is_guess_valid
+    return is_today_has_user
         
     # We should check whether the left user is correct
 
@@ -181,13 +182,14 @@ def resetGuessRange():
     user_righ = user_left
 
 def updateTargetDay():
-    global target_date, target_day, invalid_mids
+    global target_date, target_day, invalid_mids, guessed_mids
     target_date = target_date + timedelta(days=1)
     target_day = int(target_date.strftime('%Y%m%d'))
 
     invalid_mids = []
+    guessed_mids = []
 
-    if target_day >= 20090724:
+    if target_day >= 20180408:
         return True
     else:
         return False
@@ -207,10 +209,10 @@ def initAll():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids
     invalid_mids = []
     guessed_mids = []
-    user_left = fetchUser(1)
-    user_righ = fetchUser(2)
-    target_date = date(2009,6,25)
-    target_day = 20090625
+    user_left = fetchUser(441300)
+    user_righ = fetchUser(441301)
+    target_date = date(2012,6,10)
+    target_day = int(target_date.strftime('%Y%m%d'))
     guess_step = 1
 
 def spider():
@@ -218,8 +220,8 @@ def spider():
     finished = False
     while not finished:
         printLog('[{} {} ---- {} {}]'.format('left:',user_left.mid,'righ:',user_righ.mid))
-        is_guess_valid = guessMid()
-        if is_guess_valid:
+        is_today_has_user = guessMid()
+        if is_today_has_user:
             guess_user = fetchUser(guess_mid)
             guess_user = validateUser(guess_user)
             is_guess_correct = isGuessCorrect(guess_user)
@@ -234,9 +236,17 @@ def spider():
             else:
                 updateGuessRange(guess_user)
         else:
-            printLog('This day no user: ',target_day)
-            recordUser(0)
-            updateTargetDay()
+            # This day no user!
+            guess_user_datetime = datetime.fromtimestamp(guess_user.timestamp)
+            guess_user_date = guess_user_datetime.date()
+            user_righ_datetime = datetime.fromtimestamp(user_righ.timestamp)
+            user_righ_date = user_righ_datetime.date()
+
+            delta_days = (guess_user_date - user_righ_date).days
+            for i in range(1, delta_days):
+                recordUser(0)
+                updateTargetDay()
+
             resetGuessRange()
 
 if __name__ == '__main__':
