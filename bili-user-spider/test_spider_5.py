@@ -10,13 +10,6 @@ import json
 #   still has the risk of overwriting the file
 #   and destroys it.
 
-
-def printLog(str):
-    logfile = open('log.txt','a')
-    print(str)
-    print(str,file=logfile)
-    logfile.close()
-
 class User():
     def __init__(self, mid_str, name_str, timestamp_str):
         self.mid = int(mid_str)
@@ -37,7 +30,8 @@ class User():
             self.day = int(self_day_str)
 
 def fetchUser(mid):
-    global invalid_mids
+    global invalid_mids, fetch_count
+
     if mid in invalid_mids:
         printLog('{} {:0>10d}'.format('--- Invalid mid:',mid))
         user_mid = str(mid)
@@ -46,7 +40,14 @@ def fetchUser(mid):
         user = User(user_mid, user_name, user_timestamp)
         return user
 
-    sleep(0.5)
+    fetch_count += 1
+    if fetch_count >= 100:
+        printLog('Sleep for a while ...')
+        sleep(8)
+        fetch_count = 0
+
+    sleep(0.1)
+
     url = 'https://space.bilibili.com/ajax/member/GetInfo'
     headers = {
         'Referer':'https://space.bilibili.com/'
@@ -66,7 +67,7 @@ def fetchUser(mid):
             req_accepted = True
         except: # request is not accepted
             printLog('{} {:0>10s}'.format('--- Request denied, retry:',mid_str))
-            sleep(15)
+            sleep(10)
 
     try:
         user_mid = req_json_data.get('mid')
@@ -106,19 +107,11 @@ def guessMid():
     global user_left, user_righ, target_day, guess_step, guess_mid, invalid_mids, guessed_mids
 
     is_today_has_user = True
-    # guess_mid_tmp = guess_mid
+
     if user_righ.day < target_day:
         guess_step = 4 * max(guess_step, user_righ.mid - user_left.mid)
         guess_mid = user_righ.mid + guess_step
     else:
-        # if user_righ.mid - user_left.mid <= 1:
-        #     if guess_mid == user_righ.mid:
-        #         guess_mid = user_left.mid
-        #     elif guess_mid == user_left.mid:
-        #         is_today_has_user = False
-        #     else:
-        #         guess_mid = user_righ.mid
-        # else:
         guess_mid = floor((user_left.mid + user_righ.mid)/2)
 
     orient = 1
@@ -137,8 +130,7 @@ def guessMid():
     printLog('[{} {} ~ {} {}]'.format('guess_mid:',guess_mid,'target_day',target_day))
 
     return is_today_has_user
-        
-    # We should check whether the left user is correct
+
 
 def updateGuessRange(guess_user):
     global user_left, user_righ, target_day
@@ -178,25 +170,32 @@ def resetGuessRange():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, guessed_mids
     guessed_mids = []
     guess_step = 1
-    # user_left = validateUser(fetchUser(1))
     user_righ = user_left
 
 def updateTargetDay():
-    global target_date, target_day, invalid_mids, guessed_mids
+    global target_date, target_day, invalid_mids, guessed_mids, final_day
     target_date = target_date + timedelta(days=1)
     target_day = int(target_date.strftime('%Y%m%d'))
 
     invalid_mids = []
     guessed_mids = []
 
-    if target_day >= 20180408:
+    if target_day >= final_day:
         return True
     else:
         return False
 
+def printLog(str):
+    logfile = open('log.txt','a')
+    # logfile = open('log_test.txt','a')
+    print(str)
+    print(str,file=logfile)
+    logfile.close()
+
 def recordUser(user):
     global target_day, target_date
     userfile = open('user.txt','a')
+    # userfile = open('user_test.txt','a')
     if user == 0:
         userstr = '{} {:0>10d} {:0>10s} {} {}'.format(target_day, 0, '0', '0000-00-00 00:00:00', '*')
     else:
@@ -206,14 +205,20 @@ def recordUser(user):
     userfile.close()
 
 def initAll():
-    global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids
+    global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids, final_day, fetch_count
     invalid_mids = []
     guessed_mids = []
-    user_left = fetchUser(441300)
-    user_righ = fetchUser(441301)
-    target_date = date(2012,6,10)
-    target_day = int(target_date.strftime('%Y%m%d'))
+    final_day = 20180408
     guess_step = 1
+    fetch_count = 0
+    target_date = date(2013,3,23)
+    target_day = int(target_date.strftime('%Y%m%d'))
+    user_left = fetchUser(894017)
+    user_righ = fetchUser(894017)
+    # target_date = date(2010,9,23)
+    # target_day = int(target_date.strftime('%Y%m%d'))
+    # user_left = fetchUser(58506)
+    # user_righ = fetchUser(58506)
 
 def spider():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids
@@ -235,18 +240,13 @@ def spider():
                     resetGuessRange()
             else:
                 updateGuessRange(guess_user)
-        else:
-            # This day no user!
-            guess_user_datetime = datetime.fromtimestamp(guess_user.timestamp)
-            guess_user_date = guess_user_datetime.date()
+        else: # Target day(s) no user!
             user_righ_datetime = datetime.fromtimestamp(user_righ.timestamp)
             user_righ_date = user_righ_datetime.date()
-
-            delta_days = (guess_user_date - user_righ_date).days
-            for i in range(1, delta_days):
+            gap_days = (user_righ_date - target_date).days
+            for i in range(1, gap_days+1):
                 recordUser(0)
                 updateTargetDay()
-
             resetGuessRange()
 
 if __name__ == '__main__':
