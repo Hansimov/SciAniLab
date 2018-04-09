@@ -5,8 +5,6 @@ import requests
 import json
 
 
-
-
 invars_file = open('invars.json','r+')
 # invars_str = invars_file.read()
 # invars = json.loads(invars_str)
@@ -23,4 +21,9 @@ def updateInvarsFile():
     invars_file.close()
 
 
+def prt(*argv):
+    for arg in argv:
+        print(arg)
 
+if __name__ == '__main__':
+    prt(1,2,3,'ss')

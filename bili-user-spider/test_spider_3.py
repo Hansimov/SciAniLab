@@ -49,7 +49,7 @@ def fetchUser(mid):
         user_name      = '-'
     else:
         try:
-            user_name = mem_json_data.get('name')
+            user_name = req_json_data.get('name')
             user_name = user_name.encode('gbk','ignore') # to discard special character
             user_name = user_name.decode('gbk')
         except: # name is invalid
@@ -144,7 +144,8 @@ def updateGuessRange(user_guess,target_timestamp):
             user_pool[1] = user_guess
 
 def isGuessCorrect(user_guess):
-    user_prev = fetchUser(user_guess.mid, -1)
+    user_prev = fetchUser(user_guess.mid-1)
+    user_prev = validateUser(user_prev)
     if user_prev.day < user_guess.day:
         return True
     else:
