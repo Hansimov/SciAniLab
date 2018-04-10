@@ -101,7 +101,7 @@ def fetchUser(mid):
 
     if not is_mid_valid:
         invalid_mids.append(mid)
-        printLog('{} {}'.format('xxx Invalid mids:',invalid_mids))
+        printLog('[{} {}]'.format('Number of invalid mids:',len(invalid_mids)))
 
     user = User(user_mid, user_name, user_timestamp)
     userstr = '{:0>10s} {} {} {}'.format(user_mid, user_timestamp,user.timelocal,user_name)
@@ -111,9 +111,9 @@ def fetchUser(mid):
 def guessMid():
     global user_left, user_righ, target_day, guess_step, guess_mid, invalid_mids, guessed_mids
 
-    if len(invalid_mids) >= 50:
-        is_today_has_user = -1
-        return is_today_has_user
+    # if len(invalid_mids) >= 50:
+    #     is_today_has_user = -1
+    #     return is_today_has_user
 
     is_today_has_user = 1
 
@@ -220,9 +220,9 @@ def initAll():
     final_day = 20180409
     guess_step = 1
     fetch_count = 0
-    target_date = date(2016,12,2)
+    target_date = date(2018,3,30)
     target_day = int(target_date.strftime('%Y%m%d'))
-    user_left = fetchUser(64798586)
+    user_left = fetchUser(308924710)
     user_righ = user_left
     # target_date = date(2010,9,23)
     # target_day = int(target_date.strftime('%Y%m%d'))
@@ -263,4 +263,4 @@ def spider():
 if __name__ == '__main__':
     initAll()
     spider()
-    # fetchUser(1300000)
+    # fetchUser(103974444)
