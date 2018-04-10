@@ -220,9 +220,9 @@ def initAll():
     final_day = 20180409
     guess_step = 1
     fetch_count = 0
-    target_date = date(2016,8,29)
+    target_date = date(2016,12,2)
     target_day = int(target_date.strftime('%Y%m%d'))
-    user_left = fetchUser(39527343)
+    user_left = fetchUser(64798586)
     user_righ = user_left
     # target_date = date(2010,9,23)
     # target_day = int(target_date.strftime('%Y%m%d'))
