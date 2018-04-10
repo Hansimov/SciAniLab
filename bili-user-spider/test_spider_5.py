@@ -41,10 +41,13 @@ def fetchUser(mid):
         return user
 
     fetch_count += 1
-    if fetch_count >= 100:
-        printLog('Sleep for a while ...')
-        sleep(8)
-        fetch_count = 0
+    # if fetch_count % 20 == 0:
+    #     if fetch_count % 100 == 0:
+    #         printLog('*** Sleep for a long time ...')
+    #         sleep(10)
+    #     else:
+    #         printLog('*** Sleep for a short time ...')
+    #         sleep(2)
 
     sleep(0.1)
 
@@ -67,6 +70,9 @@ def fetchUser(mid):
             req_accepted = True
         except: # request is not accepted
             printLog('{} {:0>10s}'.format('--- Request denied, retry:',mid_str))
+            if fetch_count != 0:
+                printLog('[fetch_count: {}]'.format(fetch_count))
+                fetch_count = 0
             sleep(10)
 
     try:
@@ -106,7 +112,11 @@ def fetchUser(mid):
 def guessMid():
     global user_left, user_righ, target_day, guess_step, guess_mid, invalid_mids, guessed_mids
 
-    is_today_has_user = True
+    if len(invalid_mids) >= 50:
+        is_today_has_user = -1
+        return is_today_has_user
+
+    is_today_has_user = 1
 
     if user_righ.day < target_day:
         guess_step = 4 * max(guess_step, user_righ.mid - user_left.mid)
@@ -122,7 +132,7 @@ def guessMid():
             orient = -1
             guess_mid = guess_mid + orient
         elif guess_mid < user_left.mid:
-            is_today_has_user = False
+            is_today_has_user = 0
             break
 
     guessed_mids.append(guess_mid)
@@ -211,10 +221,10 @@ def initAll():
     final_day = 20180408
     guess_step = 1
     fetch_count = 0
-    target_date = date(2013,3,23)
+    target_date = date(2015,10,26)
     target_day = int(target_date.strftime('%Y%m%d'))
-    user_left = fetchUser(894017)
-    user_righ = fetchUser(894017)
+    user_left = fetchUser(16551418)
+    user_righ = user_left
     # target_date = date(2010,9,23)
     # target_day = int(target_date.strftime('%Y%m%d'))
     # user_left = fetchUser(58506)
@@ -226,7 +236,7 @@ def spider():
     while not finished:
         printLog('[{} {} ---- {} {}]'.format('left:',user_left.mid,'righ:',user_righ.mid))
         is_today_has_user = guessMid()
-        if is_today_has_user:
+        if is_today_has_user == 1:
             guess_user = fetchUser(guess_mid)
             guess_user = validateUser(guess_user)
             is_guess_correct = isGuessCorrect(guess_user)
@@ -240,7 +250,7 @@ def spider():
                     resetGuessRange()
             else:
                 updateGuessRange(guess_user)
-        else: # Target day(s) no user!
+        elif is_today_has_user == 0: # Target day(s) no user!
             user_righ_datetime = datetime.fromtimestamp(user_righ.timestamp)
             user_righ_date = user_righ_datetime.date()
             gap_days = (user_righ_date - target_date).days
@@ -248,7 +258,10 @@ def spider():
                 recordUser(0)
                 updateTargetDay()
             resetGuessRange()
+        else:
+            break
 
 if __name__ == '__main__':
     initAll()
     spider()
+    # fetchUser(1300000)
