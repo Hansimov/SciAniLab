@@ -41,15 +41,14 @@ def fetchUser(mid):
         return user
 
     fetch_count += 1
-    # if fetch_count % 20 == 0:
-    #     if fetch_count % 100 == 0:
-    #         printLog('*** Sleep for a long time ...')
+    # if fetch_count >= 180:
+    #     printLog('*** Sleep for a long time ***')
+    #     for i in range(1,10):
+    #         printLog('  *** Sleep {} seconds ...'.format(i*10))
     #         sleep(10)
-    #     else:
-    #         printLog('*** Sleep for a short time ...')
-    #         sleep(2)
+    #     fetch_count = 0
 
-    sleep(0.1)
+    sleep(0.25)
 
     url = 'https://space.bilibili.com/ajax/member/GetInfo'
     headers = {
@@ -119,7 +118,7 @@ def guessMid():
     is_today_has_user = 1
 
     if user_righ.day < target_day:
-        guess_step = 4 * max(guess_step, user_righ.mid - user_left.mid)
+        guess_step = 8 * max(guess_step, user_righ.mid - user_left.mid)
         guess_mid = user_righ.mid + guess_step
     else:
         guess_mid = floor((user_left.mid + user_righ.mid)/2)
@@ -218,12 +217,12 @@ def initAll():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids, final_day, fetch_count
     invalid_mids = []
     guessed_mids = []
-    final_day = 20180408
+    final_day = 20180409
     guess_step = 1
     fetch_count = 0
-    target_date = date(2015,10,26)
+    target_date = date(2016,8,29)
     target_day = int(target_date.strftime('%Y%m%d'))
-    user_left = fetchUser(16551418)
+    user_left = fetchUser(39527343)
     user_righ = user_left
     # target_date = date(2010,9,23)
     # target_day = int(target_date.strftime('%Y%m%d'))
