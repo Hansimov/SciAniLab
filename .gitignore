@@ -2,4 +2,4 @@
 *.zip
 *.csv
 */__pycache__/*
-./bili-user-spider/log.txt
+/bili-user-spider/log.txt
