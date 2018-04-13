@@ -2,4 +2,8 @@
 *.zip
 *.csv
 */__pycache__/*
-/bili-user-spider/log.txt
+*/log.txt
+*/frames/*
+*.aux
+*.log
+*/build-tmp/*
