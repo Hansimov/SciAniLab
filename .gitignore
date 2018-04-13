@@ -1,9 +1,9 @@
 *.rar
 *.zip
 *.csv
-*/__pycache__/*
+*/__pycache__/
 */log.txt
-*/frames/*
+*/frames/
 *.aux
 *.log
-*/build-tmp/*
+*/build-tmp/
