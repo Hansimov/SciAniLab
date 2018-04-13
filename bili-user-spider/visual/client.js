@@ -11,12 +11,12 @@ function setup(){
     mycanvas = createCanvas(1280,720);
     mycanvas = mycanvas.canvas;
     background(0);
-    frameRate(30);
+    frameRate(20);
     // noLoop();
 }
 
 function draw() {
-    if (frameCount>=30){
+    if (frameCount>=20){
         noLoop();
     }
     fill(200,300,300);

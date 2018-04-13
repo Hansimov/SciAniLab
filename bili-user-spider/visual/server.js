@@ -1,9 +1,10 @@
 var express = require('express');
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+var app = express();
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
 var fs = require('fs');
 var format = require('python-format')
+var reload = require('reload');
 
 app.use(express.static('.'));
 
@@ -21,9 +22,15 @@ io.on('connection',function (socket){
         var img_name = format('./frames/frame_{:>05d}.png',frameCount)
         fs.writeFile(img_name, buf);
     });
-
 });
 
-http.listen(9100,function(){
+io.on('disconnection',function(socket){
+    console.log('- Disconnected!');
+});
+
+
+reload(app);
+
+server.listen(9100,function(){
     console.log('> Listening on port : 9100');
 })
