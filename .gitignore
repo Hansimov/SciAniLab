@@ -7,3 +7,4 @@ frames/
 *.aux
 *.log
 build-tmp/
+*.mp4

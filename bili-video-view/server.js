@@ -30,7 +30,6 @@ io.on('connection',function (socket){
     });
 });
 
-
 server.listen(9100,function(){
     console.log('> Listening on port : 9100');
 });
