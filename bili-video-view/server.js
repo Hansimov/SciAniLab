@@ -6,7 +6,6 @@ let fs = require('fs');
 let format = require('python-format');
 let reload = require('reload');
 
-
 // Stop-Process -Id (Get-NetTCPConnection -LocalPort 9100).OwningProcess -Force
 
 app.use(express.static('.'));
@@ -21,11 +20,11 @@ io.on('connection',function (socket){
         console.log('- Disconnected!');
     });
 
-    socket.on('dataurl',function(url,frameCount){
-        console.log(format('Saving Frame: {:>05d}',frameCount))
+    socket.on('saveFrame',function(url, title, count){
+        console.log(format('Saving Frame: {:>05d}',count))
         var data = url.replace(/^data:image\/\w+;base64,/, "");
         var buf = new Buffer(data, 'base64');
-        var img_name = format('./frames/frame_{:>05d}.png',frameCount)
+        var img_name = format('./frames/{}_{:>05d}.png',title,count)
         fs.writeFile(img_name, buf);
     });
 });
