@@ -1,19 +1,61 @@
-function num2unit(num){
+function calcMaxFloor(num){
     let str = num.toString();
     let len = str.length;
     let exp = len - 1;
     let mod = Math.floor(exp/4);
 
-    let unit;
-    if (mod==1){
-        unit = '万';
-    } else if (mod==2){
-        unit = '亿';
-    } else if (mod==3){
-        unit = '万亿';
-    } else {
-        unit = '';
-    }
+    let mark = num2mark(num);
+    let max_floor = parseInt(mark) * Math.pow(10, mod*4);
+    return max_floor;
+}
+
+function num2mark(num){
+/******************************
+
+>>> num2mark(4)
+=== "4"
+
+>>> num2mark('44')
+=== "40"
+
+>>> num2mark(1234567) // 123 万
+=== "100"
+
+>>> num2mark(39990000) // 3999 万
+=== "3000"
+
+******************************/
+    let str = num.toString();
+    let len = str.length;
+    let exp = len - 1;
+    // let mod = Math.floor(exp/4);
+
+    let mark;
+    mark = str[0] + '0'.repeat(exp%4);
+
+    return mark;
+}
+
+
+function num2unit(num){
+/******************************
+
+>>> num2unit(1999)
+=== "1999"
+
+>>> num2unit('28499')
+=== "2.8 万"
+
+>>> num2unit(24689292145)
+=== "247 亿"
+
+******************************/
+    let str = num.toString();
+    let len = str.length;
+    let exp = len - 1;
+    let mod = Math.floor(exp/4);
+
+    unit = getUnit(num);
 
     if (mod>=1 && mod<=3) {
         nume = str.slice(0,len-4*mod) + '.' + str.slice(len-4*mod,len-4*mod+2);
@@ -46,7 +88,41 @@ function num2unit(num){
     return nume_unit;
 }
 
+function getUnit(num){
+    let str = num.toString();
+    let len = str.length;
+    let exp = len - 1;
+    let mod = Math.floor(exp/4);
+
+    let unit;
+
+    if (mod==1){
+        unit = '万';
+    } else if (mod==2){
+        unit = '亿';
+    } else if (mod==3){
+        unit = '万亿';
+    } else {
+        unit = '';
+    }
+    return unit;
+}
+
 function xround(num,n){
+/******************************
+>>> xround(1.9,2)
+=== "1.90"
+
+>>> xround(1.9,0)
+=== "2"
+
+>>> xround(1.90,2)
+=== "1.90"
+
+>>> xround(2,3)
+=== "2.000"
+
+******************************/
     let str = math.round(num,n).toString();
     let dot_index = str.indexOf('.');
     if (n>=1){

@@ -28,6 +28,8 @@ Block = function(id=-1, name=""){
     this.disp = function(){
         // this.move();
         // colorMode(HSB,255);
+        push();
+        textSize(19);
         colorMode(RGB,255);
         noStroke();
         // fill(this.hue,this.sat,this.bri,this.alp);
@@ -47,6 +49,7 @@ Block = function(id=-1, name=""){
             nume_unit = '( ' + num2unit(this.value) + ' )';
         }
         text(nume_unit,this.x+this.w+20+textWidth(this.value.toString()),this.y+this.h/2);
+        pop();
     };
 
     this.calcWidth = function(max, min){
@@ -83,7 +86,7 @@ Block.prototype.updateRank = function(propname, oldrank, newrank){
     if (oldrank!=newrank){
         this.y_old = this.y;
         this.y_new = this.rank2y(newrank);
-        this.movespeed = (this.y_new-this.y_old)/14;
+        this.movespeed = (this.y_new-this.y_old)/13;
         this.moving = 1;
         this.alp = 255*0.7;
     }
