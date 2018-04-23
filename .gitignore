@@ -8,5 +8,3 @@ frames/
 *.log
 build-tmp/
 *.mp4
-
-!videoviews.csv

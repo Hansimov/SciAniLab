@@ -1,3 +1,24 @@
+function markMul(mark, mul){
+/******************************
+|  num | mul=0.5 | mul=1.5 |
+----------------------------
+|    1 |     0.5 |     1.5 |
+|   10 |       5 |      15 |
+|  100 |      50 |     150 |
+| 1000 |     500 |    1500 |
+******************************/
+    let num = parseInt(mark);
+    let result;
+    if (num == 1){
+        result = xround(num*mul,1);
+    }
+    else {
+        result = xround(num*mul,0);
+    }
+
+    return result;
+}
+
 function calcMaxFloor(num){
     let str = num.toString();
     let len = str.length;

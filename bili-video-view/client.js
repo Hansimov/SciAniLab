@@ -31,7 +31,7 @@ let block_x = 100;
 let block_y_bias = 210;
 let block_h = 25;
 let block_gap = 8;
-let block_w_max = 630;
+let block_w_max = 690;
 let block_w_bias = 1;
 
 let progress_color = [];
@@ -51,7 +51,7 @@ function setup(){
     // mycreatecanvas = createCanvas(1920,1080);
     mycanvas = mycreatecanvas.canvas;
     background(0);
-    // frameRate(30);
+    frameRate(30);
 
     initBlocks();
     // noLoop();
@@ -338,36 +338,53 @@ function drawAxis(){
     let val_max = block_max.value;
     let str = val_max.toString();
     let unit = getUnit(str);
-    let mark_max = num2mark(str);
+    let mark = num2mark(str);
 
     let max_floor = calcMaxFloor(val_max);
+    let mark_count = parseInt(mark[0]);
 
-    // console.log(block_x,calcFloorCeil(val_max), val_max, block_max.w, block_w_bias);
-    // console.log(mark_x,mark_y);
 
-    let mark_count = parseInt(mark_max[0]);
-    for (let i=1; i<=mark_count; i++){
+    let mark_step = (mark_count<6)?1:2;
+    let mark_start = (mark_count<6)?1:2;
+
+    for (let i=mark_start; i<=mark_count+mark_step; i+=mark_step){
+        let mark_tmp, mark_unit_tmp;
         let mark_x, mark_y;
         mark_x = block_x + max_floor / val_max * block_max.w * (i/mark_count) + block_w_bias;
         mark_y = block_y_bias - 37;
-        let mark_tmp = num2mark(max_floor* (i/mark_count));
-        let mark_unit_tmp = mark_tmp + ' ' + unit;
+        mark_tmp = num2mark(max_floor * (i/mark_count));
+        mark_unit_tmp = mark_tmp + ' ' + unit;
+        drawMarkLine(mark_unit_tmp, mark_x, mark_y);
+    }
 
+    if (mark_count == 1){
+        let mark_tick = [0.5, 1.5, 2.5];
+        for (let i=0; i<mark_tick.length;i++){
+            let mark_tmp, mark_unit_tmp;
+            let mark_x, mark_y;
+            mark_x = block_x + max_floor / val_max * block_max.w * (mark_tick[i] / mark_count) + block_w_bias;
+            mark_y = block_y_bias - 37;
+            mark_tmp = markMul(mark, mark_tick[i]);
+            mark_unit_tmp = mark_tmp + ' ' + unit;
+            drawMarkLine(mark_unit_tmp, mark_x, mark_y);
+        }
+    }
+
+    function drawMarkLine(mark_unit, mark_x, mark_y){
         push();
         colorMode(RGB,255);
         noStroke();
         fill(255,255,255,90);
         textSize(18);
         textAlign(CENTER);
-        text(mark_unit_tmp, mark_x, mark_y);
+        // Disp mark + unit
+        text(mark_unit, mark_x, mark_y);
         stroke(255,255,255,60);
-        // pop();
-        // push();
         strokeWeight(2);
-        line(mark_x,block_y_bias-20, mark_x, block_y_bias+blockarr.length*(block_h+block_gap));
+        // Draw mark line
+        line(mark_x, block_y_bias-20, mark_x, block_y_bias+blockarr.length*(block_h+block_gap));
         pop();
     }
-    // return mark_unit;
 }
 
 /*function dispMaxVal(){
