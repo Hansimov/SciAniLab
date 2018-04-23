@@ -35,6 +35,8 @@ let block_w_max = 690;
 let block_w_bias = 1;
 
 let progress_color = [];
+let yeartwo = ['2009', '2009']; // last_day, this_day
+let yearlist = []; // obj: str, color, x, y
 
 function preload(){
     // | 累计播放量 | 动画 | 番剧 | 国创 | 音乐 | 舞蹈 | 游戏 | 科技 | 生活 | 鬼畜 | 时尚 | 广告 | 娱乐 | 影视 | 放映厅 |
@@ -51,7 +53,7 @@ function setup(){
     // mycreatecanvas = createCanvas(1920,1080);
     mycanvas = mycreatecanvas.canvas;
     background(0);
-    frameRate(30);
+    // frameRate(30);
 
     initBlocks();
     // noLoop();
@@ -130,11 +132,11 @@ function drawBonusScene(){
 }
 
 
-
 function drawProgress(orient){
     let block_max = blockarr[sortedarr[0].id];
     let today_color = color(block_max.r, block_max.g, block_max.b);
     let progress_x, progress_y, progress_w, progress_h;
+    let progress_w_max, progress_x_min;
     progress_color[fc-1] = today_color;
 
     if (orient == 'v') {        // Vertical
@@ -143,9 +145,11 @@ function drawProgress(orient){
         progress_w = 25;
         progress_h = 1;
     } else if (orient == 'h'){  // Horizontal
-        progress_x = block_x + fc/(rownum-1)*block_w_max;
+        progress_w_max = block_w_max+300;
+        progress_x_min = block_x + 0;
+        progress_x = progress_x_min + fc/(rownum-1)*progress_w_max;
         progress_y = block_y_bias - 130;
-        progress_w = Math.max(block_w_max/(rownum-1),1);
+        progress_w = Math.max(progress_w_max/(rownum-1),1);
         progress_h = block_h - 10;
     }
 
@@ -160,30 +164,33 @@ function drawProgress(orient){
             let progress_y_tmp = 300 - 200/3200 * i;
             rect(progress_x, progress_y_tmp , progress_w, progress_h);
         } else if (orient=='h'){
-            let progress_x_tmp = block_x + i/(rownum-1)*block_w_max;
+            let progress_x_tmp = progress_x_min + i/(rownum-1)*progress_w_max;
             rect(progress_x_tmp, progress_y , progress_w, progress_h);
         }
     }
+
     // Draw border of bar
     push();
-    stroke(128,128,128,128);
+    stroke(128,128,128,255);
     noFill();
     // fill(255,0,0,255);
     strokeWeight(2);
-    rect(block_x-1, progress_y, block_w_max, progress_h);
+    rect(progress_x_min-1, progress_y, progress_w_max+1, progress_h);
     pop();
 
-    // Draw NO.1 color
+    // Draw NO.1 color rect
     push();
     rectMode(CENTER);
     fill(today_color);
-    rect(block_x-30,progress_y+progress_h/2, 2*progress_h, 2*progress_h);
+    rect(progress_x_min-40, progress_y+progress_h/2, 3*progress_h, 3*progress_h);
     pop();
 
-
-    // Disp day
+    // Update day text and vertical line
+    push();
     let day = row.getString(0);
     if (orient == 'v'){
+        noStroke();
+        fill(today_color);
         textAlign(LEFT,CENTER);
         textSize(16);
         text(day, progress_x+progress_w+25, progress_y);
@@ -192,15 +199,43 @@ function drawProgress(orient){
         stroke(today_color);
         line(progress_x+progress_w+5, progress_y, progress_x+progress_w+20, progress_y);
     } else if (orient=='h'){
+        noStroke();
+        fill(today_color);
         textAlign(CENTER);
         textSize(16);
         text(day, progress_x, progress_y-30);
 
         noFill();
         stroke(today_color);
-        line(progress_x, progress_y-5, progress_x, progress_y-25);
+        line(progress_x+progress_w, progress_y-5, progress_x+progress_w, progress_y-25);
     }
+    pop();
 
+    // Disp history years
+    yeartwo[0] = yeartwo[1];
+    yeartwo[1] = day.slice(0,4);
+    if (yeartwo[0] != yeartwo[1]){
+        let tmp = {};
+        tmp.str = yeartwo[1];
+        tmp.color = today_color;
+        tmp.x = progress_x;
+        tmp.y = progress_y + progress_h + 20;
+        yearlist.push(tmp);
+    }
+    for (let i=0; i<yearlist.length; i++){
+        push();
+        textAlign(CENTER,TOP);
+        textSize(14);
+        fill(yearlist[i].color);
+        noStroke();
+        text(yearlist[i].str, yearlist[i].x, yearlist[i].y);
+
+        stroke(yearlist[i].color);
+        noFill();
+        line(yearlist[i].x, yearlist[i].y-5, yearlist[i].x,yearlist[i].y-15);
+        pop();
+    }
+    
     pop();
 }
 
@@ -330,7 +365,6 @@ function drawPieChart(){
         pop();
     }
 }
-
 
 
 function drawAxis(){
