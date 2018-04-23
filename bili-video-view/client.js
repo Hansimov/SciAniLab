@@ -15,7 +15,12 @@ This file requires:
 
 */
 
-let socket = io();
+try {
+    let socket = io();
+} catch(e) {
+    console.log(e);
+}
+
 let videodata;
 let blockarr = [];
 let sortedarr =[];
@@ -23,9 +28,9 @@ let namearr = [];
 let rownum, colnum;
 
 let block_x = 100;
-let block_y_bias = 70;
-let block_h = 30;
-let block_gap = 10;
+let block_y_bias = 210;
+let block_h = 25;
+let block_gap = 8;
 let block_w_max = 630;
 let block_w_bias = 1;
 
@@ -34,8 +39,11 @@ let progress_color = [];
 function preload(){
     // | 累计播放量 | 动画 | 番剧 | 国创 | 音乐 | 舞蹈 | 游戏 | 科技 | 生活 | 鬼畜 | 时尚 | 广告 | 娱乐 | 影视 | 放映厅 |
     // |      0     |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |  10  |  11  |  12  |  13  |   14   |
-
-    videodata = loadTable('./videoviews.csv','csv');
+    try {
+        videodata = loadTable('./videoviews.csv','csv');
+    } catch(e) {
+        console.log(e);
+    }
 }
 
 function setup(){
@@ -46,7 +54,6 @@ function setup(){
     // frameRate(30);
 
     initBlocks();
-
     // noLoop();
 }
 
@@ -56,10 +63,10 @@ function draw() {
     if (fc >= rownum-1){
         noLoop();
     }
-
     scale(window.width/1280, window.height/720);
 
     drawMain();
+    // saveFrame('whole',fc);
 }
 
 
@@ -69,19 +76,20 @@ function drawMain(){
     row = videodata.getRow(fc); // fc start from 1
     // dispDay();
     sortArray();
+
+    drawAxis();
     for (let i=0; i<colnum-1;i++){
         blockarr[i].move();
         blockarr[i].disp();
     }
-    drawAxis();
     drawPieChart();
-    drawProgress();
+    drawProgress('h');
     // saveFrame();
 }
 
 
-function initBlocks() {
-    row = videodata.getRow(1);
+function initBlocks(initframe=1) {
+    row = videodata.getRow(initframe);
     colnum = videodata.getColumnCount();
     rownum = videodata.getRowCount();
     namearr = videodata.getRow(0);
@@ -123,38 +131,82 @@ function drawBonusScene(){
 
 
 
-function drawProgress(){
+function drawProgress(orient){
     let block_max = blockarr[sortedarr[0].id];
     let today_color = color(block_max.r, block_max.g, block_max.b);
+    let progress_x, progress_y, progress_w, progress_h;
     progress_color[fc-1] = today_color;
-    let progress_x = 1050;
-    let progress_y = 300 - 200/3200*fc;
-    let progress_w = 25;
-    let progress_h = 1;
+
+    if (orient == 'v') {        // Vertical
+        progress_x = 1050;
+        progress_y = 300 - 200/3200*fc;
+        progress_w = 25;
+        progress_h = 1;
+    } else if (orient == 'h'){  // Horizontal
+        progress_x = block_x + fc/(rownum-1)*block_w_max;
+        progress_y = block_y_bias - 130;
+        progress_w = Math.max(block_w_max/(rownum-1),1);
+        progress_h = block_h - 10;
+    }
 
     push();
     colorMode(RGB,255);
     noStroke();
 
+    // Draw progress bar
     for (let i = 1; i<=fc; i++){
         fill(progress_color[i-1]);
-        let progress_y_tmp = 300 - 200/3200 * i;
-        rect(progress_x, progress_y_tmp , progress_w, progress_h);
+        if (orient=='v'){
+            let progress_y_tmp = 300 - 200/3200 * i;
+            rect(progress_x, progress_y_tmp , progress_w, progress_h);
+        } else if (orient=='h'){
+            let progress_x_tmp = block_x + i/(rownum-1)*block_w_max;
+            rect(progress_x_tmp, progress_y , progress_w, progress_h);
+        }
     }
-
-    let day = row.getString(0);
-    textAlign(LEFT,CENTER);
-    textSize(16);
-    text(day, progress_x+progress_w+25, progress_y);
-
+    // Draw border of bar
+    push();
+    stroke(128,128,128,128);
     noFill();
-    stroke(today_color);
-    line(progress_x+progress_w+5, progress_y, progress_x+progress_w+20, progress_y);
+    // fill(255,0,0,255);
+    strokeWeight(2);
+    rect(block_x-1, progress_y, block_w_max, progress_h);
+    pop();
+
+    // Draw NO.1 color
+    push();
+    rectMode(CENTER);
+    fill(today_color);
+    rect(block_x-30,progress_y+progress_h/2, 2*progress_h, 2*progress_h);
+    pop();
+
+
+    // Disp day
+    let day = row.getString(0);
+    if (orient == 'v'){
+        textAlign(LEFT,CENTER);
+        textSize(16);
+        text(day, progress_x+progress_w+25, progress_y);
+
+        noFill();
+        stroke(today_color);
+        line(progress_x+progress_w+5, progress_y, progress_x+progress_w+20, progress_y);
+    } else if (orient=='h'){
+        textAlign(CENTER);
+        textSize(16);
+        text(day, progress_x, progress_y-30);
+
+        noFill();
+        stroke(today_color);
+        line(progress_x, progress_y-5, progress_x, progress_y-25);
+    }
 
     pop();
 }
 
 function drawPieChart(){
+
+    // Calc ratios
     let totalnum=0;
     for (let i=0; i<colnum-1; i++){
         totalnum += blockarr[i].value;
@@ -167,17 +219,18 @@ function drawPieChart(){
         ratio[i] = (blockarr[i].value+1)/(totalnum+100);
     }
 
+    // Draw arcs
     let ang_bgn = -Math.PI*(1/2);
     let ang_end;
     let pie_r = 100;
     let pie_d = 2 * pie_r;
-    let [pie_x, pie_y] = [940, 520];
+    let [pie_x, pie_y] = [1050, 560];
     let angs = [];
+    colorMode(RGB,255);
     for (let i=0; i<colnum-1; i++){
         block = blockarr[i];
         ang_end = ang_bgn + 2*Math.PI*ratio[i];
-        colorMode(RGB,255);
-        stroke(255);
+        stroke(168,168,168,255);
         fill(block.r, block.g, block.b);
         arc(pie_x, pie_y, pie_d, pie_d, ang_bgn,ang_end,PIE);
 
@@ -186,7 +239,14 @@ function drawPieChart(){
         ang_bgn = ang_end;
     }
 
-    // Add labels
+    let circ_d = pie_d * 2/3;
+    push();
+    noStroke();
+    fill(0,0,0);
+    ellipse(pie_x, pie_y, circ_d, circ_d);
+    pop();
+
+    // Improve margin of labels
     let vtx = [];
     let orients = [];
     let rscales = [];
@@ -201,20 +261,19 @@ function drawPieChart(){
 
         let [dx,dy] = [pie_r*Math.cos(ang), pie_r*Math.sin(ang)];
         let [x1,y1] = [pie_x+dx, pie_y+dy];
-        // // Improve margin of labels
     // | 动画 | 番剧 | 国创 | 音乐 | 舞蹈 | 游戏 | 科技 | 生活 | 鬼畜 | 时尚 | 广告 | 娱乐 | 影视 | 放映厅 |
     // |   0  |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |  10  |  11  |  12  |   13   |
         let rscale;
-        if (i>=8 && ratio[i]*100>=1){
+        if (i>=8 && ratio[i]*100>=1) {
             let y2tmp = pie_y + rscales[i-1] * dy;
-            rscale = rscales[i-1];
-            rscale = 1.15;
-            while (vtx[i-1].y2 - y2tmp<24 && rscale<=3){
+            // rscale = rscales[i-1];
+            rscale = 1.2;
+            while (vtx[i-1].y2 - y2tmp<20 && rscale<=3){
                 rscale += 0.02;
                 y2tmp = pie_y + rscale * dy;
             }
         } else {
-            rscale = 1.15;
+            rscale = 1.2;
         }
 
         rscales[i] = rscale;
@@ -231,8 +290,7 @@ function drawPieChart(){
         orients[i] = orient;
     }
 
-    // for (let i=0; i<colnum-1; i++){
-
+    // Disp labels
     for (let i=colnum-2; i>=0; i--){
         if (ratio[i]*100 < 1){
             continue;
@@ -259,14 +317,16 @@ function drawPieChart(){
         noStroke();
         fill(block.r,block.g,block.b);
         // console.log(orient);
-        textAlign((orient>0)?LEFT:RIGHT,CENTER);
-        textSize(15);
+        // textAlign((orient>0)?LEFT:RIGHT,CENTER);
+        textAlign(CENTER,CENTER);
+        textSize(16);
         // text(block.name,x3+orient*5,y3);
         text(block.name, x2+orient*5, y2);
 
         let name_width = textWidth(block.name);
+        textAlign((orient>0)?LEFT:RIGHT,CENTER);
         // text(xround(ratio[i]*100,2)+'% ', x3+orient*(10+name_width), y3);
-        text(xround(ratio[i]*100,1)+'% ', x2+orient*(10+name_width),y2);
+        text(xround(ratio[i]*100,1)+'% ', x2+orient*(10+name_width/2), y2);
         pop();
     }
 }
@@ -289,14 +349,14 @@ function drawAxis(){
     for (let i=1; i<=mark_count; i++){
         let mark_x, mark_y;
         mark_x = block_x + max_floor / val_max * block_max.w * (i/mark_count) + block_w_bias;
-        mark_y = 30;
+        mark_y = block_y_bias - 37;
         let mark_tmp = num2mark(max_floor* (i/mark_count));
         let mark_unit_tmp = mark_tmp + ' ' + unit;
 
         push();
         colorMode(RGB,255);
         noStroke();
-        fill(255,255,255,150);
+        fill(255,255,255,90);
         textSize(18);
         textAlign(CENTER);
         text(mark_unit_tmp, mark_x, mark_y);

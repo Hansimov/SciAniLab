@@ -5,6 +5,7 @@ let io = require('socket.io')(server);
 let fs = require('fs');
 let format = require('python-format');
 let reload = require('reload');
+let mkdirp = require('mkdirp');
 
 // Stop-Process -Id (Get-NetTCPConnection -LocalPort 9100).OwningProcess -Force
 
@@ -24,7 +25,11 @@ io.on('connection',function (socket){
         console.log(format('Saving Frame: {:>05d}',count))
         var data = url.replace(/^data:image\/\w+;base64,/, "");
         var buf = new Buffer(data, 'base64');
-        var img_name = format('./frames/{}_{:>05d}.png',title,count)
+        // console.log('./frames/' + title);
+
+        // mkdirp('./frames');
+        // mkdirp('./frames/' + title);
+        var img_name = format('./frames/{0}/{0}_{1:>05d}.png', title, count)
         fs.writeFile(img_name, buf);
     });
 });
