@@ -175,7 +175,7 @@ function drawProgress(orient){
     noFill();
     // fill(255,0,0,255);
     strokeWeight(2);
-    rect(progress_x_min-1, progress_y, progress_w_max+1, progress_h);
+    rect(progress_x_min-1, progress_y, progress_w_max+2, progress_h);
     pop();
 
     // Draw NO.1 color rect
@@ -381,11 +381,11 @@ function drawAxis(){
     let mark_step = (mark_count<6)?1:2;
     let mark_start = (mark_count<6)?1:2;
 
+    let mark_y = block_y_bias - 25;
     for (let i=mark_start; i<=mark_count+mark_step; i+=mark_step){
         let mark_tmp, mark_unit_tmp;
-        let mark_x, mark_y;
+        let mark_x;
         mark_x = block_x + max_floor / val_max * block_max.w * (i/mark_count) + block_w_bias;
-        mark_y = block_y_bias - 37;
         mark_tmp = num2mark(max_floor * (i/mark_count));
         mark_unit_tmp = mark_tmp + ' ' + unit;
         drawMarkLine(mark_unit_tmp, mark_x, mark_y);
@@ -395,9 +395,8 @@ function drawAxis(){
         let mark_tick = [0.5, 1.5, 2.5];
         for (let i=0; i<mark_tick.length;i++){
             let mark_tmp, mark_unit_tmp;
-            let mark_x, mark_y;
+            let mark_x;
             mark_x = block_x + max_floor / val_max * block_max.w * (mark_tick[i] / mark_count) + block_w_bias;
-            mark_y = block_y_bias - 37;
             mark_tmp = markMul(mark, mark_tick[i]);
             mark_unit_tmp = mark_tmp + ' ' + unit;
             drawMarkLine(mark_unit_tmp, mark_x, mark_y);
@@ -408,15 +407,15 @@ function drawAxis(){
         push();
         colorMode(RGB,255);
         noStroke();
-        fill(255,255,255,90);
+        fill(200,200,200,90);
         textSize(18);
         textAlign(CENTER);
         // Disp mark + unit
         text(mark_unit, mark_x, mark_y);
-        stroke(255,255,255,60);
+        stroke(200,200,200,90);
         strokeWeight(2);
         // Draw mark line
-        line(mark_x, block_y_bias-20, mark_x, block_y_bias+blockarr.length*(block_h+block_gap));
+        line(mark_x, block_y_bias-15, mark_x, block_y_bias+blockarr.length*(block_h+block_gap));
         pop();
     }
 }
