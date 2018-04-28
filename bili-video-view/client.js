@@ -37,7 +37,7 @@ let block_w_bias = 1;
 let progress_color = [];
 let yeartwo = ['2009', '2009']; // last_day, this_day
 let yearlist = []; // obj: str, color, x, y
-let total_view = 0;
+
 
 function preload(){
     // | 日期 | 动画 | 番剧 | 国创 | 音乐 | 舞蹈 | 游戏 | 科技 | 生活 | 鬼畜 | 时尚 | 广告 | 娱乐 | 影视 | 放映厅 |
@@ -289,9 +289,9 @@ function drawPieChart(){
     // Draw arcs
     let ang_bgn = -Math.PI*(1/2);
     let ang_end;
-    let pie_r = 100;
+    let pie_r = 120;
     let pie_d = 2 * pie_r;
-    let [pie_x, pie_y] = [1050, 560];
+    let [pie_x, pie_y] = [1040, 530];
     let angs = [];
     colorMode(RGB,255);
     for (let i=0; i<colnum-1; i++){
@@ -399,11 +399,12 @@ function drawPieChart(){
 
     // Disp total num of views
     push();
-    textAlign(CENTER,CENTER);
     textSize(18);
+    textAlign(CENTER,CENTER);
     noStroke();
     fill(255,255,255,255);
     text('总播放量',pie_x,pie_y-13);
+    textSize(20);
     text(num2unit(total_view),pie_x,pie_y+13);
     pop();
 }
@@ -420,7 +421,7 @@ function drawAxis(){
     let mark_count = parseInt(mark[0]);
 
     let mark_step = (mark_count<6)?1:2;
-    let mark_start = (mark_count<6)?1:2;
+    let mark_start = (mark_count<6)?1:1;
 
     let mark_y = block_y_bias - 25;
 
@@ -448,16 +449,22 @@ function drawAxis(){
             drawMarkAndLine(mark_unit_tmp, mark_x, mark_y, mark_alp_tmp);
         }
     } else {
-        for (let i=mark_start; i<=mark_count+mark_step; i+=mark_step){
+        for (let i=mark_start; i<=mark_count+mark_step; i+=1){
             let mark_tmp, mark_unit_tmp;
             let mark_x;
             mark_x = block_x + max_floor / val_max * block_max.w * (i/mark_count) + block_w_bias;
             mark_tmp = num2mark(max_floor * (i/mark_count));
             if ((mark=='8000' || mark=='9000') && mark_tmp=='1'){
+                mark_tmp = '1.0';
                 unit = nextUnit(unit);
             }
             mark_unit_tmp = mark_tmp + ' ' + unit;
-            drawMarkAndLine(mark_unit_tmp, mark_x, mark_y);
+            if (mark_count>=5 && i%2==1){
+                mark_alp_tmp =  0.8 * 2 * (1 - val_max/(max_floor/mark_count*10));
+            } else {
+                mark_alp_tmp = 1;
+            }
+            drawMarkAndLine(mark_unit_tmp, mark_x, mark_y,mark_alp_tmp);
         }
     }
 

@@ -56,7 +56,7 @@ function calcMaxFloor(num){
     return max_floor;
 }
 
-function num2mark(num,valid_digits=1){
+function num2mark(num, valid_digits=1){
 /******************************
 
 >>> num2mark(4)
