@@ -16,7 +16,7 @@ This file requires:
 */
 
 try {
-    let socket = io();
+    socket = io();
 } catch(e) {
     console.log(e);
 }
@@ -50,8 +50,8 @@ function preload(){
 }
 
 function setup(){
-    mycreatecanvas = createCanvas(1280,720);
-    // mycreatecanvas = createCanvas(1920,1080);
+    // mycreatecanvas = createCanvas(1280,720);
+    mycreatecanvas = createCanvas(1920,1080);
     mycanvas = mycreatecanvas.canvas;
     background(0);
     // frameRate(30);
@@ -69,16 +69,16 @@ function draw() {
     scale(window.width/1280, window.height/720);
 
     drawMain();
-    // saveFrame('whole',fc);
 }
 
 
 function drawMain(){
     // background(0);
     drawBlackground();
-    // dispFrameRate();
     row = videodata.getRow(fc); // fc start from 1
+    // dispFrameRate();
     // dispDay();
+
     sortArray();
 
     drawAxis();
@@ -86,9 +86,9 @@ function drawMain(){
         blockarr[i].move();
         blockarr[i].disp();
     }
-    drawPieChart();
     drawProgress('h');
-    // saveFrame();
+    // drawPieChart();
+    saveFrame('nopie',fc);
 }
 
 
@@ -146,7 +146,7 @@ function drawBlackground(){
     pop();
 }
 
-function drawProgress(orient){
+function drawProgress(orient='h'){
     let block_max = blockarr[sortedarr[0].id];
     let today_color = color(block_max.r, block_max.g, block_max.b);
     let progress_x, progress_y, progress_w, progress_h;
@@ -472,12 +472,12 @@ function drawAxis(){
         push();
         colorMode(RGB,255);
         noStroke();
-        fill(200,200,200,140*mark_alp);
+        fill(200,200,200,120*mark_alp);
         textSize(18);
         textAlign(CENTER);
         // Disp mark + unit
         text(mark_unit, mark_x, mark_y);
-        stroke(200,200,200,140*mark_alp);
+        stroke(200,200,200,120*mark_alp);
         strokeWeight(2);
         // Draw mark line
         line(mark_x, block_y_bias-15, mark_x, block_y_bias+blockarr.length*(block_h+block_gap));

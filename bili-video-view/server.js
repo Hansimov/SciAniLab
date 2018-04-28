@@ -22,15 +22,15 @@ io.on('connection',function (socket){
     });
 
     socket.on('saveFrame',function(url, title, count){
-        console.log(format('Saving Frame: {:>05d}',count))
+        console.log(format('Saving Frame: {:>05d}',count));
         var data = url.replace(/^data:image\/\w+;base64,/, "");
-        var buf = new Buffer(data, 'base64');
-        // console.log('./frames/' + title);
 
+        // var buf = new Buffer(data, 'base64');
         // mkdirp('./frames');
         // mkdirp('./frames/' + title);
-        var img_name = format('./frames/{0}/{0}_{1:>05d}.png', title, count)
-        fs.writeFile(img_name, buf);
+        var img_name = format('./frames/{0}/{0}_{1:>05d}.png', title, count);
+
+        fs.writeFileSync(img_name, data, 'base64');
     });
 });
 
