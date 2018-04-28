@@ -1,4 +1,4 @@
-function markMul(mark, mul){
+function floatMul(mark, mul){
 /******************************
 |  num | mul=0.5 | mul=1.5 |
 ----------------------------
@@ -20,6 +20,21 @@ function markMul(mark, mul){
 }
 
 function calcMaxFloor(num){
+/******************************
+
+>>> calcMaxFloor(5)
+=== 5
+
+>>> calcMaxFloor(55)
+=== 50
+
+>>> calcMaxFloor(555)
+=== 500
+
+>>> calcMaxFloor(51234567)
+=== 50000000
+
+******************************/
     let str = num.toString();
     let len = str.length;
     let exp = len - 1;
@@ -110,6 +125,24 @@ function num2unit(num){
 }
 
 function getUnit(num){
+/******************************
+
+>>> getUnit(5)
+=== ''
+
+>>> getUnit(5555)
+=== ''
+
+>>> getUnit(51234)
+=== '万'
+
+>>> getUnit(512341234)
+=== '亿'
+
+>>> getUnit(5123412341234)
+=== '万亿'
+
+******************************/
     let str = num.toString();
     let len = str.length;
     let exp = len - 1;
@@ -158,6 +191,24 @@ function xround(num,n){
 }
 
 function calcMaxCeil(val_max){
+/******************************
+
+>>> calcMaxCeil(5)
+=== NAN
+
+>>> calcMaxCeil(55)
+=== 56
+
+>>> calcMaxCeil(555)
+=== 560
+
+>>> calcMaxCeil(5555)
+=== 5600
+
+>>> calcMaxCeil(51234567)
+=== 52000000
+
+******************************/
     let num_str = val_max.toString();
     let num_len = num_str.length;
     let num_head = num_str.slice(0, 2);
@@ -179,7 +230,8 @@ function calcMaxCeil(val_max){
 
     max_ceil = digits[0]*Math.pow(10,num_len-1)+digits[1]*Math.pow(10,num_len-2);
 
-    return [num_len, digits, max_ceil];
+    // return [num_len, digits, max_ceil];
+    return max_ceil;
 }
 
 

@@ -31,7 +31,7 @@ let block_x = 100;
 let block_y_bias = 210;
 let block_h = 25;
 let block_gap = 8;
-let block_w_max = 690;
+let block_w_max = 680;
 let block_w_bias = 1;
 
 let progress_color = [];
@@ -273,7 +273,6 @@ function drawProgress(orient){
 }
 
 function drawPieChart(){
-
     // Calc ratios
     let total_view=0;
     for (let i=0; i<colnum-1; i++){
@@ -404,8 +403,8 @@ function drawPieChart(){
     textSize(18);
     noStroke();
     fill(255,255,255,255);
-    text('总播放量',pie_x,pie_y-12);
-    text(num2unit(total_view),pie_x,pie_y+12);
+    text('总播放量',pie_x,pie_y-13);
+    text(num2unit(total_view),pie_x,pie_y+13);
     pop();
 }
 
@@ -424,37 +423,48 @@ function drawAxis(){
     let mark_start = (mark_count<6)?1:2;
 
     let mark_y = block_y_bias - 25;
-    for (let i=mark_start; i<=mark_count+mark_step; i+=mark_step){
-        let mark_tmp, mark_unit_tmp;
-        let mark_x;
-        mark_x = block_x + max_floor / val_max * block_max.w * (i/mark_count) + block_w_bias;
-        mark_tmp = num2mark(max_floor * (i/mark_count));
-        mark_unit_tmp = mark_tmp + ' ' + unit;
-        drawMarkLine(mark_unit_tmp, mark_x, mark_y);
-    }
 
     if (mark_count == 1){
-        let mark_tick = [0.5, 1.5, 2.5];
+        let mark_tick = [];
+        for (let i=1;i<6;i++){
+            mark_tick[i] = 0.2*i;
+        }
+        mark_tick.push(2.0);
+
+        let mark_alp_tmp = 1 - (val_max - max_floor) / max_floor;
+        // console.log(mark_alp_tmp);
         for (let i=0; i<mark_tick.length;i++){
             let mark_tmp, mark_unit_tmp;
             let mark_x;
             mark_x = block_x + max_floor / val_max * block_max.w * (mark_tick[i] / mark_count) + block_w_bias;
-            mark_tmp = markMul(mark, mark_tick[i]);
+            mark_tmp = floatMul(mark, mark_tick[i]);
             mark_unit_tmp = mark_tmp + ' ' + unit;
-            drawMarkLine(mark_unit_tmp, mark_x, mark_y);
+            if (mark_tick[i]==1.0 || mark_tick[i]==2.0){
+                mark_alp_tmp = 1;
+            }
+            drawMarkAndLine(mark_unit_tmp, mark_x, mark_y, mark_alp_tmp);
+        }
+    } else {
+        for (let i=mark_start; i<=mark_count+mark_step; i+=mark_step){
+            let mark_tmp, mark_unit_tmp;
+            let mark_x;
+            mark_x = block_x + max_floor / val_max * block_max.w * (i/mark_count) + block_w_bias;
+            mark_tmp = num2mark(max_floor * (i/mark_count));
+            mark_unit_tmp = mark_tmp + ' ' + unit;
+            drawMarkAndLine(mark_unit_tmp, mark_x, mark_y);
         }
     }
 
-    function drawMarkLine(mark_unit, mark_x, mark_y){
+    function drawMarkAndLine(mark_unit, mark_x, mark_y,mark_alp=1){
         push();
         colorMode(RGB,255);
         noStroke();
-        fill(200,200,200,90);
+        fill(200,200,200,140*mark_alp);
         textSize(18);
         textAlign(CENTER);
         // Disp mark + unit
         text(mark_unit, mark_x, mark_y);
-        stroke(200,200,200,90);
+        stroke(200,200,200,140*mark_alp);
         strokeWeight(2);
         // Draw mark line
         line(mark_x, block_y_bias-15, mark_x, block_y_bias+blockarr.length*(block_h+block_gap));
