@@ -1,3 +1,14 @@
+function nextUnit(unit){
+    unit_arr = ['万','亿','万亿'];
+    unit_index = unit_arr.indexOf(unit);
+    if (unit_index<0){
+        unit_next = unit_arr[0];
+    } else {
+        unit_next = unit_arr[unit_index+1];
+    }
+    return unit_next;
+}
+
 function floatMul(mark, mul){
 /******************************
 |  num | mul=0.5 | mul=1.5 |
@@ -45,29 +56,44 @@ function calcMaxFloor(num){
     return max_floor;
 }
 
-function num2mark(num){
+function num2mark(num,valid_digits=1){
 /******************************
 
 >>> num2mark(4)
-=== "4"
+=== '4'
 
 >>> num2mark('44')
-=== "40"
+=== '40'
 
 >>> num2mark(1234567) // 123 万
-=== "100"
+=== '100'
 
 >>> num2mark(39990000) // 3999 万
-=== "3000"
+=== '3000'
+
+>>> num2mark(1234,2)
+=== '1200'
+
+>>> num2mark(12341234,2)
+=== '1200'
+
+>>> num2mark(12341234,4)
+=== '1234'
+
+>>> num2mark(12341234,5)
+=== '1234'
 
 ******************************/
     let str = num.toString();
     let len = str.length;
     let exp = len - 1;
     // let mod = Math.floor(exp/4);
+    if (valid_digits >= exp%4+1){
+        valid_digits = exp%4+1;
+    }
 
     let mark;
-    mark = str[0] + '0'.repeat(exp%4);
+    mark = str.slice(0,valid_digits) + '0'.repeat(exp%4-valid_digits+1);
 
     return mark;
 }

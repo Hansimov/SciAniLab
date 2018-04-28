@@ -426,21 +426,24 @@ function drawAxis(){
 
     if (mark_count == 1){
         let mark_tick = [];
-        for (let i=1;i<6;i++){
+        for (let i=1;i<=10;i++){
             mark_tick[i] = 0.2*i;
         }
-        mark_tick.push(2.0);
+        // mark_tick.push(2.0);
 
-        let mark_alp_tmp = 1 - (val_max - max_floor) / max_floor;
         // console.log(mark_alp_tmp);
+        let mark_alp_tmp;
         for (let i=0; i<mark_tick.length;i++){
             let mark_tmp, mark_unit_tmp;
             let mark_x;
             mark_x = block_x + max_floor / val_max * block_max.w * (mark_tick[i] / mark_count) + block_w_bias;
             mark_tmp = floatMul(mark, mark_tick[i]);
             mark_unit_tmp = mark_tmp + ' ' + unit;
+            // console.log(mark_tick[i]);
             if (mark_tick[i]==1.0 || mark_tick[i]==2.0){
                 mark_alp_tmp = 1;
+            } else {
+                mark_alp_tmp = 0.8*(1 - (val_max - max_floor) / max_floor);
             }
             drawMarkAndLine(mark_unit_tmp, mark_x, mark_y, mark_alp_tmp);
         }
@@ -450,6 +453,9 @@ function drawAxis(){
             let mark_x;
             mark_x = block_x + max_floor / val_max * block_max.w * (i/mark_count) + block_w_bias;
             mark_tmp = num2mark(max_floor * (i/mark_count));
+            if ((mark=='8000' || mark=='9000') && mark_tmp=='1'){
+                unit = nextUnit(unit);
+            }
             mark_unit_tmp = mark_tmp + ' ' + unit;
             drawMarkAndLine(mark_unit_tmp, mark_x, mark_y);
         }
