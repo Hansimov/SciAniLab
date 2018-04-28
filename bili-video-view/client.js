@@ -37,6 +37,7 @@ let block_w_bias = 1;
 let progress_color = [];
 let yeartwo = ['2009', '2009']; // last_day, this_day
 let yearlist = []; // obj: str, color, x, y
+let total_view = 0;
 
 function preload(){
     // | 日期 | 动画 | 番剧 | 国创 | 音乐 | 舞蹈 | 游戏 | 科技 | 生活 | 鬼畜 | 时尚 | 广告 | 娱乐 | 影视 | 放映厅 |
@@ -274,16 +275,16 @@ function drawProgress(orient){
 function drawPieChart(){
 
     // Calc ratios
-    let thisday_total_view=0;
+    let total_view=0;
     for (let i=0; i<colnum-1; i++){
-        thisday_total_view += blockarr[i].value;
+        total_view += blockarr[i].value;
     }
     let ratio = [];
     for (let i=0; i<colnum-1; i++){
         // I add one to the value to avoid angle from 0 to 0
         // Because arc(x,y,w,h,0,0,PIE) will fill the whole pie chart.
-        // I add 100 to the thisday_total_view to avoid sum of angle exceeds 2*PI.
-        ratio[i] = (blockarr[i].value+1)/(thisday_total_view+100);
+        // I add 100 to the total_view to avoid sum of angle exceeds 2*PI.
+        ratio[i] = (blockarr[i].value+1)/(total_view+100);
     }
 
     // Draw arcs
@@ -397,9 +398,15 @@ function drawPieChart(){
         pop();
     }
 
-    // Disp total num of views by this day
-
-
+    // Disp total num of views
+    push();
+    textAlign(CENTER,CENTER);
+    textSize(18);
+    noStroke();
+    fill(255,255,255,255);
+    text('总播放量',pie_x,pie_y-12);
+    text(num2unit(total_view),pie_x,pie_y+12);
+    pop();
 }
 
 
