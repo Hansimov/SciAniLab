@@ -29,7 +29,7 @@ Block = function(id=-1, name=""){
         // this.move();
         // colorMode(HSB,255);
         push();
-        textSize(19);
+        textSize(20);
         colorMode(RGB,255);
         noStroke();
         // fill(this.hue,this.sat,this.bri,this.alp);

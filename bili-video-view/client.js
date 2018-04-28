@@ -222,12 +222,12 @@ function drawProgress(orient){
         noStroke();
         fill(today_color);
         textAlign(CENTER);
-        textSize(17);
+        textSize(22);
         text(day, progress_x, progress_y-30);
 
         noFill();
         stroke(today_color);
-        line(progress_x+progress_w, progress_y-5, progress_x+progress_w, progress_y-25);
+        line(progress_x+progress_w, progress_y, progress_x+progress_w, progress_y-25);
     }
     pop();
 
@@ -244,14 +244,14 @@ function drawProgress(orient){
 
         push();
         textAlign(CENTER,TOP);
-        textSize(16);
+        textSize(18);
         fill(tmp.color);
         // noStroke();
         text(tmp.str, tmp.x, tmp.y);
 
         stroke(tmp.color);
         noFill();
-        line(tmp.x, tmp.y-5, tmp.x, tmp.y-15);
+        line(tmp.x, tmp.y-5, tmp.x, progress_y+progress_h);
         pop();
     }
 
@@ -386,7 +386,7 @@ function drawPieChart(){
         // console.log(orient);
         // textAlign((orient>0)?LEFT:RIGHT,CENTER);
         textAlign(CENTER,CENTER);
-        textSize(18);
+        textSize(20);
         // text(block.name,x3+orient*5,y3);
         text(block.name, x2+orient*5, y2);
 
@@ -403,8 +403,8 @@ function drawPieChart(){
     textAlign(CENTER,CENTER);
     noStroke();
     fill(255,255,255,255);
-    text('总播放量',pie_x,pie_y-13);
-    textSize(20);
+    text('总播放量',pie_x,pie_y-17);
+    textSize(27);
     text(num2unit(total_view),pie_x,pie_y+13);
     pop();
 }
