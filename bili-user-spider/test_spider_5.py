@@ -217,12 +217,12 @@ def initAll():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids, final_day, fetch_count
     invalid_mids = []
     guessed_mids = []
-    final_day = 20180426
+    final_day = 20180428
     guess_step = 1
     fetch_count = 0
-    target_date = date(2018,4,25)
+    target_date = date(2018,4,27)
     target_day = int(target_date.strftime('%Y%m%d'))
-    user_left = fetchUser(319773707)
+    user_left = fetchUser(320355744)
     user_righ = user_left
     # target_date = date(2010,9,23)
     # target_day = int(target_date.strftime('%Y%m%d'))

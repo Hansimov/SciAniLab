@@ -39,8 +39,8 @@ let yeartwo = ['2009', '2009']; // last_day, this_day
 let yearlist = []; // obj: str, color, x, y
 
 function preload(){
-    // | 累计播放量 | 动画 | 番剧 | 国创 | 音乐 | 舞蹈 | 游戏 | 科技 | 生活 | 鬼畜 | 时尚 | 广告 | 娱乐 | 影视 | 放映厅 |
-    // |      0     |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |  10  |  11  |  12  |  13  |   14   |
+    // | 日期 | 动画 | 番剧 | 国创 | 音乐 | 舞蹈 | 游戏 | 科技 | 生活 | 鬼畜 | 时尚 | 广告 | 娱乐 | 影视 | 放映厅 |
+    // |   0  |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |  10  |  11  |  12  |  13  |   14   |
     try {
         videodata = loadTable('./videoviews.csv','csv');
     } catch(e) {
@@ -73,7 +73,8 @@ function draw() {
 
 
 function drawMain(){
-    background(0);
+    // background(0);
+    drawBlackground();
     // dispFrameRate();
     row = videodata.getRow(fc); // fc start from 1
     // dispDay();
@@ -131,6 +132,18 @@ function drawBonusScene(){
     
 }
 
+function drawBlackground(){
+    push();
+    colorMode(RGB,255);
+    rectMode(CORNERS);
+    fill(0,0,0,255);
+    noStroke();
+    rect(0,block_y_bias-50,window.width,window.height); // Mask Below
+    rect(0,0,window.width, block_y_bias - 130);         // Mask Up
+    rect(0,0,block_x-2,block_y_bias);                   // Mask Left
+
+    pop();
+}
 
 function drawProgress(orient){
     let block_max = blockarr[sortedarr[0].id];
@@ -154,20 +167,26 @@ function drawProgress(orient){
     }
 
     push();
+    // Draw progress bar
     colorMode(RGB,255);
     noStroke();
-
-    // Draw progress bar
-    for (let i = 1; i<=fc; i++){
-        fill(progress_color[i-1]);
-        if (orient=='v'){
-            let progress_y_tmp = 300 - 200/3200 * i;
-            rect(progress_x, progress_y_tmp , progress_w, progress_h);
-        } else if (orient=='h'){
-            let progress_x_tmp = progress_x_min + i/(rownum-1)*progress_w_max;
-            rect(progress_x_tmp, progress_y , progress_w, progress_h);
-        }
-    }
+    fill(progress_color[fc-1]);
+    let progress_x_tmp = progress_x_min + fc/(rownum-1)*progress_w_max;
+    rect(progress_x_tmp, progress_y , progress_w, progress_h);
+    // for (let i = 1; i<=fc; i++){
+    //     fill(progress_color[i-1]);
+    //     // stroke(progress_color[i-1]);
+    //     if (orient=='v'){
+    //         let progress_y_tmp = 300 - 200/3200 * i;
+    //         rect(progress_x, progress_y_tmp , progress_w, progress_h);
+    //     } else if (orient=='h'){
+    //         let progress_x_tmp = progress_x_min + i/(rownum-1)*progress_w_max;
+    //         rect(progress_x_tmp, progress_y , progress_w, progress_h);
+    //         // for (let j=0; j<=progress_w;j++){
+    //         //     line(progress_x_tmp+j, progress_y, progress_x_tmp+j, progress_y+progress_h);
+    //         // }
+    //     }
+    // }
 
     // Draw border of bar
     push();
@@ -192,7 +211,7 @@ function drawProgress(orient){
         noStroke();
         fill(today_color);
         textAlign(LEFT,CENTER);
-        textSize(16);
+        textSize(17);
         text(day, progress_x+progress_w+25, progress_y);
 
         noFill();
@@ -202,7 +221,7 @@ function drawProgress(orient){
         noStroke();
         fill(today_color);
         textAlign(CENTER);
-        textSize(16);
+        textSize(17);
         text(day, progress_x, progress_y-30);
 
         noFill();
@@ -221,20 +240,33 @@ function drawProgress(orient){
         tmp.x = progress_x;
         tmp.y = progress_y + progress_h + 20;
         yearlist.push(tmp);
-    }
-    for (let i=0; i<yearlist.length; i++){
+
         push();
         textAlign(CENTER,TOP);
-        textSize(14);
-        fill(yearlist[i].color);
-        noStroke();
-        text(yearlist[i].str, yearlist[i].x, yearlist[i].y);
+        textSize(16);
+        fill(tmp.color);
+        // noStroke();
+        text(tmp.str, tmp.x, tmp.y);
 
-        stroke(yearlist[i].color);
+        stroke(tmp.color);
         noFill();
-        line(yearlist[i].x, yearlist[i].y-5, yearlist[i].x,yearlist[i].y-15);
+        line(tmp.x, tmp.y-5, tmp.x, tmp.y-15);
         pop();
     }
+
+    // for (let i=0; i<yearlist.length; i++){
+    //     push();
+    //     textAlign(CENTER,TOP);
+    //     textSize(16);
+    //     fill(yearlist[i].color);
+    //     // noStroke();
+    //     text(yearlist[i].str, yearlist[i].x, yearlist[i].y);
+
+    //     stroke(yearlist[i].color);
+    //     noFill();
+    //     line(yearlist[i].x, yearlist[i].y-5, yearlist[i].x,yearlist[i].y-15);
+    //     pop();
+    // }
     
     pop();
 }
@@ -242,16 +274,16 @@ function drawProgress(orient){
 function drawPieChart(){
 
     // Calc ratios
-    let totalnum=0;
+    let thisday_total_view=0;
     for (let i=0; i<colnum-1; i++){
-        totalnum += blockarr[i].value;
+        thisday_total_view += blockarr[i].value;
     }
     let ratio = [];
     for (let i=0; i<colnum-1; i++){
         // I add one to the value to avoid angle from 0 to 0
         // Because arc(x,y,w,h,0,0,PIE) will fill the whole pie chart.
-        // I add 100 to the totalnum to avoid sum of angle exceeds 2*PI.
-        ratio[i] = (blockarr[i].value+1)/(totalnum+100);
+        // I add 100 to the thisday_total_view to avoid sum of angle exceeds 2*PI.
+        ratio[i] = (blockarr[i].value+1)/(thisday_total_view+100);
     }
 
     // Draw arcs
@@ -303,7 +335,7 @@ function drawPieChart(){
             let y2tmp = pie_y + rscales[i-1] * dy;
             // rscale = rscales[i-1];
             rscale = 1.2;
-            while (vtx[i-1].y2 - y2tmp<20 && rscale<=3){
+            while (vtx[i-1].y2 - y2tmp<21 && rscale<=3){
                 rscale += 0.02;
                 y2tmp = pie_y + rscale * dy;
             }
@@ -354,7 +386,7 @@ function drawPieChart(){
         // console.log(orient);
         // textAlign((orient>0)?LEFT:RIGHT,CENTER);
         textAlign(CENTER,CENTER);
-        textSize(16);
+        textSize(18);
         // text(block.name,x3+orient*5,y3);
         text(block.name, x2+orient*5, y2);
 
@@ -364,6 +396,10 @@ function drawPieChart(){
         text(xround(ratio[i]*100,1)+'% ', x2+orient*(10+name_width/2), y2);
         pop();
     }
+
+    // Disp total num of views by this day
+
+
 }
 
 
@@ -376,7 +412,6 @@ function drawAxis(){
 
     let max_floor = calcMaxFloor(val_max);
     let mark_count = parseInt(mark[0]);
-
 
     let mark_step = (mark_count<6)?1:2;
     let mark_start = (mark_count<6)?1:2;
