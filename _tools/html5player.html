@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<div class="content">
+	<input id="v_file" type="file" style="display:none;" onChange="play()"/>
+	<video id="video_id" controls autoplay></video>
+	<br/>
+	<button id="play" onClick="hide()">Open</button>
+</div>
+<script>
+ function hide(){
+	var v_file=document.getElementById('v_file');
+	v_file.click();
+ }
+ function play(){
+	 var file = document.getElementById('v_file').files[0];
+            var url = URL.createObjectURL(file);
+            console.log(url);
+            document.getElementById("video_id").src = url;
+	 
+	}
+	</script>
+</body>
+</html>

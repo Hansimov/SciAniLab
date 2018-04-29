@@ -14,6 +14,30 @@ This file requires:
 - Classes.js
 
 */
+// https://superuser.com/questions/533695/how-can-i-convert-a-series-of-png-images-to-a-video-for-youtube
+// ffmpeg -framerate 60 -i ./pie/pie_%05d.png -s:v 1920x1080 -c:v libx264 -profile:v high -level 5.0 -crf 20 -pix_fmt yuv420p pie_5.mp4
+// ffmpeg -framerate 60 -i ./nopie/nopie_%05d.png -s:v 1920x1080 -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p nopie.mp4
+// ffmpeg -framerate 60 -i ./pie/pie_%05d.png -s:v 1920x1080 -profile:v high -crf 20 -pix_fmt yuv420p pie.mp4
+// ffmpeg -pix_fmt rgba -i pie.mp4 -c:v libx264 -pix_fmt yuv420p -crf 0 pie_420.mp4
+// ffmpeg -framerate 60 -pix_fmt yuv420p -i ./pie/pie_%05d.png -s:v 1920x1080 -c:v libx264 -profile:v high -crf 20 -level 5.0 -pix_fmt yuv420p pie_yuv420pp.mp4
+
+// http://trac.ffmpeg.org/wiki/Slideshow#Framerates
+// Set input frame rate with the -framerate input option (before -i). The default for reading inputs is -framerate 25 which will be set if no -framerate is specified.
+// The output frame rate for the video stream by setting -r after -i or by using the fps filter. If you want the input and output frame rates to be the same, then just declare an input -framerate and the output will inherit the same value (meaning you can omit the -r).
+
+// If you encounter problems, such as the first image is skipped or only shows for one frame, then use the ​fps video filter instead of -r for the output framerate (see ticket:1578 and ticket:2674 / ticket:3164 for more info):
+
+// ffmpeg -framerate 1/5 -i img%03d.png -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4
+
+// Alternatively the ​format video filter can be added to the ​filterchain to replace -pix_fmt yuv420p. The advantage to this method is that you can control which filter goes first:
+
+// ffmpeg -framerate 1/5 -i img%03d.png -c:v libx264 -vf "fps=25,format=yuv420p" out.mp4
+// ffmpeg -framerate 60 -i ./pie/pie_%05d.png -c:v libx264 -vf "fps=60,format=yuv420p" pie.mp4
+
+
+// ffmpeg -i pie_raw.mp4 -vf "scale=in_color_matrix=bt601:out_color_matrix=bt709" pie_709.mp4
+// ffmpeg -i pie_raw.mp4 -vf "scale=in_color_matrix=bt709:out_color_matrix=bt709" pie_601.mp4
+// ffmpeg -framerate 60 -i ./pie/pie_%05d.png -s:v 1920x1080 -pix_fmt rgb24 pie_5.mp4
 
 try {
     socket = io();
@@ -81,14 +105,15 @@ function drawMain(){
 
     sortArray();
 
-    drawAxis();
-    for (let i=0; i<colnum-1;i++){
-        blockarr[i].move();
-        blockarr[i].disp();
-    }
-    drawProgress('h');
-    // drawPieChart();
-    saveFrame('nopie',fc);
+    // drawAxis();
+    // for (let i=0; i<colnum-1;i++){
+    //     blockarr[i].move();
+    //     blockarr[i].disp();
+    // }
+    // drawProgress('h');
+    // saveFrame('nopie',fc);
+    drawPieChart();
+    saveFrame('pie',fc);
 }
 
 
@@ -97,6 +122,8 @@ function initBlocks(initframe=1) {
     colnum = videodata.getColumnCount();
     rownum = videodata.getRowCount();
     namearr = videodata.getRow(0);
+    // | 动画 | 番剧 | 国创 | | 音乐 | 舞蹈 | 游戏 | | 科技 | 生活 | 鬼畜 | | 时尚 | 广告 | 娱乐 | | 影视 | 放映厅 |
+    // |   0  |   1  |   2  | |   3  |   4  |   5  | |   6  |   7  |   8  | |   9  |  10  |  11  | |  12  |   13   |
     let rgbarr = [ [0.5, 0.5,  1 ], [0.5, 0.5,  1 ], [0.5, 0.5,  1 ],
                [ 1 ,  1 ,  0 ], [ 1 , 0.5,  0 ], [ 1 ,  0 ,  0 ],
                [ 0 , 0.5,  1 ], [ 0 , 0.5,  0 ], [0.5,  1 ,  1 ],
