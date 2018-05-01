@@ -19,6 +19,29 @@ This file requires:
 //   ffmpeg -framerate 60 -i ./pie/pie_%05d.png -s:v 1920x1080 -vf "colormatrix=bt601:bt709" -pix_fmt yuv420p pie.mp4
 //   ffmpeg -framerate 60 -i ./nopie/nopie_%05d.png -s:v 1920x1080 -vf "colormatrix=bt601:bt709" -pix_fmt yuv420p nopie.mp4
 
+//   ffmpeg -framerate 60 -i ./nopie/nopie_%05d.png -s:v 1920x1080 -vf "colormatrix=bt601:bt709" -preset slow -crf 18 -pix_fmt yuv420p nopie.mp4
+
+// Test commands
+//   ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -vf "colormatrix=bt601:bt709" -pix_fmt yuv420p nopie_300.mp4
+//   ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -pix_fmt yuv420p nopie_300_nomatrix.mp4
+//   ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -s:v 3840x2160 -vf "colormatrix=bt601:bt709" -pix_fmt yuv420p nopie_300_4k.mp4
+//   ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -c:v libx264 -crf 0 -vf "colormatrix=bt601:bt709" -pix_fmt yuv420p lossless.mp4
+
+//   ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -s:v 5760x3240 -vf "colormatrix=bt601:bt709" -pix_fmt yuv420p nopie_300_8k.mp4
+
+// ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -f avi -c:v rawvideo lossless.avi
+
+// ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -c:v libvpx-vp9 -b:v 2M output.webm
+
+// ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -vf "colormatrix=bt601:bt709" -pix_fmt yuv444p nopie_300_444.mp4
+
+// ffmpeg -framerate 60 -i ./nopie_300/nopie_%05d.png -vf "colormatrix=bt601:bt709" -pix_fmt yuv420p16be nopie_300_420p16be.mp4
+
+// ffmpeg -pix_fmt yuv444p -i nopie_300_444.mp4 -pix_fmt yuv420p nopie_420.mp4
+
+// ffmpeg -i nopie/nopie_00001.png -pix_fmt yuv444p 00001_444.yuv
+// ffmpeg -s 1920x1080 -i 00001_444.yuv -pix_fmt yuv420p 00001_420.png
+
 try {
     socket = io();
 } catch(e) {
