@@ -1,6 +1,7 @@
 *.rar
 *.zip
 *.csv
+*.pdf
 __pycache__/
 log.txt
 frames/
