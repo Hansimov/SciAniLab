@@ -104,7 +104,7 @@ def fetchUser(mid):
         printLog('[{} {}]'.format('Number of invalid mids:',len(invalid_mids)))
 
     user = User(user_mid, user_name, user_timestamp)
-    userstr = '{:0>10s} {} {} {}'.format(user_mid, user_timestamp,user.timelocal,user_name)
+    userstr = '{:0>10} {} {} {}'.format(user_mid, user_timestamp,user.timelocal,user_name)
     printLog(userstr)
     return user
 
@@ -217,7 +217,7 @@ def initAll():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids, final_day, fetch_count
     invalid_mids = []
     guessed_mids = []
-    final_day = 20180428
+    final_day = 20180522
     guess_step = 1
     fetch_count = 0
     target_date = date(2018,4,27)
