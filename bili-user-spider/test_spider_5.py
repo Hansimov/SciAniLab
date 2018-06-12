@@ -203,31 +203,46 @@ def printLog(str):
 
 def recordUser(user):
     global target_day, target_date
-    userfile = open('user.txt','a')
+    with open('user.txt','a') as userfile:
     # userfile = open('user_test.txt','a')
-    if user == 0:
-        userstr = '{} {:0>10d} {:0>10s} {} {}'.format(target_day, 0, '0', '0000-00-00 00:00:00', '*')
-    else:
-        userstr = '{} {:0>10d} {} {} {}'.format(user.day, user.mid, user.timestamp, user.timelocal, user.name)
-    printLog('{} {}'.format('++++++++++', userstr))
-    print(userstr, file=userfile)
-    userfile.close()
+        if user == 0:
+            userstr = '{} {:0>10d} {:0>10s} {} {}'.format(target_day, 0, '0', '0000-00-00 00:00:00', '*')
+        else:
+            userstr = '{} {:0>10d} {} {} {}'.format(user.day, user.mid, user.timestamp, user.timelocal, user.name)
+        printLog('{} {}'.format('++++++++++', userstr))
+        print(userstr, file=userfile)
+
 
 def initAll():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids, final_day, fetch_count
     invalid_mids = []
     guessed_mids = []
-    final_day = 20180522
+    final_day = 20180610
     guess_step = 1
     fetch_count = 0
-    target_date = date(2018,4,27)
-    target_day = int(target_date.strftime('%Y%m%d'))
-    user_left = fetchUser(320355744)
-    user_righ = user_left
+    # target_date = date(2018,4,27)
+    with open('user.txt', 'r') as userfile:
+        for line in userfile:
+            pass
+        lastline = line.strip()
+
+        last_mid = int(lastline[9:19].lstrip('0'))
+        user_left = fetchUser(last_mid)
+
+        last_date_str = lastline[0:8]
+        last_date_year = int(last_date_str[0:4])
+        last_date_month = int(last_date_str[4:6])
+        last_date_day = int(last_date_str[6:8])
+
+        target_date = date(last_date_year,last_date_month,last_date_day) + timedelta(days=1)
+
+        target_day = int(target_date.strftime('%Y%m%d'))
+
+        user_righ = user_left
     # target_date = date(2010,9,23)
     # target_day = int(target_date.strftime('%Y%m%d'))
     # user_left = fetchUser(58506)
-    # user_righ = fetchUser(58506)
+    # user_righ = user_left
 
 def spider():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids
