@@ -45,8 +45,8 @@ function plotInfinitySymbol(){
     lb.stroke(0, 255, 0);
 
     lb.scale(3);
-    lb.line(pa1[0], pa1[1], pc1[0], pc1[1]);
-    lb.line(pc2[0], pc2[1], pa2[0], pa2[1]);
+    // lb.line(pa1[0], pa1[1], pc1[0], pc1[1]);
+    // lb.line(pc2[0], pc2[1], pa2[0], pa2[1]);
 
     lb.strokeWeight(8);
     lb.stroke(155, 155, 155);
