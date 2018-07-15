@@ -17,6 +17,7 @@
 | 高中 选修3-2（理科） | http://jiaofu.yousi.com/compontent/pdf/?url=http://jfpdf.yousi.com/160424051123834900.pdf | |
 | 高中 选修3-3（理科） | http://jiaofu.yousi.com/compontent/pdf/?url=http://jfpdf.yousi.com/160424051221397983.pdf | |
 | 高中 选修3-4（理科） | http://jiaofu.yousi.com/compontent/pdf/?url=http://jfpdf.yousi.com/160424051334153290.pdf | |
+| 高中 选修3-5（理科） | http://jiaofu.yousi.com/compontent/pdf/?url=http://jfpdf.yousi.com/160424051425124532.pdf | |
 | 八年级 上册 | http://jiaofu.yousi.com/compontent/pdf/?url=http%3A%2F%2Fjfpdf.yousi.com%2F160727174700627979.pdf | |
 | 八年级 下册 | http://jiaofu.yousi.com/compontent/pdf/?url=http%3A%2F%2Fjfpdf.yousi.com%2F161009093413877048.pdf | |
 | 九年级 上册 | http://jiaofu.yousi.com/compontent/pdf/?url=http%3A%2F%2Fjfpdf.yousi.com%2F160728110859193577.pdf | |
