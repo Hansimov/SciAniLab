@@ -8,4 +8,5 @@ frames/
 *.aux
 *.log
 build-tmp/
+latex-temp/
 *.mp4
