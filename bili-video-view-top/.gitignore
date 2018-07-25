@@ -1,1 +1,7 @@
+*.*
+!*.py
+!*.bat
+
 data/
+pic/
+face/
