@@ -1,6 +1,9 @@
 import os
+import math
 
+all_cmds = []
 def compileTex(cp_type='xelatex'):
+    outputTex()
     if cp_type == 'xelatex' or cp_type == 'x':
         compile_type = '-xelatex'
     else:
@@ -18,7 +21,9 @@ def preamble():
     preamble_list = [
         '\\documentclass[tikz]{standalone}\n',
         '\\usepackage{tikz}',
-        '\\usetikzlibrary{backgrounds}'
+        '\\usetikzlibrary{backgrounds}',
+        '\\usepackage[scheme=plain]{ctex}',
+        '\\newcommand{\\fs}[1]{\\fontsize{#1 pt}{0pt}\\selectfont}'
     ]
     printTex(preamble_list)
 
@@ -42,13 +47,18 @@ def endTikz():
     printTex('\n\\end{tikzpicture}\n')
 
 def printTex(commands):
-    with open(tex_filename, 'a') as txf:
-        if isinstance(commands, str):
-            print(commands, file=txf)
-        elif isinstance(commands, list):
-            for line in commands:
-                print(line, file=txf)
-        # print('',file=txf)
+    global all_cmds
+    if isinstance(commands, str):
+        all_cmds.append(commands)
+    elif isinstance(commands, list):
+        for line in commands:
+            all_cmds.append(line)
+
+def outputTex():
+    global all_cmds
+    with open(tex_filename, 'a', encoding='utf-8') as txf:
+        for line in all_cmds:
+            print(line, file=txf)
 
 def setSize(width, height, anchor='lb'):
     # anchor is the center of the origin point of the bounding box
@@ -98,6 +108,8 @@ def setSize(width, height, anchor='lb'):
         嗯，这个值还是比较合理的
         需要留出一定的调整空间，因此同屏的现实时长范围约为 1-3 月
 '''
+def drawAxis():
+    pass
 
 if __name__ == '__main__':
     tex_filename = 'ani_view.tex'
@@ -107,13 +119,13 @@ if __name__ == '__main__':
     beginDoc()
     for i in range(0, 1):
         beginTikz()
-        width, height = 1280, 720
+        width, height = 1280/2, 720/2
         setSize(width, height, 'c')
         # printTex('\\fill[blue] ({0:}, {1:}) rectangle ({0:}, {1:});'.format(width/2,height/2))
         radius = 200
-        cmd_list = [
-            '\\draw [fill=yellow, radius=6] (5,0) circle;'
-        ]
+        cmd_list = []
+
+
 
         printTex(cmd_list)
         endTikz()

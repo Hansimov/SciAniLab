@@ -6,7 +6,7 @@ if __name__ == '__main__':
     # view, videos, view_avg, title, coin, favorite, danmaku, aid, name, mid, pubdate, tid, duration, copyright, pic, face
     
     # for i in range(0, len(df)):
-    for i in range(0, 4):
+    for i in range(0, 10):
         pubdate = df['pubdate'][i]
         # 0123456789012345678
         # 2010/12/1 13:54:15
