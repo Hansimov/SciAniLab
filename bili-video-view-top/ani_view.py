@@ -1,5 +1,6 @@
 import os
 from math import *
+from datetime import date, datetime, timedelta
 
 all_cmds = []
 def compileTex(cp_type='xelatex'):
@@ -17,13 +18,15 @@ def clearTex():
     with open(tex_filename, 'w'):
         pass
 
-def preamble():
+def addPreamble():
     preamble_list = [
         '\\documentclass[tikz,border=0pt]{standalone}\n',
         '\\usepackage{tikz}',
         '\\usetikzlibrary{backgrounds}',
         '\\usepackage[scheme=plain]{ctex}',
-        '\\newcommand{\\fs}[1]{\\fontsize{#1 pt}{0pt}\\selectfont}'
+        '\\newcommand{\\fs}[1]{\\fontsize{#1 pt}{0pt}\\selectfont}',
+        '\\setCJKmainfont{Microsoft YaHei}',
+        '\\setmainfont{Microsoft YaHei}'
     ]
     printTex(preamble_list)
 
@@ -34,14 +37,17 @@ def endDoc():
     printTex('\n\\end{document}')
 
 def beginTikz():
-    begin_tikz = '\\begin{tikzpicture}'
-    global_setting = '''
-    [ x=1pt,y=1pt,
-      background rectangle/.style={fill=black},
-      show background rectangle
+    begin_tikz = [
+        '\\begin{tikzpicture}',
+        '[',
+        'x=1pt,y=1pt,',
+        'background rectangle/.style={fill=black},',
+        'show background rectangle,',
+        # 'scale=1.5',
+        ']\n'
     ]
-    '''
-    printTex(begin_tikz + global_setting + '\n')
+
+    printTex(begin_tikz)
 
 def endTikz():
     printTex('\n\\end{tikzpicture}\n')
@@ -65,15 +71,21 @@ def setSize(width, height, anchor='lb'):
     #   - left right up bottom center
     #   - l,r,u,b, lu, lb, ru, rb, c
     if   anchor == 'c':
-        set_size = '\path (-{0:}, -{1:}) rectangle ({0:}, {1:});'.format(width/2,height/2)
+        set_size = [
+            '\\useasboundingbox (-{0:}, -{1:}) rectangle ({0:}, {1:});'.format(width/2,height/2),
+        ]
     elif anchor == 'lb':
-        set_size = '\path ({0:}, {1:}) rectangle ({0:}, {1:});'.format(width,height)
+        set_size = [
+            '\\path[clip] (0, 0) rectangle ({0:}, {1:});'.format(width,height),
+        ]
     else: # TODO
-        set_size = '\path ({0:}, {1:}) rectangle ({0:}, {1:});'.format(width,height)
+        set_size = [
+            '\\useasboundingbox (0, 0) rectangle ({0:}, {1:});'.format(width,height),
+        ]
     printTex(set_size)
 
 '''
-第四期视频的话，300万以上的显示封面，200万~300万的作为背景墙吧
+第四期视频的话，>=300w 显示封面，<=300w 只绘制点
     100w+ 4103
     200w+ 932
     300w+ 388
@@ -108,26 +120,130 @@ def setSize(width, height, anchor='lb'):
         嗯，这个值还是比较合理的
         需要留出一定的调整空间，因此同屏的现实时长范围约为 1-3 月
 '''
-def drawAxis():
-    pass
+date_all = []
+
+video_all = []
+video_onscreen = [] # obj: info, x, y, color
+video_active = []
+
+date_head = date(2009, 7, 30)
+date_tail = date(2018, 7, 25)
+def initDate():
+    global date_all
+    date_delta = date_tail - date_head
+
+    for i in range(date_delta.days + 1):
+        current_date = date_head + timedelta(days=i)
+        for j in range(0, 6):
+            date_obj_tmp = {}
+            date_obj_tmp['year']  = current_date.year
+            date_obj_tmp['month'] = current_date.month
+            date_obj_tmp['day']   = current_date.day
+            date_obj_tmp['hour']  = 4*(j+1)
+            date_all.append(date_obj_tmp)
+
+ptr_left = 0
+ptr_righ = 0
+
+def compareDate(date1, date2):
+    # -1 A before B
+    #  0 A equal  B
+    #  1 A after  B
+    if   date1['year'] <  date2['year']:
+        return -1
+    elif date1['year'] >  date2['year']:
+        return  1
+    else:
+        if   date1['month'] <  date2['month']:
+            return -1
+        elif date1['month'] >  date2['month']:
+            return  1
+        else:
+            if   date1['day'] <  date2['day']:
+                return -1
+            elif date1['day'] <  date2['day']:
+                return  1
+            else:
+                if   date1['hour'] <  date2['hour']:
+                    return -1
+                elif date1['hour'] <  date2['hour']:
+                    return  1
+                else:
+                    return  0
+
+date_onscreen = []
+
+cover_x, cover_y = 920, 50
+cover_w, cover_h = 350, 350*9/16
+
+axis_l, axis_r = 100, cover_x-50
+axis_b, axis_t = 100, 600
+
+initDate()
+def updateDateOnscreen(ptr_righ):
+    global date_onscreen
+
+    if ptr_righ >= 381:
+        date_onscreen.pop(0)
+        ptr_left = ptr_righ-380
+    else:
+        ptr_left = 0
+
+    current_date = date_all[ptr_righ]
+    date_onscreen.append(current_date)
+
+    tmp_cmds = []
+    tmp_cmds.extend([
+        '\\draw [line width=2pt, gray]  ({0},{2}) -- ({1},{2});'.format(axis_l, axis_r+50,axis_b,axis_t),
+        '\\draw [line width=2pt, gray]  ({0},{2}) -- ({0},{3});'.format(axis_l, axis_r,axis_b,axis_t),
+        '\\draw [line width=2pt, green, opacity=0.5] ({0},{1}) -- ({0},{2});'.format(axis_r,axis_b,axis_t),
+        '\\node [text=white, align=right, font=\\fs{{20}}] at ({0},{1}) {{ {2} 年 {3:0>2d} 月 {4:0>2d} 日 }};' \
+            .format(1100, 680, current_date['year'], current_date['month'], current_date['day'])
+        ])
+
+    cnt = 0
+    for date_tmp in date_onscreen:
+        if (date_tmp['day']==1) and (date_tmp['hour']==4):
+            date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/381)
+            tmp_cmds.extend([
+                '\\node [text=white, align=center, font=\\fs{{15}}] at ({0},{1}) {{ {2}-{3:0>2d} }};' \
+                    .format(date_tmp_x, axis_b-20, date_tmp['year'], date_tmp['month'])
+                ])
+        cnt +=1
+
+    printTex(tmp_cmds)
+
+def drawCover():
+    tmp_cmds = [
+        # '\\fill [green,radius={}] ({},{}) circle;'.format(radius,80+80*sin(i*0.2),80+80*cos(i*0.2)),
+        '\\fill [yellow, opacity=0.8] ({},{}) rectangle ({}, {});'.format(cover_x, cover_y, cover_x+cover_w, cover_y+cover_h)
+    ]
+    printTex(tmp_cmds)
 
 if __name__ == '__main__':
+    # initDate()
+    # for i in range(0, 40):
+    #     axisDate(i)
+    #     print('{} {} {} {:02d}'.format(*list(map(lambda x:date_onscreen[-1][x], ['year', 'month','day','hour']))))
+
+# '''
     tex_filename = 'ani_view.tex'
 
     clearTex()
-    preamble()
+    addPreamble()
     beginDoc()
-    for i in range(0, 4000):
+    for i in range(0, 400):
         beginTikz()
-        # width, height = 1920-1, 1080-5
-        width, height = 1280-4, 720-6
-        setSize(width, height, 'c')
-        radius = 10
-        cmd_list = [
-            '\\fill [green,radius={}] ({},{}) circle;'.format(radius,80*sin(i*0.2),80*cos(i*0.2))
-        ]
 
-        printTex(cmd_list)
+        # width, height = 1920+7, 1080+4
+        width, height = 1280+5, 720+3
+        setSize(width, height, 'lb')
+        radius = 10
+
+        updateDateOnscreen(i)
+        drawCover()
+
         endTikz()
     endDoc()
     compileTex()
+# '''
