@@ -1,5 +1,5 @@
 import os
-import math
+from math import *
 
 all_cmds = []
 def compileTex(cp_type='xelatex'):
@@ -19,7 +19,7 @@ def clearTex():
 
 def preamble():
     preamble_list = [
-        '\\documentclass[tikz]{standalone}\n',
+        '\\documentclass[tikz,border=0pt]{standalone}\n',
         '\\usepackage{tikz}',
         '\\usetikzlibrary{backgrounds}',
         '\\usepackage[scheme=plain]{ctex}',
@@ -117,15 +117,15 @@ if __name__ == '__main__':
     clearTex()
     preamble()
     beginDoc()
-    for i in range(0, 1):
+    for i in range(0, 4000):
         beginTikz()
-        width, height = 1280/2, 720/2
+        # width, height = 1920-1, 1080-5
+        width, height = 1280-4, 720-6
         setSize(width, height, 'c')
-        # printTex('\\fill[blue] ({0:}, {1:}) rectangle ({0:}, {1:});'.format(width/2,height/2))
-        radius = 200
-        cmd_list = []
-
-
+        radius = 10
+        cmd_list = [
+            '\\fill [green,radius={}] ({},{}) circle;'.format(radius,80*sin(i*0.2),80*cos(i*0.2))
+        ]
 
         printTex(cmd_list)
         endTikz()
