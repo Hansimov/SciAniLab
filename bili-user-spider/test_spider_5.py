@@ -217,7 +217,7 @@ def initAll():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids, final_day, fetch_count
     invalid_mids = []
     guessed_mids = []
-    final_day = 20180610
+    final_day = 20180726
     guess_step = 1
     fetch_count = 0
     # target_date = date(2018,4,27)
@@ -278,4 +278,3 @@ def spider():
 if __name__ == '__main__':
     initAll()
     spider()
-    # fetchUser(103974444)
