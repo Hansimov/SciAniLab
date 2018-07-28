@@ -1,91 +1,9 @@
-import os
-from math import *
-from datetime import date, datetime, timedelta
-
-all_cmds = []
-def compileTex(cp_type='xelatex'):
-    outputTex()
-    if cp_type == 'xelatex' or cp_type == 'x':
-        compile_type = '-xelatex'
-    else:
-        compile_type = '-pdf'
-
-    compile_tool = 'latexmk -pv '+ compile_type + ' '
-    absolute_tex_filename = os.path.join(os.getcwd(), tex_filename)
-    os.system(compile_tool + absolute_tex_filename)
-
-def clearTex():
-    with open(tex_filename, 'w'):
-        pass
-
-def addPreamble():
-    preamble_list = [
-        '\\documentclass[tikz,border=0pt]{standalone}\n',
-        '\\usepackage{tikz}',
-        '\\usetikzlibrary{backgrounds}',
-        '\\usepackage[scheme=plain]{ctex}',
-        '\\newcommand{\\fs}[1]{\\fontsize{#1 pt}{0pt}\\selectfont}',
-        '\\setCJKmainfont{Microsoft YaHei}',
-        '\\setmainfont{Microsoft YaHei}'
-    ]
-    printTex(preamble_list)
-
-def beginDoc(doctype='standalone'):
-    printTex('\\begin{document}\n')
-
-def endDoc():
-    printTex('\n\\end{document}')
-
-def beginTikz():
-    begin_tikz = [
-        '\\begin{tikzpicture}',
-        '[',
-        'x=1pt,y=1pt,',
-        'background rectangle/.style={fill=black},',
-        'show background rectangle,',
-        # 'scale=1.5',
-        ']\n'
-    ]
-
-    printTex(begin_tikz)
-
-def endTikz():
-    printTex('\n\\end{tikzpicture}\n')
-
-def printTex(commands):
-    global all_cmds
-    if isinstance(commands, str):
-        all_cmds.append(commands)
-    elif isinstance(commands, list):
-        for line in commands:
-            all_cmds.append(line)
-
-def outputTex():
-    global all_cmds
-    with open(tex_filename, 'a', encoding='utf-8') as txf:
-        for line in all_cmds:
-            print(line, file=txf)
-
-def setSize(width, height, anchor='lb'):
-    # anchor is the center of the origin point of the bounding box
-    #   - left right up bottom center
-    #   - l,r,u,b, lu, lb, ru, rb, c
-    if   anchor == 'c':
-        set_size = [
-            '\\useasboundingbox (-{0:}, -{1:}) rectangle ({0:}, {1:});'.format(width/2,height/2),
-        ]
-    elif anchor == 'lb':
-        set_size = [
-            '\\path[clip] (0, 0) rectangle ({0:}, {1:});'.format(width,height),
-        ]
-    else: # TODO
-        set_size = [
-            '\\useasboundingbox (0, 0) rectangle ({0:}, {1:});'.format(width,height),
-        ]
-    printTex(set_size)
+from _videoClass import *
+from _tikzEnv import *
+import pandas as pd
 
 '''
-第四期视频的话，>=300w 显示封面，<=300w 只绘制点
+>=300w 显示封面，<=300w 只绘制圆点
     100w+ 4103
     200w+ 932
     300w+ 388
@@ -120,56 +38,56 @@ def setSize(width, height, anchor='lb'):
         嗯，这个值还是比较合理的
         需要留出一定的调整空间，因此同屏的现实时长范围约为 1-3 月
 '''
+
 date_all = []
 
-video_all = []
-video_onscreen = [] # obj: info, x, y, color
-video_active = []
-
-date_head = date(2009, 7, 30)
+date_head = date(2018, 1, 25)
 date_tail = date(2018, 7, 25)
 def initDate():
     global date_all
     date_delta = date_tail - date_head
 
     for i in range(date_delta.days + 1):
-        current_date = date_head + timedelta(days=i)
+        date_this = date_head + timedelta(days=i)
         for j in range(0, 6):
-            date_obj_tmp = {}
-            date_obj_tmp['year']  = current_date.year
-            date_obj_tmp['month'] = current_date.month
-            date_obj_tmp['day']   = current_date.day
-            date_obj_tmp['hour']  = 4*(j+1)
-            date_all.append(date_obj_tmp)
-
-ptr_left = 0
-ptr_righ = 0
+            date_tmp = {}
+            date_tmp['year']  = date_this.year
+            date_tmp['month'] = date_this.month
+            date_tmp['day']   = date_this.day
+            date_tmp['hour']  = 4*(j+1)
+            date_tmp['minute']  = 0
+            date_all.append(date_tmp)
 
 def compareDate(date1, date2):
     # -1 A before B
     #  0 A equal  B
     #  1 A after  B
-    if   date1['year'] <  date2['year']:
+    if   date1['year'] < date2['year']:
         return -1
-    elif date1['year'] >  date2['year']:
+    elif date1['year'] > date2['year']:
         return  1
     else:
-        if   date1['month'] <  date2['month']:
+        if   date1['month'] < date2['month']:
             return -1
-        elif date1['month'] >  date2['month']:
+        elif date1['month'] > date2['month']:
             return  1
         else:
-            if   date1['day'] <  date2['day']:
+            if   date1['day'] < date2['day']:
                 return -1
-            elif date1['day'] <  date2['day']:
+            elif date1['day'] > date2['day']:
                 return  1
             else:
-                if   date1['hour'] <  date2['hour']:
+                if   date1['hour'] < date2['hour']:
                     return -1
-                elif date1['hour'] <  date2['hour']:
+                elif date1['hour'] > date2['hour']:
                     return  1
                 else:
-                    return  0
+                    if   date1['minute'] < date2['minute']:
+                        return -1
+                    elif date1['minute'] > date2['minute']:
+                        return  1
+                    else:
+                        return  0
 
 date_onscreen = []
 
@@ -179,17 +97,19 @@ cover_w, cover_h = 350, 350*9/16
 axis_l, axis_r = 100, cover_x-50
 axis_b, axis_t = 100, 600
 
+date_axis_segs = 180
+
 initDate()
-def updateDateOnscreen(ptr_righ):
+def drawDateAxis(date_ptr):
     global date_onscreen
 
-    if ptr_righ >= 381:
+    if date_ptr >= date_axis_segs+1:
         date_onscreen.pop(0)
-        ptr_left = ptr_righ-380
+        ptr_left = date_ptr-date_axis_segs
     else:
         ptr_left = 0
 
-    current_date = date_all[ptr_righ]
+    current_date = date_all[date_ptr]
     date_onscreen.append(current_date)
 
     tmp_cmds = []
@@ -203,12 +123,23 @@ def updateDateOnscreen(ptr_righ):
 
     cnt = 0
     for date_tmp in date_onscreen:
-        if (date_tmp['day']==1) and (date_tmp['hour']==4):
-            date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/381)
-            tmp_cmds.extend([
-                '\\node [text=white, align=center, font=\\fs{{15}}] at ({0},{1}) {{ {2}-{3:0>2d} }};' \
-                    .format(date_tmp_x, axis_b-20, date_tmp['year'], date_tmp['month'])
+        if date_tmp['hour'] == 4:
+            date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
+            if date_tmp['day'] == 1:
+                tmp_cmds.extend([
+                    '\\node [text=white, align=center, font=\\fs{{15}}] at ({0},{1}) {{ {2}-{3:0>2d} }};' \
+                        .format(date_tmp_x, axis_b-30, date_tmp['year'], date_tmp['month']),
+                    '\\draw [white,line width=2] ({0},{1}) -- ({0}, {2});'.format(date_tmp_x, axis_b-10, axis_b+10)
                 ])
+            elif date_tmp['day'] % 5 == 0:
+                tmp_cmds.extend([
+                    '\\draw [gray] ({0},{1}) -- ({0}, {2});'.format(date_tmp_x, axis_b-7, axis_b+7)
+                ])
+            else:
+                tmp_cmds.extend([
+                    '\\draw [gray] ({0},{1}) -- ({0}, {2});'.format(date_tmp_x, axis_b-3, axis_b+3)
+                ])
+
         cnt +=1
 
     printTex(tmp_cmds)
@@ -216,23 +147,92 @@ def updateDateOnscreen(ptr_righ):
 def drawCover():
     tmp_cmds = [
         # '\\fill [green,radius={}] ({},{}) circle;'.format(radius,80+80*sin(i*0.2),80+80*cos(i*0.2)),
-        '\\fill [yellow, opacity=0.8] ({},{}) rectangle ({}, {});'.format(cover_x, cover_y, cover_x+cover_w, cover_y+cover_h)
+        '\\fill [opacity=0.8, fill={{rgb,1: red,1; green,1; blue,0}}] ({},{}) rectangle ({}, {});'.format(cover_x, cover_y, cover_x+cover_w, cover_y+cover_h)
     ]
     printTex(tmp_cmds)
 
+video_all = []
+def initVideo():
+    global video_all
+    df = pd.read_csv('./data/view_gt100w_180725.CSV', sep=',')
+    # view, videos, view_avg, title, coin, favorite, danmaku, aid, name, mid, pubdate, tid, duration, copyright, pic, face
+    for i in range(len(df)):
+        video_tmp = VideoPoint()
+        video_tmp.view     = int(df['view'][i])
+        video_tmp.videos   = int(df['videos'][i])
+        video_tmp.view_avg = int(df['view_avg'][i])
+        video_tmp.title    = str(df['title'][i])
+        video_tmp.aid      = int(df['aid'][i])
+        video_tmp.tid      = int(df['tid'][i])
+        video_tmp.name     = str(df['name'][i])
+        video_tmp.mid      = int(df['mid'][i])
+
+        pubdate_this = datetime.strptime(df['pubdate'][i], '%Y/%m/%d %H:%M:%S')
+        pubdate_tmp = {}
+        pubdate_tmp['year']    = pubdate_this.year
+        pubdate_tmp['month']   = pubdate_this.month
+        pubdate_tmp['day']     = pubdate_this.day
+        pubdate_tmp['hour']    = pubdate_this.hour
+        pubdate_tmp['minute']  = pubdate_this.minute
+
+        video_tmp.pubdate = pubdate_tmp
+        video_all.append(video_tmp)
+    # print('Video initialized!')
+
+video_onscreen = []
+video_ptr = 0
+initVideo()
+
+def drawVideoPoint():
+    global video_ptr
+
+    video_onscreen_len_old = len(video_onscreen)
+    cnt_pop = 0
+
+    if len(date_onscreen) >= 1:
+
+        while compareDate(video_all[video_ptr].pubdate, date_onscreen[-1]) <= 0:
+            video_this = video_all[video_ptr]
+
+            if video_this.view_avg >= 2e6:
+                # date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
+                video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs \
+                                        * (date_onscreen[-1]['hour'] - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
+                video_this.y = axis_b + (axis_t-axis_b)*(video_this.view_avg/5e6)
+                video_onscreen.append(video_this)
+            video_ptr += 1
+
+        if len(video_onscreen) >= 1:
+            while compareDate(video_onscreen[0].pubdate, date_onscreen[0]) == -1:
+                video_onscreen.pop(0)
+                cnt_pop += 1
+                if len(video_onscreen)<=0:
+                    break
+
+    for i in range(0, video_onscreen_len_old-cnt_pop):
+        video_onscreen[i].x -= (axis_r-axis_l)/(date_axis_segs)
+
+    for video_tmp in video_onscreen:
+        video_tmp.draw()
+
+    # print('Video points drawn!')
+
+def drawRegion():
+    rgn_cnt = 0
+    tmp_cmds = []
+    for i,j in zip(rgnclr, rgnname):
+        tmp_cmds.extend([
+            '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{15}}, inner sep=3] at ({},{}) {{{}}};' \
+                .format(rgnclr[i][0], rgnclr[i][1], rgnclr[i][2], width-80, height-100-30*rgn_cnt, j)
+        ])
+        rgn_cnt += 1
+    printTex(tmp_cmds)
+
 if __name__ == '__main__':
-    # initDate()
-    # for i in range(0, 40):
-    #     axisDate(i)
-    #     print('{} {} {} {:02d}'.format(*list(map(lambda x:date_onscreen[-1][x], ['year', 'month','day','hour']))))
-
-# '''
-    tex_filename = 'ani_view.tex'
-
     clearTex()
     addPreamble()
     beginDoc()
-    for i in range(0, 400):
+    for i in range(0, 4):
         beginTikz()
 
         # width, height = 1920+7, 1080+4
@@ -240,10 +240,11 @@ if __name__ == '__main__':
         setSize(width, height, 'lb')
         radius = 10
 
-        updateDateOnscreen(i)
+        drawDateAxis(i)
         drawCover()
+        drawRegion()
+        drawVideoPoint()
 
         endTikz()
     endDoc()
     compileTex()
-# '''
