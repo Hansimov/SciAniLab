@@ -39,6 +39,28 @@ import pandas as pd
         需要留出一定的调整空间，因此同屏的现实时长范围约为 1-3 月
 '''
 
+'''
+右侧分区向轴发射->散射 
+光柱->闪电
+圆圈周围光环->尾迹->相同颜色的连接->积累一定数目全部消除
+光环出现在坐标快消失时
+分区文字闪烁->重影
+hit数->小飞机打砖块
+声音->不同分区音调不同->不同播放数音量不同
+
+100-500-1000-1500-2000-3000-4000-4500
+
+一开始就有的：
+  - 分区字块、播放数纵轴、视频点颜色、Hit 数（带颜色）、到达左侧边缘光环
+逐渐增加的：
+  - 分区字块闪烁/重影
+  - 同颜色的 Hit 数连击到一定数目（带颜色） -> good->...->perfect
+  - 光柱（渐隐） -> 闪电（为了保证绘制速度和简洁性，不模拟分叉效果）
+  - 视频点之间相互连接 -> 到达一定数目会消除（透明）
+  - 尾迹
+
+'''
+
 date_all = []
 
 date_head = date(2018, 1, 25)
@@ -54,7 +76,7 @@ def initDate():
             date_tmp['year']  = date_this.year
             date_tmp['month'] = date_this.month
             date_tmp['day']   = date_this.day
-            date_tmp['hour']  = 4*(j+1)
+            date_tmp['hour']  = 4*j
             date_tmp['minute']  = 0
             date_all.append(date_tmp)
 
@@ -180,6 +202,7 @@ def initVideo():
     # print('Video initialized!')
 
 video_onscreen = []
+video_fadeout = []
 video_ptr = 0
 initVideo()
 
@@ -187,33 +210,48 @@ def drawVideoPoint():
     global video_ptr
 
     video_onscreen_len_old = len(video_onscreen)
-    cnt_pop = 0
+    pop_cnt = 0
 
-    if len(date_onscreen) >= 1:
+    while (len(date_onscreen) >= 1) and compareDate(video_all[video_ptr].pubdate, date_onscreen[-1]) <= 0:
+        video_this = video_all[video_ptr]
 
-        while compareDate(video_all[video_ptr].pubdate, date_onscreen[-1]) <= 0:
-            video_this = video_all[video_ptr]
+        if video_this.view_avg >= 2e6 and compareDate(video_this.pubdate, date_all[0]) >= 0:
+            # date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
+            if video_this.pubdate['day'] < date_onscreen[-1]['day']:
+                video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (24 - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
+            else:
+                video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (date_onscreen[-1]['hour'] - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
 
-            if video_this.view_avg >= 2e6:
-                # date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
-                video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs \
-                                        * (date_onscreen[-1]['hour'] - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
-                video_this.y = axis_b + (axis_t-axis_b)*(video_this.view_avg/5e6)
-                video_onscreen.append(video_this)
-            video_ptr += 1
+            video_this.y = axis_b + (axis_t-axis_b)*(video_this.view_avg/5e6)
+            video_onscreen.append(video_this)
+        video_ptr += 1
 
-        if len(video_onscreen) >= 1:
-            while compareDate(video_onscreen[0].pubdate, date_onscreen[0]) == -1:
-                video_onscreen.pop(0)
-                cnt_pop += 1
-                if len(video_onscreen)<=0:
-                    break
+    # while (len(video_onscreen) >= 1) and compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= -1:
+    while   (len(video_onscreen) >= 1)  \
+        and (compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= 0 \
+             or video_onscreen[0].x <= axis_l + 1.7*(axis_r-axis_l)/(date_axis_segs)):
+        video_pop = video_onscreen.pop(0)
+        pop_cnt += 1
+        # if video_pop.x <= axis_l + (axis_r-axis_l)/date_axis_segs:
+        # if video_pop.x <= axis_l + (axis_r-axis_l)/date_axis_segs:
+        video_fadeout.append(video_pop)
 
-    for i in range(0, video_onscreen_len_old-cnt_pop):
+    for i in range(0, video_onscreen_len_old-pop_cnt):
         video_onscreen[i].x -= (axis_r-axis_l)/(date_axis_segs)
 
     for video_tmp in video_onscreen:
-        video_tmp.draw()
+        video_tmp.display()
+
+    fadeout_cnt = len(video_fadeout)
+    idx_tmp = 0
+    for i in range(0, fadeout_cnt):
+        video_tmp = video_fadeout[idx_tmp]
+        if video_tmp.halo_cnt < 0:
+            video_fadeout.pop(idx_tmp)
+        else:
+            video_tmp.x = axis_l
+            video_tmp.halo()
+            idx_tmp += 1
 
     # print('Video points drawn!')
 
@@ -232,7 +270,7 @@ if __name__ == '__main__':
     clearTex()
     addPreamble()
     beginDoc()
-    for i in range(0, 4):
+    for i in range(0, 400):
         beginTikz()
 
         # width, height = 1920+7, 1080+4
