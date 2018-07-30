@@ -1,4 +1,5 @@
 from _tikzEnv import *
+from _initVariable import *
 
 rgnclr = {} # region color
 
@@ -12,6 +13,36 @@ rgnclr['guichu']   = [0.5,  1 ,  1 ]
 rgnclr['qita']     = [ 1 , 0.5,  1 ]
 
 rgnname = ['动画','音乐','舞蹈','游戏','科技','生活','鬼畜','其他']
+rgnpinyin = ['donghua','yinyue','wudao','youxi','keji','shenghuo','guichu','qita']
+
+class RegionBlock(object):
+    def display(self):
+        tmp_cmds = [
+            '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{15}}, inner sep=3] ({}) at ({},{}) {{{}}};' \
+                .format(self.color[0], self.color[1], self.color[2], self.pinyin, self.x, self.y, self.name)
+        ]
+        printTex(tmp_cmds)
+
+
+region_all = {}
+def initRegion():
+    global region_all
+    rgn_cnt = 0
+    for clrkey, name, pinyin in zip(rgnclr, rgnname, rgnpinyin):
+        region_tmp = RegionBlock()
+        region_tmp.color = rgnclr[pinyin]
+        region_tmp.name = name
+        region_tmp.pinyin = pinyin
+        region_tmp.x = width - 80
+        region_tmp.y = height - 100 - 30 * rgn_cnt
+        region_all[pinyin] = region_tmp
+        rgn_cnt += 1
+
+initRegion()
+
+def drawRegion():
+    for _ , region_tmp in region_all.items():
+        region_tmp.display()
 
 class VideoPoint(object):
     # def __init__(self, view=-1, videos=-1, view_avg=-1, title ='', aid=-1, name='', mid=-1, pubdate={}, tid=-1):
@@ -22,8 +53,12 @@ class VideoPoint(object):
     #     self.name, self.mid = name, mid
 
     def __init__(self):
-        self.halo_cnt_max = 10
+        self.halo_cnt_max = 15
         self.halo_cnt = self.halo_cnt_max
+        self.laser_cnt_max = 15
+        self.laser_cnt = self.laser_cnt_max
+        self.shake_cnt_max = 10
+        self.shake_cnt = self.shake_cnt_max
 
     @property
     def tid(self):
@@ -93,22 +128,47 @@ class VideoPoint(object):
 
     def display(self):
         tmp_cmds = [
-            '\\fill [radius={},fill={{rgb,1: red,{}; green,{}; blue,{}}}] ({},{}) circle;' \
-                .format(self.radius, self.color[0], self.color[1], self.color[2], self.x, self.y)
+            '\\node [fill={{rgb,1: red,{}; green,{}; blue,{}}}, shape=circle, minimum size={}] ({}) at ({},{}) {{}};' \
+                .format(self.color[0], self.color[1], self.color[2], 2*self.radius, self.aid, self.x, self.y)
         ]
         printTex(tmp_cmds)
 
     def halo(self):
         if self.halo_cnt > 0:
             tmp_cmds = [
-                '\draw[fill={{rgb,1: red,{}; green,{}; blue,{}}}, even odd rule, opacity={}]  ({},{}) circle ({}) ({},{}) circle ({});' \
-                    .format(self.color[0], self.color[1], self.color[2], self.halo_cnt/self.halo_cnt_max,\
+                '\\draw [fill={{rgb,1: red,{}; green,{}; blue,{}}}, even odd rule, opacity={}]  ({},{}) circle ({}) ({},{}) circle ({});' \
+                    .format(self.color[0], self.color[1], self.color[2], self.halo_cnt/self.halo_cnt_max, \
                             self.x, self.y, self.radius*(1+(1-self.halo_cnt/self.halo_cnt_max)+0.6), \
                             self.x, self.y, self.radius*(1+(1-self.halo_cnt/self.halo_cnt_max)+0.1))
             ]
             self.halo_cnt -= 1
             printTex(tmp_cmds)
+    def laser(self):
+        if self.laser_cnt > 0:
+            tmp_cmds = [
+                # '\\draw [draw={{rgb,1: red,{}; green,{}; blue,{}}}, opacity={}, line width={}] ({}) -- ({});'\
+                    # .format(self.color[0], self.color[1], self.color[2], self.laser_cnt/self.laser_cnt_max, \
+                    #         self.region, self.radius, self.region, self.aid)
+                '\\fill [fill={{rgb,1: red,{}; green,{}; blue,{}}}, opacity={}] ({}.west) -- (tangent cs:node={},point={{({}.west)}},solution=1) -- ({}.center) -- (tangent cs:node={},point={{({}.west)}}, solution=2) -- cycle;'\
+                    .format(self.color[0], self.color[1], self.color[2], self.laser_cnt/self.laser_cnt_max-0.1, \
+                            self.region, self.aid, self.region, self.aid, self.aid, self.region)
+            ]
+            self.laser_cnt -= 1
+            printTex(tmp_cmds)
 
-    def draw(self):
-        self.display()
-        self.halo()
+    def shake(self):
+        if self.shake_cnt > 0:
+            this_region = region_all[self.region]
+            tmp_cmds = [
+                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, inner sep=3, opacity={}] ({}) at ({},{}) {{{}}};' \
+                    .format(self.color[0], self.color[1], self.color[2], \
+                            15+2*(10-self.shake_cnt), self.shake_cnt/self.shake_cnt_max-0.2,\
+                            this_region.pinyin, this_region.x, this_region.y, this_region.name)
+            ]
+            self.shake_cnt -= 1
+            printTex(tmp_cmds)
+
+    # def draw(self):
+    #     self.display()
+    #     self.halo()
+

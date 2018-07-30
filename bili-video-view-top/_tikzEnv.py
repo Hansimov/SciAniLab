@@ -24,6 +24,7 @@ def addPreamble():
     preamble_list = [
         '\\documentclass[tikz,border=0pt]{standalone}\n',
         '\\usepackage{tikz}',
+        '\\usetikzlibrary{calc}',
         '\\usetikzlibrary{backgrounds}',
         '\\usepackage[scheme=plain]{ctex}',
         '\\newcommand{\\fs}[1]{\\fontsize{#1}{0pt}\\selectfont}',

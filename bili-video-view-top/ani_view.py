@@ -1,5 +1,7 @@
 from _videoClass import *
 from _tikzEnv import *
+from _initVariable import *
+
 import pandas as pd
 
 '''
@@ -19,7 +21,7 @@ import pandas as pd
 
     精度：6 帧/天 = 4 h/帧 
     速度：10 天/秒
-    
+
     视频点数（4102） = 天数（3287）
     阈值：100w 
         考虑到点的分布集中在后 7/9，因此
@@ -40,13 +42,12 @@ import pandas as pd
 '''
 
 '''
-右侧分区向轴发射->散射 
-光柱->闪电
-圆圈周围光环->尾迹->相同颜色的连接->积累一定数目全部消除
+右侧分区向轴发射 -> 散射 -> 光柱 -> 闪电
+圆圈周围光环 -> 尾迹 -> 相同颜色的连接 -> 积累一定数目全部消除
 光环出现在坐标快消失时
-分区文字闪烁->重影
-hit数->小飞机打砖块
-声音->不同分区音调不同->不同播放数音量不同
+分区文字闪烁 -> 重影
+hit数 -> 小飞机打砖块
+声音 -> 不同分区音调不同 -> 不同播放数音量不同
 
 100-500-1000-1500-2000-3000-4000-4500
 
@@ -58,6 +59,7 @@ hit数->小飞机打砖块
   - 光柱（渐隐） -> 闪电（为了保证绘制速度和简洁性，不模拟分叉效果）
   - 视频点之间相互连接 -> 到达一定数目会消除（透明）
   - 尾迹
+  - 音效：http://touchpianist.com/
 
 '''
 
@@ -80,47 +82,7 @@ def initDate():
             date_tmp['minute']  = 0
             date_all.append(date_tmp)
 
-def compareDate(date1, date2):
-    # -1 A before B
-    #  0 A equal  B
-    #  1 A after  B
-    if   date1['year'] < date2['year']:
-        return -1
-    elif date1['year'] > date2['year']:
-        return  1
-    else:
-        if   date1['month'] < date2['month']:
-            return -1
-        elif date1['month'] > date2['month']:
-            return  1
-        else:
-            if   date1['day'] < date2['day']:
-                return -1
-            elif date1['day'] > date2['day']:
-                return  1
-            else:
-                if   date1['hour'] < date2['hour']:
-                    return -1
-                elif date1['hour'] > date2['hour']:
-                    return  1
-                else:
-                    if   date1['minute'] < date2['minute']:
-                        return -1
-                    elif date1['minute'] > date2['minute']:
-                        return  1
-                    else:
-                        return  0
-
 date_onscreen = []
-
-cover_x, cover_y = 920, 50
-cover_w, cover_h = 350, 350*9/16
-
-axis_l, axis_r = 100, cover_x-50
-axis_b, axis_t = 100, 600
-
-date_axis_segs = 180
-
 initDate()
 def drawDateAxis(date_ptr):
     global date_onscreen
@@ -206,6 +168,8 @@ video_fadeout = []
 video_ptr = 0
 initVideo()
 
+video_view_threshold = 2e6
+
 def drawVideoPoint():
     global video_ptr
 
@@ -215,25 +179,24 @@ def drawVideoPoint():
     while (len(date_onscreen) >= 1) and compareDate(video_all[video_ptr].pubdate, date_onscreen[-1]) <= 0:
         video_this = video_all[video_ptr]
 
-        if video_this.view_avg >= 2e6 and compareDate(video_this.pubdate, date_all[0]) >= 0:
+        if video_this.view_avg >= video_view_threshold and compareDate(video_this.pubdate, date_all[0]) > 0:
             # date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
             if video_this.pubdate['day'] < date_onscreen[-1]['day']:
                 video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (24 - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
             else:
                 video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (date_onscreen[-1]['hour'] - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
 
-            video_this.y = axis_b + (axis_t-axis_b)*(video_this.view_avg/5e6)
+            video_this.y = axis_b + (axis_t-axis_b) * 2*(1/(1+1.3**(-2*(video_this.view_avg)/video_view_threshold))-0.5)
             video_onscreen.append(video_this)
         video_ptr += 1
 
     # while (len(video_onscreen) >= 1) and compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= -1:
-    while   (len(video_onscreen) >= 1)  \
+    while (len(video_onscreen) >= 1)  \
         and (compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= 0 \
              or video_onscreen[0].x <= axis_l + 1.7*(axis_r-axis_l)/(date_axis_segs)):
         video_pop = video_onscreen.pop(0)
         pop_cnt += 1
-        # if video_pop.x <= axis_l + (axis_r-axis_l)/date_axis_segs:
-        # if video_pop.x <= axis_l + (axis_r-axis_l)/date_axis_segs:
+        # if video_pop.x <= axis_l + 2*(axis_r-axis_l)/date_axis_segs:
         video_fadeout.append(video_pop)
 
     for i in range(0, video_onscreen_len_old-pop_cnt):
@@ -241,6 +204,8 @@ def drawVideoPoint():
 
     for video_tmp in video_onscreen:
         video_tmp.display()
+        video_tmp.laser()
+        video_tmp.shake()
 
     fadeout_cnt = len(video_fadeout)
     idx_tmp = 0
@@ -255,17 +220,6 @@ def drawVideoPoint():
 
     # print('Video points drawn!')
 
-def drawRegion():
-    rgn_cnt = 0
-    tmp_cmds = []
-    for i,j in zip(rgnclr, rgnname):
-        tmp_cmds.extend([
-            '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{15}}, inner sep=3] at ({},{}) {{{}}};' \
-                .format(rgnclr[i][0], rgnclr[i][1], rgnclr[i][2], width-80, height-100-30*rgn_cnt, j)
-        ])
-        rgn_cnt += 1
-    printTex(tmp_cmds)
-
 if __name__ == '__main__':
     clearTex()
     addPreamble()
@@ -273,10 +227,7 @@ if __name__ == '__main__':
     for i in range(0, 400):
         beginTikz()
 
-        # width, height = 1920+7, 1080+4
-        width, height = 1280+5, 720+3
         setSize(width, height, 'lb')
-        radius = 10
 
         drawDateAxis(i)
         drawCover()
