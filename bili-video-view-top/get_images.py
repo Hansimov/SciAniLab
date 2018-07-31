@@ -48,14 +48,13 @@ def getImage(img_link, img_name, retry_count=0):
             img_file.write(img.content)
         print(f'+++ Successfully dumped: {img_name}')
         remaining_num -= 1
-        print(f'=== Remaining: {remaining_num:{0}{3}}/{total_num:{0}{3}} ===')
+        print(f'=== Remaining: {remaining_num:{0}{5}}/{total_num:{0}{5}} ===')
     semlock.release()
-
 
 def createThread(img_link, img_ext, xid, xtype):
     xid_name = ('mid', 'aid')[xtype=='pic']
     # xid_name = ('aid', 'mid')[xtype=='face']
-    img_name = f'{xtype}/{xid_name}_{xid}{img_ext}'
+    img_name = f'{xtype}/{xid_name}_{xid:{0}{10}}{img_ext}'
 
     semlock.acquire()
     thrd = threading.Thread(target=getImage, args=[img_link, img_name])
@@ -65,7 +64,7 @@ def createThread(img_link, img_ext, xid, xtype):
 def startThread(thrd):
     # thrd.daemon = True
     thrd.start()
-    # thrd.join()
+    thrd.join()
 
 pic_list = []
 face_list = []
@@ -77,14 +76,15 @@ def getInfoList():
     global pic_list, face_list
     global total_num, remaining_num
 
-    total_num = len(df) * 2
-    remaining_num = total_num
-
     for i in range(len(df)):
-        pic_list.append(df['pic'][i])
-        face_list.append(df['face'][i])
-        aid_list.append(df['aid'][i])
-        mid_list.append(df['mid'][i])
+        if df['view'][i] >= 3e6:
+            pic_list.append(df['pic'][i])
+            face_list.append(df['face'][i])
+            aid_list.append(df['aid'][i])
+            mid_list.append(df['mid'][i])
+
+    total_num = len(pic_list) * 2
+    remaining_num = total_num
 
 def getAllImages():
     pic_thrd_pool = []
@@ -93,7 +93,7 @@ def getAllImages():
     pic_img_link_body = img_link_body_list[0]
     face_img_link_body = img_link_body_list[1]
 
-    for i in range(100):
+    for i in range(len(pic_list)):
         # pic_test = '1c1480299d2105c1bd0db584eec8932ebf0c8097.jpg' # pic: aid_17515643
         # face_test = '163812458cbd1b2fc04e7c02c8075700867fcbb7.jpg' # face: mid_10769575
         pic_tmp = pic_list[i]
@@ -105,16 +105,19 @@ def getAllImages():
         pic_img_ext = os.path.splitext(pic_tmp)[1]
 
         pic_thrd = createThread(pic_img_link, pic_img_ext, xid=aid_tmp, xtype='pic')
-        # pic_thrd_pool.append(pic_thrd)
         startThread(pic_thrd)
 
         face_img_link = face_img_link_body.format(face_tmp)
         face_img_ext = os.path.splitext(face_tmp)[1]
 
         face_thrd = createThread(face_img_link, face_img_ext, xid=mid_tmp, xtype='face')
-        # face_thrd_pool.append(face_thrd)
         startThread(face_thrd)
 
 if __name__ == '__main__':
+    if not os.path.exists('face'):
+        os.mkdir('face')
+    if not os.path.exists('pic'):
+        os.mkdir('pic')
+
     getInfoList()
     getAllImages()
