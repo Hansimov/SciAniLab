@@ -83,6 +83,8 @@ def initDate():
             date_all.append(date_tmp)
 
 date_onscreen = []
+video_fadeout = []
+
 initDate()
 def drawDateAxis(date_ptr):
     global date_onscreen
@@ -96,11 +98,18 @@ def drawDateAxis(date_ptr):
     current_date = date_all[date_ptr]
     date_onscreen.append(current_date)
 
+    if len(video_fadeout) <= 0:
+        color_tmp = [0, 0, 0]
+        width_tmp = 0
+    else:
+        color_tmp = video_fadeout[-1].color
+        width_tmp = video_fadeout[-1].radius
+
     tmp_cmds = []
     tmp_cmds.extend([
-        '\\draw [line width=2pt, gray]  ({0},{2}) -- ({1},{2});'.format(axis_l, axis_r+50,axis_b,axis_t),
-        '\\draw [line width=2pt, gray]  ({0},{2}) -- ({0},{3});'.format(axis_l, axis_r,axis_b,axis_t),
-        '\\draw [line width=2pt, green, opacity=0.5] ({0},{1}) -- ({0},{2});'.format(axis_r,axis_b,axis_t),
+        '\\draw [line width=2, gray]  ({0},{2}) -- ({1},{2});'.format(axis_l, axis_r+50,axis_b,axis_t),
+        f'\\draw [line width={width_tmp}, draw={{rgb,1:red,{color_tmp[0]};green,{color_tmp[1]};blue,{color_tmp[2]}}}]  ({axis_l},{axis_b}) -- ({axis_l},{axis_t});',
+        # '\\draw [line width=2pt, green, opacity=0.5] ({0},{1}) -- ({0},{2});'.format(axis_r,axis_b,axis_t),
         '\\node [text=white, align=right, font=\\fs{{20}}] at ({0},{1}) {{ {2} 年 {3:0>2d} 月 {4:0>2d} 日 }};' \
             .format(1100, 680, current_date['year'], current_date['month'], current_date['day'])
         ])
@@ -164,7 +173,6 @@ def initVideo():
     # print('Video initialized!')
 
 video_onscreen = []
-video_fadeout = []
 video_ptr = 0
 initVideo()
 

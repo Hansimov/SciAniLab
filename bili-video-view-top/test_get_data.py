@@ -32,13 +32,13 @@ video_top_file = './data/video_dynamic_180723_top1000.csv' # header = True,  all
 # 视频id、up主id、播放量、收藏量、硬币量、弹幕量、视频标题、封面地址
 
 # select d.view, s.videos, d.coin, d.favorite, d.danmaku, s.title, s.aid, up.name, up.mid, s.pubdate, s.tid, s.duration, s.copyright, s.pic, up.face from
-# (select * from video_dynamic_180725 order by view) as d,
+# (select * from video_dynamic_180731 order by view) as d,
 # (select * from video_static) as s,
 # (select * from up_data) as up
 # where (d.aid=s.aid and s.mid=up.mid and (d.view<0 or d.view>=100000))
 
 # select d.view, s.videos, d.coin, s.title, d.favorite, d.danmaku, s.aid, up.name, up.mid, s.pubdate, s.tid, s.duration, s.copyright, s.pic, up.face from
-# (select * from video_dynamic_180725 order by view desc limit 200000) as d,
+# (select * from video_dynamic_180731 order by view desc limit 200000) as d,
 # (select * from video_static) as s,
 # (select * from up_data) as up
 # where (d.aid=s.aid and s.mid=up.mid and d.view>=1000000)
