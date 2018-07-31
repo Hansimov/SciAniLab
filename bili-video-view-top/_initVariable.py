@@ -9,6 +9,10 @@ axis_b, axis_t = 100, 600
 
 date_axis_segs = 200
 
+total_hits = 0
+
+level_counter = ['',0]
+
 def compareDate(date1, date2):
     # -1 A before B
     #  0 A equal  B

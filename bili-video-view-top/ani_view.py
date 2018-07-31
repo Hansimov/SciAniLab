@@ -65,8 +65,8 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-date_head = date(2018, 1, 25)
-date_tail = date(2018, 7, 25)
+date_head = date(2017, 6, 25)
+date_tail = date(2018, 7, 24)
 def initDate():
     global date_all
     date_delta = date_tail - date_head
@@ -107,8 +107,8 @@ def drawDateAxis(date_ptr):
 
     tmp_cmds = []
     tmp_cmds.extend([
-        '\\draw [line width=2, gray]  ({0},{2}) -- ({1},{2});'.format(axis_l, axis_r+50,axis_b,axis_t),
-        f'\\draw [line width={width_tmp}, draw={{rgb,1:red,{color_tmp[0]};green,{color_tmp[1]};blue,{color_tmp[2]}}}]  ({axis_l},{axis_b}) -- ({axis_l},{axis_t});',
+        f'\\draw [line width=2, gray] ({axis_l},{axis_b}) -- ({axis_r+50},{axis_b});',
+        f'\\draw [line width={width_tmp}, draw={{rgb,1:red,{color_tmp[0]};green,{color_tmp[1]};blue,{color_tmp[2]}}}] ({axis_l},{axis_b}) -- ({axis_l},{axis_t});',
         # '\\draw [line width=2pt, green, opacity=0.5] ({0},{1}) -- ({0},{2});'.format(axis_r,axis_b,axis_t),
         '\\node [text=white, align=right, font=\\fs{{20}}] at ({0},{1}) {{ {2} 年 {3:0>2d} 月 {4:0>2d} 日 }};' \
             .format(1100, 680, current_date['year'], current_date['month'], current_date['day'])
@@ -178,15 +178,16 @@ initVideo()
 
 video_view_threshold = 2e6
 
+board_onscreeen = []
+
 def drawVideoPoint():
-    global video_ptr
+    global video_ptr, total_hits, level_counter
 
     video_onscreen_len_old = len(video_onscreen)
     pop_cnt = 0
 
     while (len(date_onscreen) >= 1) and compareDate(video_all[video_ptr].pubdate, date_onscreen[-1]) <= 0:
         video_this = video_all[video_ptr]
-
         if video_this.view_avg >= video_view_threshold and compareDate(video_this.pubdate, date_all[0]) > 0:
             # date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
             if video_this.pubdate['day'] < date_onscreen[-1]['day']:
@@ -196,7 +197,10 @@ def drawVideoPoint():
 
             video_this.y = axis_b + (axis_t-axis_b) * 2*(1/(1+1.3**(-2*(video_this.view_avg)/video_view_threshold))-0.5)
             video_onscreen.append(video_this)
+            updateLevelBoard(video_this)
         video_ptr += 1
+        # if video_ptr >= len(date_all)-10:
+        #     break
 
     # while (len(video_onscreen) >= 1) and compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= -1:
     while (len(video_onscreen) >= 1)  \
@@ -204,35 +208,56 @@ def drawVideoPoint():
              or video_onscreen[0].x <= axis_l + 1.7*(axis_r-axis_l)/(date_axis_segs)):
         video_pop = video_onscreen.pop(0)
         pop_cnt += 1
-        # if video_pop.x <= axis_l + 2*(axis_r-axis_l)/date_axis_segs:
+        total_hits += 1
+        video_pop.hit_idx = total_hits
         video_fadeout.append(video_pop)
 
     for i in range(0, video_onscreen_len_old-pop_cnt):
         video_onscreen[i].x -= (axis_r-axis_l)/(date_axis_segs)
 
     for video_tmp in video_onscreen:
-        video_tmp.display()
-        video_tmp.laser()
+        # video_tmp.display()
+        # video_tmp.laser()
         video_tmp.shake()
 
     fadeout_cnt = len(video_fadeout)
     idx_tmp = 0
     for i in range(0, fadeout_cnt):
         video_tmp = video_fadeout[idx_tmp]
-        if video_tmp.halo_cnt < 0:
+        if video_tmp.halo_cnt < 0 and video_tmp.hit_cnt < 0:
             video_fadeout.pop(idx_tmp)
         else:
             video_tmp.x = axis_l
             video_tmp.halo()
+            # video_tmp.hit()
             idx_tmp += 1
+def drawHitAndBoard():
+    for board_tmp in board_onscreeen:
+        board_tmp.shine()
+    for hitbox_tmp in hitbox_onscreen:
+        hitbox_tmp.hit()
 
-    # print('Video points drawn!')
+def updateLevelBoard(video_tmp):
+    global level_counter, board_onscreeen
+
+    if video_tmp.region == level_counter[0]:
+        level_counter[1] += 1
+    else:
+        board_tmp = LevelBoard()
+        board_tmp.color = video_tmp.color
+        board_tmp.region = level_counter[0]
+        board_tmp.level = level_counter[1]
+        board_onscreeen.append(board_tmp)
+
+        level_counter[0] = video_tmp.region
+        level_counter[1] = 1
 
 if __name__ == '__main__':
     clearTex()
     addPreamble()
     beginDoc()
-    for i in range(0, 400):
+    # for i in range(0, len(date_all)):
+    for i in range(0, 300):
         beginTikz()
 
         setSize(width, height, 'lb')
@@ -241,6 +266,7 @@ if __name__ == '__main__':
         drawCover()
         drawRegion()
         drawVideoPoint()
+        drawLe
 
         endTikz()
     endDoc()

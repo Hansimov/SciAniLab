@@ -160,15 +160,120 @@ class VideoPoint(object):
         if self.shake_cnt > 0:
             this_region = region_all[self.region]
             tmp_cmds = [
-                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, inner sep=3, opacity={}] ({}) at ({},{}) {{{}}};' \
+                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, inner sep=3, opacity={}] at ({},{}) {{{}}};' \
                     .format(self.color[0], self.color[1], self.color[2], \
-                            15+2*(10-self.shake_cnt), self.shake_cnt/self.shake_cnt_max-0.2,\
-                            this_region.pinyin, this_region.x, this_region.y, this_region.name)
+                            15+2*(self.shake_cnt_max-self.shake_cnt), self.shake_cnt/self.shake_cnt_max-0.2,\
+                            this_region.x, this_region.y, this_region.name)
             ]
             self.shake_cnt -= 1
+            printTex(tmp_cmds)
+
+class HitBox(object):
+    def __init__(self):
+        self.hit_cnt_max = 15
+        self.hit_cnt = self.hit_cnt_max
+
+    def hit(self):
+        if self.hit_cnt > 0:
+            tmp_cmds = [
+                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, anchor=west, inner sep=5, opacity={}] ({}) at ({},{}) {{{}}};' \
+                    .format(self.color[0], self.color[1], self.color[2], 30, self.hit_cnt/self.hit_cnt_max,\
+                            'hit', axis_l, axis_t+40, 'HITs'),
+                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, align=right, anchor=east, inner sep=5, opacity={}] at ({}.west) {{{}}};' \
+                    .format(self.color[0], self.color[1], self.color[2], 30, self.hit_cnt/self.hit_cnt_max,\
+                            'hit', '{}'.format(self.hit_idx))
+            ]
+            self.hit_cnt -= 1
             printTex(tmp_cmds)
 
     # def draw(self):
     #     self.display()
     #     self.halo()
 
+class LevelBoard(object):
+    def __init__(self):
+        self.level_cnt_max = 20
+        self.level_cnt = self.level_cnt_max
+
+    def highlight(self):
+        if   self.level == 3:
+            # print(name, level, 'Triple Kill !')
+            # print(name, level, 'Killing spree!')
+            self.adjective = 'Killing spree!'
+        elif self.level == 4:
+            # print(name, level, 'Quodra Kill!')
+            # print(name, level, 'Rampage!')
+            self.adjective = 'Rampage!'
+        elif self.level == 5:
+            # print(name, level, 'Penta Kill !')
+            # print(name, level, 'Unstoppable!')
+            self.adjective = 'Unstoppable!'
+        elif self.level == 6:
+            # print(name, level, 'Hexa Kill !')
+            # print(name, level, 'Dominating!')
+            self.adjective = 'Dominating!'
+        elif self.level == 7:
+            # print(name, level, 'Godlike!')
+            self.adjective = 'Godlike!'
+        elif self.level >= 8:
+            # print(name, level, 'Legendary!')
+            self.adjective = 'Legendary!'
+
+        if self.level >= 3:
+            tmp_cmds = [
+                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, align=center, inner sep=5, opacity={}] at ({},{}) {{{}}};' \
+                            .format(self.color[0], self.color[1], self.color[2], 80, 1,\
+                                    width/2, height/2, self.region+'---'+self.adjective)
+            ]
+            printTex(tmp_cmds)
+
+
+# League of Legends Wiki - Kill
+#   http://leagueoflegends.wikia.com/wiki/Kill
+# Penta kill - 百度百科
+#   https://baike.baidu.com/item/Penta%20kill
+# 双杀是 (enemy) Double kill
+# 三杀是 (enemy) Triple kill
+# 四杀是 (enemy) Quadra kill
+# 五杀是 (enemy) Penta kill
+# 六杀是 (enemy) Hexa kill (只有在活动“六杀争夺战”活动中得到)
+# 如果是敌方玩家得到连杀，音效会在前面多加 Enemy
+
+# 一血是 First blood
+# 第三个 Killing Spree (正在大杀特杀)
+# 第四个 rampage (接近暴走了)
+# 第五个 unstoppable (已经无人能挡了)
+# 第六个 dominating (已经主宰比赛了)
+# 第七个 (An enemy is) godlike (已经接近神了)
+# 第八个 (An enemy is) legendary (已经超神了)
+
+# Great  Amazing  UnbilePerfect
+
+# Choosing Natural Adjective Ladders
+# http://www.mcdonald.me.uk/storytelling/lichert_article.htm
+# = Adjective     mean   SD  = #
+#   Phenomenal    9.5    1.2
+#   World-Class   9.5    0.6
+#   Incredible    9.0    0.9
+#   Amazing       8.9    1.0
+#   Exceptional   8.7    1.1
+#   Excellent     8.3    1.0
+#   Superior      8.2    1.0
+#   Great         8.0    1.1
+#   Good          6.9    1.1
+#   Fine          6.6    1.2
+#   Decent        6.2    0.9
+#   Fair          5.4    0.9
+#   Middling      5.0    0.8
+#   Mediocre      4.4    0.9
+#   Limited       3.8    1.0
+#   Weak          3.4    0.9
+#   Deficient     3.2    0.9
+#   Inferior      3.1    1.0
+#   Poor          2.9    1.1
+#   Bad           2.6    1.0
+#   Awful         1.9    0.9
+#   Terrible      1.8    1.3
+#   Dreadful      1.9    0.9
+#   Abysmal       1.3    0.8
+  
