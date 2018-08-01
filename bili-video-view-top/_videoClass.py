@@ -194,30 +194,30 @@ class LevelBoard(object):
         if   self.level == 3:
             # print(name, level, 'Triple Kill !')
             # print(name, level, 'Killing spree!')
-            self.adj_en = 'Killing spree!'
+            self.adj_en = 'Killing spree'
             self.adj_zh = '正在大杀特杀！'
         elif self.level == 4:
             # print(name, level, 'Quodra Kill!')
             # print(name, level, 'Rampage!')
-            self.adj_en = 'Rampage!'
+            self.adj_en = 'Rampage'
             self.adj_zh = '接近暴走了！'
         elif self.level == 5:
             # print(name, level, 'Penta Kill !')
             # print(name, level, 'Unstoppable!')
-            self.adj_en = 'Unstoppable!'
+            self.adj_en = 'Unstoppable'
             self.adj_zh = '已经无人能挡了！'
         elif self.level == 6:
             # print(name, level, 'Hexa Kill !')
             # print(name, level, 'Dominating!')
-            self.adj_en = 'Dominating!'
+            self.adj_en = 'Dominating'
             self.adj_zh = '已经主宰比赛了！'
         elif self.level == 7:
             # print(name, level, 'Godlike!')
-            self.adj_en = 'Godlike!'
+            self.adj_en = 'Godlike'
             self.adj_zh = '已经接近神了！'
         elif self.level >= 8:
             # print(name, level, 'Legendary!')
-            self.adj_en = 'Legendary!'
+            self.adj_en = 'Legendary'
             self.adj_zh = '已经超神了！'
 
         if self.level >= 3:
@@ -225,7 +225,7 @@ class LevelBoard(object):
                 '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\hupo\\hupozh\\fs{{{}}}, align=center, anchor=center, inner sep=5, opacity={}] at ({},{}) {{{}}};' \
                             .format(self.color[0], self.color[1], self.color[2], 60,\
                                 self.highlight_cnt/self.highlight_cnt_max, width/2, height*3/5, \
-                                str(self.level)+ '连击' + '\\\\ \\vspace*{40pt}\\\\ ' + region_all[self.region].name+'区'+self.adj_zh +'\\\\ \\vspace*{40pt}\\\\ ' + self.adj_en.upper())
+                                str(self.level)+ '\, KILL' + '\\\\ \\vspace*{40pt}\\\\ ' + region_all[self.region].name+'区'+self.adj_zh +'\\\\ \\vspace*{40pt}\\\\ ' + self.adj_en.upper())
             ]
             self.highlight_cnt -= 1
             printTex(tmp_cmds)

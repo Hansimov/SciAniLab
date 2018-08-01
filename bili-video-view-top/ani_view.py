@@ -167,6 +167,10 @@ def initVideo():
         video_tmp.view     = int(df['view'][i])
         video_tmp.videos   = int(df['videos'][i])
         video_tmp.view_avg = int(df['view_avg'][i])
+        video_tmp.favorite = int(df['favorite'][i])
+        video_tmp.coin     = int(df['coin'][i])
+        video_tmp.danmaku  = int(df['danmaku'][i])
+
         video_tmp.title    = str(df['title'][i])
         video_tmp.aid      = int(df['aid'][i])
         video_tmp.tid      = int(df['tid'][i])
@@ -250,35 +254,62 @@ def drawVideoPoint():
 
 def drawCover():
     if videos_star != {}:
-        img_ext  = os.path.splitext(videos_star.pic)[1]
-        if not img_ext in ['.jpg', '.png']:
-            img_ext = '.jpg'
+        pic_ext  = os.path.splitext(videos_star.pic)[1]
+        if not pic_ext in ['.jpg', '.png']:
+            pic_ext = '.jpg'
+
+        face_ext  = os.path.splitext(videos_star.face)[1]
+        if not face_ext in ['.jpg', '.png']:
+            face_ext = '.jpg'
 
         # img_name = os.path.splitext(videos_star.pic)[0]
-        img_body = 'aid_{:0>10d}'.format(videos_star.aid)
-        img_path = './pic/{}{}'.format(img_body, img_ext)
+        pic_body = 'aid_{:0>10d}'.format(videos_star.aid)
+        pic_path = './pic/{}{}'.format(pic_body, pic_ext)
 
-        cover_id   = 'cover'   + str(videos_star.aid)
+        face_body = 'mid_{:0>10d}'.format(videos_star.mid)
+        face_path = './face/{}{}'.format(face_body, face_ext)
+
+        pic_id     = 'pic'     + str(videos_star.aid)
         title_id   = 'title'   + str(videos_star.aid)
         pubdate_id = 'pubdate' + str(videos_star.aid)
+
         up_id      = 'up'      + str(videos_star.aid)
+        face_id    = 'face'    + str(videos_star.aid)
+
+        view_avg_id = 'viewavg'  + str(videos_star.aid)
+        favorite_id = 'favorite' + str(videos_star.aid)
+        coin_id     = 'coin'     + str(videos_star.aid)
+        danmaku_id  = 'danmaku'  + str(videos_star.aid)
 
         tmp_cmds = [
             # '\\fill [green,radius={}] ({},{}) circle;'.format(radius,80+80*sin(i*0.2),80+80*cos(i*0.2)),
-            '\\tikzstyle{{covertextcolor}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=south west, align=left, font=\\fs{{15}}];'\
+            '\\tikzstyle{{videocover}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=south west, align=left, font=\\fs{{15}}, inner sep=5pt];'\
                 .format(videos_star.color[0], videos_star.color[1], videos_star.color[2]),
             '\\node [draw={{rgb,1: red,{}; green,{}; blue,{}}}, line width=3, anchor=south east, opacity=0.7] ({}) at ({},{}) {{ \\includegraphics[width={}pt,height={}pt] {{{}}} }};'\
-                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2], cover_id, \
-                    cover_x, cover_y, cover_w, cover_h, img_path
-                    ),
-            '\\node [covertextcolor, yshift=5pt] ({}) at ({}.north west) {{{}}};'\
-                .format(title_id, cover_id, videos_star.title),
-            '\\node [covertextcolor] ({}) at ({}.north west) {{{}}};'\
-                .format(pubdate_id, title_id, \
-                    str(videos_star.pubdate['year'])+'年'+str(videos_star.pubdate['month'])+'月'+str(videos_star.pubdate['day'])+'日'+'\\quad 投稿'),
-            '\\node [covertextcolor] ({}) at ({}.north west) {{{}}};'\
-                .format(up_id, pubdate_id, videos_star.name)
+                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2], pic_id, \
+                    cover_x, cover_y, cover_w, cover_h, pic_path),
+            '\\node [draw={{rgb,1: red,{}; green,{}; blue,{}}}, line width=2, anchor=south west, opacity=0.7] ({}) at ({}.north west) {{\\includegraphics[width={}pt] {{{}}}}};'\
+                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2], \
+                     face_id, pic_id, 60, face_path),
+
+            '\\node [videocover, text=white!70!black, xshift= 10pt] ({}) at ({}.south east) {{{:0>4d} 年 {:0>2d} 月 {:0>2d} 日 \\quad 投稿}};'\
+                .format(pubdate_id, face_id, \
+                    videos_star.pubdate['year'], videos_star.pubdate['month'], videos_star.pubdate['day']),
+            '\\node [videocover, text=white] ({}) at ({}.north west) {{{}}};'\
+                .format(up_id, pubdate_id, videos_star.name),
+            '\\node [videocover, text width=230pt] ({}) at ({}.north west) {{{}}};'\
+                .format(title_id, up_id, videos_star.title),
+
+            '\\tikzstyle{{videodata}}=[anchor=north east, align=right, font=\\fs{{15}}, inner sep=5pt];',
+            '\\node [videodata] ({}) at ({}.north west) {{{}}};'.format(view_avg_id, pic_id, '{} \\, 播放'.format(videos_star.view_avg)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(favorite_id, view_avg_id, '{} \\, 收藏'.format(videos_star.favorite)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(coin_id, favorite_id, '{} \\, 硬币'.format(videos_star.coin)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(danmaku_id, coin_id, '{} \\, 弹幕'.format(videos_star.danmaku)),
         ]
+
+        tmp_cmds.extend([
+
+        ])
         printTex(tmp_cmds)
 
 def updateHitBox(video_tmp):
