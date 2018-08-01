@@ -25,6 +25,7 @@ semlock = threading.BoundedSemaphore(thrd_num_max)
 
 def getImage(img_link, img_name, retry_count=0):
     global remaining_num, total_num
+
     if os.path.exists(img_name):
         print(f'=== Remaining: {remaining_num:{0}{5}}/{total_num:{0}{5}} ===')
         print(f'+++ Existed: {img_name}')
@@ -64,7 +65,7 @@ def createThread(img_link, img_ext, xid, xtype):
 def startThread(thrd):
     # thrd.daemon = True
     thrd.start()
-    thrd.join()
+    # thrd.join()
 
 pic_list = []
 face_list = []

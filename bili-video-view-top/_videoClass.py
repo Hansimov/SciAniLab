@@ -127,7 +127,7 @@ class VideoPoint(object):
 
     def display(self):
         tmp_cmds = [
-            '\\node [fill={{rgb,1: red,{}; green,{}; blue,{}}}, shape=circle, minimum size={}] ({}) at ({},{}) {{}};' \
+            '\\node [fill={{rgb,1: red,{}; green,{}; blue,{}}}, shape=circle, minimum size={}, opacity=0.8] ({}) at ({},{}) {{}};' \
                 .format(self.color[0], self.color[1], self.color[2], 2*self.radius, self.aid, self.x, self.y)
         ]
         printTex(tmp_cmds)
@@ -185,13 +185,9 @@ class HitBox(object):
             self.hit_cnt -= 1
             printTex(tmp_cmds)
 
-    # def draw(self):
-    #     self.display()
-    #     self.halo()
-
 class LevelBoard(object):
     def __init__(self):
-        self.highlight_cnt_max = 20
+        self.highlight_cnt_max = 40
         self.highlight_cnt = self.highlight_cnt_max
 
     def highlight(self):
@@ -226,10 +222,10 @@ class LevelBoard(object):
 
         if self.level >= 3:
             tmp_cmds = [
-                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, align=center,anchor=center, inner sep=5, opacity={}] at ({},{}) {{{}}};' \
-                            .format(self.color[0], self.color[1], self.color[2], 80, \
+                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\hupo\\hupozh\\fs{{{}}}, align=center, anchor=center, inner sep=5, opacity={}] at ({},{}) {{{}}};' \
+                            .format(self.color[0], self.color[1], self.color[2], 60,\
                                 self.highlight_cnt/self.highlight_cnt_max, width/2, height*3/5, \
-                                self.adj_en.upper() + '\\\\\\vspace*{40pt}\\\\' + region_all[self.region].name+'区'+self.adj_zh)
+                                str(self.level)+ '连击' + '\\\\ \\vspace*{40pt}\\\\ ' + region_all[self.region].name+'区'+self.adj_zh +'\\\\ \\vspace*{40pt}\\\\ ' + self.adj_en.upper())
             ]
             self.highlight_cnt -= 1
             printTex(tmp_cmds)

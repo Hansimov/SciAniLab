@@ -82,9 +82,29 @@ def initDate():
             date_tmp['minute']  = 0
             date_all.append(date_tmp)
 
+view_num_list = [200, 400, 600, 800, 1000, 2000]
+view_height_list = []
+def initViewRange():
+    global view_height_list
+    for i in view_num_list:
+        view_height_tmp = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=i*1e4, ratio=video_view_threshold/2)
+        view_height_list.append(view_height_tmp)
+
+initViewRange()
+def drawViewAxis():
+    tmp_cmds = []
+    for i in range(len(view_height_list)):
+        view_height_tmp = view_height_list[i]
+        view_num_tmp = view_num_list[i]
+        tmp_cmds.extend([
+            f'\\draw [gray, opacity=0.6] ({axis_l}, {view_height_tmp}) -- ({axis_r},{view_height_tmp});',
+            '\\node [gray, opacity=0.6, align=right, anchor=east, font=\\fs{{20}}, inner sep=12] at ({},{}) {{{}}};'\
+                .format(axis_l, view_height_tmp, str(view_num_tmp)+'万')
+        ])
+    printTex(tmp_cmds)
+
 date_onscreen = []
 video_fadeout = []
-
 initDate()
 def drawDateAxis(date_ptr):
     global date_onscreen
@@ -107,7 +127,7 @@ def drawDateAxis(date_ptr):
 
     tmp_cmds = []
     tmp_cmds.extend([
-        f'\\draw [line width=2, gray] ({axis_l},{axis_b}) -- ({axis_r+50},{axis_b});',
+        f'\\draw [line width=2, gray] ({axis_l},{axis_b}) -- ({axis_r},{axis_b});',
         f'\\draw [line width={width_tmp}, draw={{rgb,1:red,{color_tmp[0]};green,{color_tmp[1]};blue,{color_tmp[2]}}}] ({axis_l},{axis_b}) -- ({axis_l},{axis_t});',
         # '\\draw [line width=2pt, green, opacity=0.5] ({0},{1}) -- ({0},{2});'.format(axis_r,axis_b,axis_t),
         '\\node [text=white, align=right, font=\\fs{{20}}] at ({0},{1}) {{ {2} 年 {3:0>2d} 月 {4:0>2d} 日 }};' \
@@ -132,17 +152,10 @@ def drawDateAxis(date_ptr):
                 tmp_cmds.extend([
                     '\\draw [gray] ({0},{1}) -- ({0}, {2});'.format(date_tmp_x, axis_b-3, axis_b+3)
                 ])
-
         cnt +=1
 
     printTex(tmp_cmds)
 
-def drawCover():
-    tmp_cmds = [
-        # '\\fill [green,radius={}] ({},{}) circle;'.format(radius,80+80*sin(i*0.2),80+80*cos(i*0.2)),
-        '\\fill [opacity=0.8, fill={{rgb,1: red,1; green,1; blue,0}}] ({},{}) rectangle ({}, {});'.format(cover_x, cover_y, cover_x+cover_w, cover_y+cover_h)
-    ]
-    printTex(tmp_cmds)
 
 video_all = []
 def initVideo():
@@ -159,6 +172,8 @@ def initVideo():
         video_tmp.tid      = int(df['tid'][i])
         video_tmp.name     = str(df['name'][i])
         video_tmp.mid      = int(df['mid'][i])
+        video_tmp.pic      = str(df['pic'][i])
+        video_tmp.face     = str(df['face'][i])
 
         pubdate_this = datetime.strptime(df['pubdate'][i], '%Y/%m/%d %H:%M:%S')
         pubdate_tmp = {}
@@ -176,13 +191,13 @@ video_onscreen = []
 video_ptr = 0
 initVideo()
 
-video_view_threshold = 2e6
-
 board_onscreen = []
 hitbox_onscreen = []
 
+videos_star = {}
+
 def drawVideoPoint():
-    global video_ptr, total_hits, level_counter
+    global video_ptr, total_hits, level_counter, videos_star
 
     video_onscreen_len_old = len(video_onscreen)
     pop_cnt = 0
@@ -196,8 +211,11 @@ def drawVideoPoint():
             else:
                 video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (date_onscreen[-1]['hour'] - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
 
-            video_this.y = axis_b + (axis_t-axis_b) * 2*(1/(1+1.3**(-2*(video_this.view_avg)/video_view_threshold))-0.5)
+            # video_this.y = axis_b + (axis_t-axis_b) * 2*(1/(1+1.3**(-2*(video_this.view_avg)/video_view_threshold))-0.5)
+            video_this.y = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=video_this.view_avg, ratio=video_view_threshold/2)
             video_onscreen.append(video_this)
+            if video_this.view_avg >= video_star_threshold:
+                videos_star = video_this
             updateLevelBoard(video_this)
         video_ptr += 1
 
@@ -227,9 +245,41 @@ def drawVideoPoint():
             video_fadeout.pop(idx_tmp)
         else:
             video_tmp.x = axis_l
-            video_tmp.halo()
+            # video_tmp.halo()
             idx_tmp += 1
 
+def drawCover():
+    if videos_star != {}:
+        img_ext  = os.path.splitext(videos_star.pic)[1]
+        if not img_ext in ['.jpg', '.png']:
+            img_ext = '.jpg'
+
+        # img_name = os.path.splitext(videos_star.pic)[0]
+        img_body = 'aid_{:0>10d}'.format(videos_star.aid)
+        img_path = './pic/{}{}'.format(img_body, img_ext)
+
+        cover_id   = 'cover'   + str(videos_star.aid)
+        title_id   = 'title'   + str(videos_star.aid)
+        pubdate_id = 'pubdate' + str(videos_star.aid)
+        up_id      = 'up'      + str(videos_star.aid)
+
+        tmp_cmds = [
+            # '\\fill [green,radius={}] ({},{}) circle;'.format(radius,80+80*sin(i*0.2),80+80*cos(i*0.2)),
+            '\\tikzstyle{{covertextcolor}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=south west, align=left, font=\\fs{{15}}];'\
+                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2]),
+            '\\node [draw={{rgb,1: red,{}; green,{}; blue,{}}}, line width=3, anchor=south east, opacity=0.7] ({}) at ({},{}) {{ \\includegraphics[width={}pt,height={}pt] {{{}}} }};'\
+                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2], cover_id, \
+                    cover_x, cover_y, cover_w, cover_h, img_path
+                    ),
+            '\\node [covertextcolor, yshift=5pt] ({}) at ({}.north west) {{{}}};'\
+                .format(title_id, cover_id, videos_star.title),
+            '\\node [covertextcolor] ({}) at ({}.north west) {{{}}};'\
+                .format(pubdate_id, title_id, \
+                    str(videos_star.pubdate['year'])+'年'+str(videos_star.pubdate['month'])+'月'+str(videos_star.pubdate['day'])+'日'+'\\quad 投稿'),
+            '\\node [covertextcolor] ({}) at ({}.north west) {{{}}};'\
+                .format(up_id, pubdate_id, videos_star.name)
+        ]
+        printTex(tmp_cmds)
 
 def updateHitBox(video_tmp):
     global hitbox_onscreen
@@ -286,11 +336,12 @@ if __name__ == '__main__':
 
         setSize(width, height, 'lb')
 
+        drawViewAxis()
         drawDateAxis(i)
-        drawCover()
         drawRegion()
         drawVideoPoint()
         drawHitAndBoard()
+        drawCover()
 
         endTikz()
     endDoc()

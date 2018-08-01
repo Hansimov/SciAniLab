@@ -27,6 +27,13 @@ def addPreamble():
         '\\usetikzlibrary{calc}',
         '\\usetikzlibrary{backgrounds}',
         '\\usepackage[scheme=plain]{ctex}',
+        # '\\usepackage[UTF8]{ctex}',
+        # '\\usepackage{fontspec, xunicode, xltxtra}',
+        # '\\usepackage[utf8]{inputenc}',
+        # '\\usepackage[T1]{fontenc}',
+        '\\newfontfamily\\hupo{STHupo}',
+        '\\setCJKfamilyfont{hwhp}{STHupo}',
+        '\\newcommand{\\hupozh}{\\CJKfamily{hwhp}}',
         '\\newcommand{\\fs}[1]{\\fontsize{#1}{0pt}\\selectfont}',
         '\\setCJKmainfont{Microsoft YaHei}',
         '\\setmainfont{Microsoft YaHei}'

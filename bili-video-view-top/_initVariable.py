@@ -1,13 +1,16 @@
 # width, height = 1920+7, 1080+4
 width, height = 1280+5, 720+3
 
-cover_x, cover_y = 920, 50
-cover_w, cover_h = 350, 350*9/16
+cover_x, cover_y = 1280-20, 20
+cover_w, cover_h = 300, 300*9/16
 
-axis_l, axis_r = 100, cover_x-50
+axis_l, axis_r = 100, width-cover_w-30
 axis_b, axis_t = 100, 600
 
 date_axis_segs = 200
+
+video_view_threshold = 2e6
+video_star_threshold = 5e6
 
 total_hits = 0
 
@@ -43,3 +46,11 @@ def compareDate(date1, date2):
                         return  1
                     else:
                         return  0
+
+def logisticX(base=2, val=0, offset=0, ratio=1):
+    # map [0, +∞] to [0, 1]
+    return 2*(1/(1+base**(-(val-offset)/ratio))-0.5)
+
+def logistic(base=2, val=0, offset=0, ratio=1):
+    # map [-∞, +∞] to [0, 1]
+    return 1/(1+base**(-(val-offset)/ratio))
