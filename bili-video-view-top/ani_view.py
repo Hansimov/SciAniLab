@@ -178,7 +178,8 @@ initVideo()
 
 video_view_threshold = 2e6
 
-board_onscreeen = []
+board_onscreen = []
+hitbox_onscreen = []
 
 def drawVideoPoint():
     global video_ptr, total_hits, level_counter
@@ -199,8 +200,6 @@ def drawVideoPoint():
             video_onscreen.append(video_this)
             updateLevelBoard(video_this)
         video_ptr += 1
-        # if video_ptr >= len(date_all)-10:
-        #     break
 
     # while (len(video_onscreen) >= 1) and compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= -1:
     while (len(video_onscreen) >= 1)  \
@@ -208,9 +207,9 @@ def drawVideoPoint():
              or video_onscreen[0].x <= axis_l + 1.7*(axis_r-axis_l)/(date_axis_segs)):
         video_pop = video_onscreen.pop(0)
         pop_cnt += 1
-        total_hits += 1
-        video_pop.hit_idx = total_hits
         video_fadeout.append(video_pop)
+        total_hits += 1
+        updateHitBox(video_pop)
 
     for i in range(0, video_onscreen_len_old-pop_cnt):
         video_onscreen[i].x -= (axis_r-axis_l)/(date_axis_segs)
@@ -224,40 +223,65 @@ def drawVideoPoint():
     idx_tmp = 0
     for i in range(0, fadeout_cnt):
         video_tmp = video_fadeout[idx_tmp]
-        if video_tmp.halo_cnt < 0 and video_tmp.hit_cnt < 0:
+        if video_tmp.halo_cnt <= 0:
             video_fadeout.pop(idx_tmp)
         else:
             video_tmp.x = axis_l
             video_tmp.halo()
-            # video_tmp.hit()
             idx_tmp += 1
-def drawHitAndBoard():
-    for board_tmp in board_onscreeen:
-        board_tmp.shine()
-    for hitbox_tmp in hitbox_onscreen:
-        hitbox_tmp.hit()
+
+
+def updateHitBox(video_tmp):
+    global hitbox_onscreen
+    hitbox_tmp = HitBox()
+    hitbox_tmp.num = total_hits
+    hitbox_tmp.color = video_tmp.color
+    hitbox_onscreen.append(hitbox_tmp)
 
 def updateLevelBoard(video_tmp):
-    global level_counter, board_onscreeen
+    global level_counter, board_onscreen
 
-    if video_tmp.region == level_counter[0]:
+    if level_counter[0] == '':
+        level_counter[0] = video_tmp.region
+        level_counter[1] = 1
+    elif video_tmp.region == level_counter[0]:
         level_counter[1] += 1
     else:
-        board_tmp = LevelBoard()
-        board_tmp.color = video_tmp.color
-        board_tmp.region = level_counter[0]
-        board_tmp.level = level_counter[1]
-        board_onscreeen.append(board_tmp)
+        if level_counter[1] >= 3:
+            board_tmp = LevelBoard()
+            board_tmp.region = level_counter[0]
+            board_tmp.level = level_counter[1]
+            board_tmp.color = region_all[board_tmp.region].color
+            board_onscreen.append(board_tmp)
 
         level_counter[0] = video_tmp.region
         level_counter[1] = 1
+
+def drawHitAndBoard():
+    idx_tmp = 0
+    for i in range(0, len(hitbox_onscreen)):
+        hitbox_tmp = hitbox_onscreen[idx_tmp]
+        if hitbox_tmp.hit_cnt <= 0:
+            hitbox_onscreen.pop(idx_tmp)
+        else:
+            hitbox_tmp.hit()
+            idx_tmp += 1
+
+    idx_tmp = 0
+    for i in range(0,len(board_onscreen)):
+        board_tmp = board_onscreen[idx_tmp]
+        if board_tmp.highlight_cnt <= 0:
+            board_onscreen.pop(idx_tmp)
+        else:
+            board_tmp.highlight()
+            idx_tmp += 1
 
 if __name__ == '__main__':
     clearTex()
     addPreamble()
     beginDoc()
     # for i in range(0, len(date_all)):
-    for i in range(0, 300):
+    for i in range(0, 80):
         beginTikz()
 
         setSize(width, height, 'lb')
@@ -266,7 +290,7 @@ if __name__ == '__main__':
         drawCover()
         drawRegion()
         drawVideoPoint()
-        drawLe
+        drawHitAndBoard()
 
         endTikz()
     endDoc()

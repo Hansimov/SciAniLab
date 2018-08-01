@@ -23,7 +23,6 @@ class RegionBlock(object):
         ]
         printTex(tmp_cmds)
 
-
 region_all = {}
 def initRegion():
     global region_all
@@ -181,7 +180,7 @@ class HitBox(object):
                             'hit', axis_l, axis_t+40, 'HITs'),
                 '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, align=right, anchor=east, inner sep=5, opacity={}] at ({}.west) {{{}}};' \
                     .format(self.color[0], self.color[1], self.color[2], 30, self.hit_cnt/self.hit_cnt_max,\
-                            'hit', '{}'.format(self.hit_idx))
+                            'hit', '{}'.format(self.num))
             ]
             self.hit_cnt -= 1
             printTex(tmp_cmds)
@@ -192,41 +191,48 @@ class HitBox(object):
 
 class LevelBoard(object):
     def __init__(self):
-        self.level_cnt_max = 20
-        self.level_cnt = self.level_cnt_max
+        self.highlight_cnt_max = 20
+        self.highlight_cnt = self.highlight_cnt_max
 
     def highlight(self):
         if   self.level == 3:
             # print(name, level, 'Triple Kill !')
             # print(name, level, 'Killing spree!')
-            self.adjective = 'Killing spree!'
+            self.adj_en = 'Killing spree!'
+            self.adj_zh = '正在大杀特杀！'
         elif self.level == 4:
             # print(name, level, 'Quodra Kill!')
             # print(name, level, 'Rampage!')
-            self.adjective = 'Rampage!'
+            self.adj_en = 'Rampage!'
+            self.adj_zh = '接近暴走了！'
         elif self.level == 5:
             # print(name, level, 'Penta Kill !')
             # print(name, level, 'Unstoppable!')
-            self.adjective = 'Unstoppable!'
+            self.adj_en = 'Unstoppable!'
+            self.adj_zh = '已经无人能挡了！'
         elif self.level == 6:
             # print(name, level, 'Hexa Kill !')
             # print(name, level, 'Dominating!')
-            self.adjective = 'Dominating!'
+            self.adj_en = 'Dominating!'
+            self.adj_zh = '已经主宰比赛了！'
         elif self.level == 7:
             # print(name, level, 'Godlike!')
-            self.adjective = 'Godlike!'
+            self.adj_en = 'Godlike!'
+            self.adj_zh = '已经接近神了！'
         elif self.level >= 8:
             # print(name, level, 'Legendary!')
-            self.adjective = 'Legendary!'
+            self.adj_en = 'Legendary!'
+            self.adj_zh = '已经超神了！'
 
         if self.level >= 3:
             tmp_cmds = [
-                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, align=center, inner sep=5, opacity={}] at ({},{}) {{{}}};' \
-                            .format(self.color[0], self.color[1], self.color[2], 80, 1,\
-                                    width/2, height/2, self.region+'---'+self.adjective)
+                '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{{}}}, align=center,anchor=center, inner sep=5, opacity={}] at ({},{}) {{{}}};' \
+                            .format(self.color[0], self.color[1], self.color[2], 80, \
+                                self.highlight_cnt/self.highlight_cnt_max, width/2, height*3/5, \
+                                self.adj_en.upper() + '\\\\\\vspace*{40pt}\\\\' + region_all[self.region].name+'区'+self.adj_zh)
             ]
+            self.highlight_cnt -= 1
             printTex(tmp_cmds)
-
 
 # League of Legends Wiki - Kill
 #   http://leagueoflegends.wikia.com/wiki/Kill

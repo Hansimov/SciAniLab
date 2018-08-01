@@ -11,7 +11,7 @@ date_axis_segs = 200
 
 total_hits = 0
 
-level_counter = ['',0]
+level_counter = ['', 0]
 
 def compareDate(date1, date2):
     # -1 A before B
