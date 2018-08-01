@@ -300,11 +300,12 @@ def drawCover():
             '\\node [videocover, text width=230pt] ({}) at ({}.north west) {{{}}};'\
                 .format(title_id, up_id, videos_star.title),
 
-            '\\tikzstyle{{videodata}}=[anchor=north east, align=right, font=\\fs{{15}}, inner sep=5pt];',
-            '\\node [videodata] ({}) at ({}.north west) {{{}}};'.format(view_avg_id, pic_id, '{} \\, 播放'.format(videos_star.view_avg)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(favorite_id, view_avg_id, '{} \\, 收藏'.format(videos_star.favorite)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(coin_id, favorite_id, '{} \\, 硬币'.format(videos_star.coin)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(danmaku_id, coin_id, '{} \\, 弹幕'.format(videos_star.danmaku)),
+            '\\tikzstyle{{videodata}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=north east, align=right, font=\\fs{{15}}, inner sep=5pt, opacity=0.8];'\
+                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2]),
+            '\\node [videodata, xshift=-5pt] ({}) at ({}.north west) {{{}}};'.format(view_avg_id, pic_id, '{} 播放'.format(videos_star.view_avg)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(favorite_id, view_avg_id, '{} 收藏'.format(videos_star.favorite)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(coin_id, favorite_id, '{} 硬币'.format(videos_star.coin)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(danmaku_id, coin_id, '{} 弹幕'.format(videos_star.danmaku)),
         ]
 
         tmp_cmds.extend([
