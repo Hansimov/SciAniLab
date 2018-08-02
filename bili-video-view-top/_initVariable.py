@@ -54,3 +54,16 @@ def logisticX(base=2, val=0, offset=0, ratio=1):
 def logistic(base=2, val=0, offset=0, ratio=1):
     # map [-∞, +∞] to [0, 1]
     return 1/(1+base**(-(val-offset)/ratio))
+
+def escchar(texstr):
+    # char_macro = ['~', '^', '\\']
+    texstr = texstr.replace('\\','\\textbackslash ')
+    # Put all after backslash
+    texstr = texstr.replace('~','\\textasciitilde ')
+    texstr = texstr.replace('^','\\textasciicircum ')
+
+    char_slash = ['&', '%', '$', '#', '_', '{', '}']
+    for char in char_slash:
+        texstr = texstr.replace(char, '\\'+char+' ')
+
+    return texstr

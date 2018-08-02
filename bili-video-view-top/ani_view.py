@@ -66,7 +66,7 @@ hit数 -> 小飞机打砖块
 date_all = []
 
 date_head = date(2017, 6, 25)
-date_tail = date(2018, 7, 24)
+date_tail = date(2017, 7, 24)
 def initDate():
     global date_all
     date_delta = date_tail - date_head
@@ -237,8 +237,8 @@ def drawVideoPoint():
         video_onscreen[i].x -= (axis_r-axis_l)/(date_axis_segs)
 
     for video_tmp in video_onscreen:
-        # video_tmp.display()
-        # video_tmp.laser()
+        video_tmp.display()
+        video_tmp.laser()
         video_tmp.shake()
 
     fadeout_cnt = len(video_fadeout)
@@ -249,7 +249,7 @@ def drawVideoPoint():
             video_fadeout.pop(idx_tmp)
         else:
             video_tmp.x = axis_l
-            # video_tmp.halo()
+            video_tmp.halo()
             idx_tmp += 1
 
 def drawCover():
@@ -296,21 +296,22 @@ def drawCover():
                 .format(pubdate_id, face_id, \
                     videos_star.pubdate['year'], videos_star.pubdate['month'], videos_star.pubdate['day']),
             '\\node [videocover, text=white] ({}) at ({}.north west) {{{}}};'\
-                .format(up_id, pubdate_id, videos_star.name),
+                .format(up_id, pubdate_id, escchar(videos_star.name)),
             '\\node [videocover, text width=230pt] ({}) at ({}.north west) {{{}}};'\
-                .format(title_id, up_id, videos_star.title),
+                .format(title_id, up_id, escchar(videos_star.title)),
 
-            '\\tikzstyle{{videodata}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=north east, align=right, font=\\fs{{15}}, inner sep=5pt, opacity=0.8];'\
+            '\\tikzstyle{{videodata}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=north east, align=right, font=\\fs{{15}}, inner sep=5pt];'\
                 .format(videos_star.color[0], videos_star.color[1], videos_star.color[2]),
-            '\\node [videodata, xshift=-5pt] ({}) at ({}.north west) {{{}}};'.format(view_avg_id, pic_id, '{} 播放'.format(videos_star.view_avg)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(favorite_id, view_avg_id, '{} 收藏'.format(videos_star.favorite)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(coin_id, favorite_id, '{} 硬币'.format(videos_star.coin)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'.format(danmaku_id, coin_id, '{} 弹幕'.format(videos_star.danmaku)),
+            '\\node [videodata, xshift=-5pt] ({}) at ({}.north west) {{{}}};'\
+                .format(view_avg_id, pic_id, '{} 播放'.format(videos_star.view_avg)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
+                .format(favorite_id, view_avg_id, '{} 收藏'.format(videos_star.favorite)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
+                .format(coin_id, favorite_id, '{} 硬币'.format(videos_star.coin)),
+            '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
+                .format(danmaku_id, coin_id, '{} 弹幕'.format(videos_star.danmaku)),
         ]
 
-        tmp_cmds.extend([
-
-        ])
         printTex(tmp_cmds)
 
 def updateHitBox(video_tmp):
@@ -363,7 +364,7 @@ if __name__ == '__main__':
     addPreamble()
     beginDoc()
     # for i in range(0, len(date_all)):
-    for i in range(0, 80):
+    for i in range(0, 100):
         beginTikz()
 
         setSize(width, height, 'lb')
