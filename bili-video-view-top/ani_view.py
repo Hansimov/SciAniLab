@@ -65,8 +65,8 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-date_head = date(2017, 6, 25)
-date_tail = date(2017, 7, 24)
+date_head = date(2017, 7, 26)
+date_tail = date(2017, 8, 3)
 def initDate():
     global date_all
     date_delta = date_tail - date_head
@@ -81,6 +81,7 @@ def initDate():
             date_tmp['hour']  = 4*j
             date_tmp['minute']  = 0
             date_all.append(date_tmp)
+        # print(date_this)
 
 view_num_list = [200, 400, 600, 800, 1000, 2000]
 view_height_list = []
@@ -136,7 +137,7 @@ def drawDateAxis(date_ptr):
 
     cnt = 0
     for date_tmp in date_onscreen:
-        if date_tmp['hour'] == 4:
+        if date_tmp['hour'] == 0:
             date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
             if date_tmp['day'] == 1:
                 tmp_cmds.extend([
@@ -160,7 +161,7 @@ def drawDateAxis(date_ptr):
 video_all = []
 def initVideo():
     global video_all
-    df = pd.read_csv('./data/view_gt100w_180725.CSV', sep=',')
+    df = pd.read_csv('./data/view_gt100w_180808_x.csv', sep=',')
     # view, videos, view_avg, title, coin, favorite, danmaku, aid, name, mid, pubdate, tid, duration, copyright, pic, face
     for i in range(len(df)):
         video_tmp = VideoPoint()
@@ -205,17 +206,15 @@ def drawVideoPoint():
 
     video_onscreen_len_old = len(video_onscreen)
     pop_cnt = 0
-
-    while (len(date_onscreen) >= 1) and compareDate(video_all[video_ptr].pubdate, date_onscreen[-1]) <= 0:
+    while (len(date_onscreen) >= 1) and (video_ptr < len(video_all)) \
+        and compareDate(video_all[video_ptr].pubdate, date_onscreen[-1]) <= 0:
         video_this = video_all[video_ptr]
+
         if video_this.view_avg >= video_view_threshold and compareDate(video_this.pubdate, date_all[0]) > 0:
-            # date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
-            if video_this.pubdate['day'] < date_onscreen[-1]['day']:
+            if video_this.pubdate['hour'] >= 20:
                 video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (24 - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
             else:
                 video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (date_onscreen[-1]['hour'] - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
-
-            # video_this.y = axis_b + (axis_t-axis_b) * 2*(1/(1+1.3**(-2*(video_this.view_avg)/video_view_threshold))-0.5)
             video_this.y = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=video_this.view_avg, ratio=video_view_threshold/2)
             video_onscreen.append(video_this)
             if video_this.view_avg >= video_star_threshold:
@@ -223,7 +222,6 @@ def drawVideoPoint():
             updateLevelBoard(video_this)
         video_ptr += 1
 
-    # while (len(video_onscreen) >= 1) and compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= -1:
     while (len(video_onscreen) >= 1)  \
         and (compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= 0 \
              or video_onscreen[0].x <= axis_l + 1.7*(axis_r-axis_l)/(date_axis_segs)):
@@ -292,7 +290,7 @@ def drawCover():
                 .format(videos_star.color[0], videos_star.color[1], videos_star.color[2], \
                      face_id, pic_id, 60, face_path),
 
-            '\\node [videocover, text=white!70!black, xshift= 10pt] ({}) at ({}.south east) {{{:0>4d} 年 {:0>2d} 月 {:0>2d} 日 \\quad 投稿}};'\
+            '\\node [videocover, xshift= 10pt] ({}) at ({}.south east) {{{:0>4d} 年 {:0>2d} 月 {:0>2d} 日 \\quad 投稿}};'\
                 .format(pubdate_id, face_id, \
                     videos_star.pubdate['year'], videos_star.pubdate['month'], videos_star.pubdate['day']),
             '\\node [videocover, text=white] ({}) at ({}.north west) {{{}}};'\
@@ -363,8 +361,8 @@ if __name__ == '__main__':
     clearTex()
     addPreamble()
     beginDoc()
-    # for i in range(0, len(date_all)):
-    for i in range(0, 100):
+    for i in range(0, len(date_all)):
+    # for i in range(0, 300):
         beginTikz()
 
         setSize(width, height, 'lb')

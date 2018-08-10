@@ -56,7 +56,7 @@ class VideoPoint(object):
         self.halo_cnt = self.halo_cnt_max
         self.laser_cnt_max = 15
         self.laser_cnt = self.laser_cnt_max
-        self.shake_cnt_max = 10
+        self.shake_cnt_max = 15
         self.shake_cnt = self.shake_cnt_max
 
     @property
@@ -128,7 +128,9 @@ class VideoPoint(object):
     def display(self):
         tmp_cmds = [
             '\\node [fill={{rgb,1: red,{}; green,{}; blue,{}}}, shape=circle, minimum size={}, opacity=0.8] ({}) at ({},{}) {{}};' \
-                .format(self.color[0], self.color[1], self.color[2], 2*self.radius, self.aid, self.x, self.y)
+                .format(self.color[0], self.color[1], self.color[2], 2*self.radius, self.aid, self.x, self.y),
+            '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, opacity=0.5, anchor=west, align=left, inner sep=4pt, font=\\fs{{{}}}] at ({}.east) {{{}}};' \
+                .format(self.color[0], self.color[1], self.color[2], 2*self.radius, self.aid, escchar(self.title))
         ]
         printTex(tmp_cmds)
 
@@ -187,7 +189,7 @@ class HitBox(object):
 
 class LevelBoard(object):
     def __init__(self):
-        self.highlight_cnt_max = 40
+        self.highlight_cnt_max = 70
         self.highlight_cnt = self.highlight_cnt_max
 
     def highlight(self):
@@ -225,7 +227,7 @@ class LevelBoard(object):
                 '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\hupo\\hupozh\\fs{{{}}}, align=center, anchor=center, inner sep=5, opacity={}] at ({},{}) {{{}}};' \
                             .format(self.color[0], self.color[1], self.color[2], 60,\
                                 self.highlight_cnt/self.highlight_cnt_max, width/2, height*3/5, \
-                                str(self.level)+ '\, KILL' + '\\\\ \\vspace*{40pt}\\\\ ' + region_all[self.region].name+'区'+self.adj_zh +'\\\\ \\vspace*{40pt}\\\\ ' + self.adj_en.upper())
+                                str(self.level)+ '\\, KILL' + '\\\\ \\vspace*{40pt}\\\\ ' + region_all[self.region].name+'区'+self.adj_zh +'\\\\ \\vspace*{40pt}\\\\ ' + self.adj_en.upper())
             ]
             self.highlight_cnt -= 1
             printTex(tmp_cmds)

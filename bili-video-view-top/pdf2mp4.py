@@ -10,4 +10,7 @@ if not os.path.exists('frames'):
 os.system('gswin64c -sDEVICE=pngalpha -r216 -dDownScaleFactor=3 -o ./frames/ani_view_%06d.png ani_view.pdf')
 # os.system('gswin64c -sDEVICE=pngalpha -r144 -dDownScaleFactor=2 -o ./frames/ani_view_%06d.png ani_view.pdf')
 
-os.system('C:/MySoftwares/ffmpeg/bin/ffmpeg.exe -framerate 60 -i ./frames/ani_view_%06d.png -pix_fmt yuv420p ani_view.mp4')
+
+# ffmpeg_path = 'C:/MySoftwares/ffmpeg/bin/ffmpeg.exe'
+ffmpeg_path = 'D:/ffmpeg/bin/ffmpeg.exe'
+os.system(f'{ffmpeg_path} -framerate 60 -i ./frames/ani_view_%06d.png -pix_fmt yuv420p ani_view.mp4')
