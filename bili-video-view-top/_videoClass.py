@@ -52,6 +52,8 @@ class VideoPoint(object):
     #     self.name, self.mid = name, mid
 
     def __init__(self):
+        self.display_cnt_max = date_axis_segs
+        self.display_cnt = 0
         self.halo_cnt_max = 15
         self.halo_cnt = self.halo_cnt_max
         self.laser_cnt_max = 15
@@ -76,7 +78,9 @@ class VideoPoint(object):
         self.calcRadius()
 
     def calcRadius(self):
-        self.radius = 10 * self.view_avg / 5e6
+        # self.radius = 10 * self.view_avg / 5e6
+        self.radius = int(20 * logisticX(base=1.3, val=self.view_avg, ratio=video_view_threshold/2))
+        self.textsize = int(2*self.radius + 5)
 
     def calcRegion(self):
         # https://github.com/uupers/BiliSpider/wiki/%E8%A7%86%E9%A2%91%E5%88%86%E5%8C%BA%E5%AF%B9%E5%BA%94%E8%A1%A8
@@ -126,11 +130,15 @@ class VideoPoint(object):
         self.color = rgnclr[self.region]
 
     def display(self):
+        self.display_cnt += 1
         tmp_cmds = [
-            '\\node [fill={{rgb,1: red,{}; green,{}; blue,{}}}, shape=circle, minimum size={}, opacity=0.8] ({}) at ({},{}) {{}};' \
+            '\\node [fill={{rgb,1: red,{}; green,{}; blue,{}}}, shape=circle, minimum size={}, opacity=1.0] ({}) at ({},{}) {{}};' \
                 .format(self.color[0], self.color[1], self.color[2], 2*self.radius, self.aid, self.x, self.y),
-            '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, opacity=0.5, anchor=west, align=left, inner sep=4pt, font=\\fs{{{}}}] at ({}.east) {{{}}};' \
-                .format(self.color[0], self.color[1], self.color[2], 2*self.radius, self.aid, escchar(self.title))
+            '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, opacity={}, anchor=west, align=left, inner sep=4pt, font=\\fs{{{}}}] at ({}.east) {{{}}};' \
+                .format(self.color[0], self.color[1], self.color[2], \
+                    # y=x/2 -> y=abs(x/2) -> y=abs((x-1)/2) -> y=0.5-abs((x-1)/2) x:[0,2]
+                    0.5*2*(0.5-abs(self.display_cnt-self.display_cnt_max/2)/self.display_cnt_max),\
+                    self.textsize, self.aid, escchar(self.title))
         ]
         printTex(tmp_cmds)
 
@@ -171,7 +179,7 @@ class VideoPoint(object):
 
 class HitBox(object):
     def __init__(self):
-        self.hit_cnt_max = 15
+        self.hit_cnt_max = 10
         self.hit_cnt = self.hit_cnt_max
 
     def hit(self):

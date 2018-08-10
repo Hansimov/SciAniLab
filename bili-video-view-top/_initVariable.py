@@ -9,7 +9,7 @@ axis_b, axis_t = 100, 600
 
 date_axis_segs = 200
 
-video_view_threshold = 2e6
+video_view_threshold = 1e6
 video_star_threshold = 5e6
 
 total_hits = 0

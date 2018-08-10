@@ -25,6 +25,8 @@ def addPreamble():
         '\\documentclass[tikz,border=0pt]{standalone}\n',
         '\\usepackage{tikz}',
         '\\usetikzlibrary{calc}',
+        '\\usepackage{amssymb}',
+        '\\usepackage{bm}',
         '\\usetikzlibrary{backgrounds}',
         '\\usepackage[scheme=plain]{ctex}',
         # '\\usepackage[UTF8]{ctex}',

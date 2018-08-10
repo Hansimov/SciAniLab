@@ -3,6 +3,7 @@ from _tikzEnv import *
 from _initVariable import *
 
 import pandas as pd
+import time
 
 '''
 >=300w 显示封面，<=300w 只绘制圆点
@@ -65,8 +66,8 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-date_head = date(2017, 7, 26)
-date_tail = date(2017, 8, 3)
+date_head = date(2018, 8, 6)
+date_tail = date(2018, 8, 8)
 def initDate():
     global date_all
     date_delta = date_tail - date_head
@@ -83,7 +84,7 @@ def initDate():
             date_all.append(date_tmp)
         # print(date_this)
 
-view_num_list = [200, 400, 600, 800, 1000, 2000]
+view_num_list = [100, 200, 300, 400, 500, 1000]
 view_height_list = []
 def initViewRange():
     global view_height_list
@@ -97,10 +98,11 @@ def drawViewAxis():
     for i in range(len(view_height_list)):
         view_height_tmp = view_height_list[i]
         view_num_tmp = view_num_list[i]
+        view_num_tmp_str = (str(view_num_tmp), '\\bm{$\\geqslant$} 1000')[view_num_tmp>=1000]
         tmp_cmds.extend([
             f'\\draw [gray, opacity=0.6] ({axis_l}, {view_height_tmp}) -- ({axis_r},{view_height_tmp});',
-            '\\node [gray, opacity=0.6, align=right, anchor=east, font=\\fs{{20}}, inner sep=12] at ({},{}) {{{}}};'\
-                .format(axis_l, view_height_tmp, str(view_num_tmp)+'万')
+            '\\node [gray, opacity=0.6, align=right, anchor=east, font=\\fs{{17}}, inner sep=12] at ({},{}) {{{}}};'\
+                .format(axis_l, view_height_tmp, view_num_tmp_str+'万')
         ])
     printTex(tmp_cmds)
 
@@ -219,7 +221,7 @@ def drawVideoPoint():
             video_onscreen.append(video_this)
             if video_this.view_avg >= video_star_threshold:
                 videos_star = video_this
-            updateLevelBoard(video_this)
+            # updateLevelBoard(video_this)
         video_ptr += 1
 
     while (len(video_onscreen) >= 1)  \
@@ -348,14 +350,14 @@ def drawHitAndBoard():
             hitbox_tmp.hit()
             idx_tmp += 1
 
-    idx_tmp = 0
-    for i in range(0,len(board_onscreen)):
-        board_tmp = board_onscreen[idx_tmp]
-        if board_tmp.highlight_cnt <= 0:
-            board_onscreen.pop(idx_tmp)
-        else:
-            board_tmp.highlight()
-            idx_tmp += 1
+    # idx_tmp = 0
+    # for i in range(0,len(board_onscreen)):
+    #     board_tmp = board_onscreen[idx_tmp]
+    #     if board_tmp.highlight_cnt <= 0:
+    #         board_onscreen.pop(idx_tmp)
+    #     else:
+    #         board_tmp.highlight()
+    #         idx_tmp += 1
 
 if __name__ == '__main__':
     clearTex()
@@ -376,4 +378,17 @@ if __name__ == '__main__':
 
         endTikz()
     endDoc()
+
+    t1 = time.time()
     compileTex()
+    t2 = time.time()
+
+    dt1 = t2 - t1
+    print('Elapsed time 1: {:.5} s'.format(dt1))
+
+    # os.system('python pdf2mp4.py')
+    # t3 = time.time()
+
+    # dt2 = t3 - t2
+    # print('Elapsed time 1: {:.5} s'.format(dt1))
+    # print('Elapsed time 2: {:.5} s'.format(dt2))
