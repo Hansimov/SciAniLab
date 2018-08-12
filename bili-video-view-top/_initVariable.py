@@ -5,7 +5,7 @@ cover_x, cover_y = 1280-20, 20
 cover_w, cover_h = 300, 300*9/16
 
 axis_l, axis_r = 100, width-cover_w-30
-axis_b, axis_t = 100, 600
+axis_b, axis_t = 70, 600
 
 date_axis_segs = 200
 

@@ -66,10 +66,15 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-date_head = date(2018, 8, 6)
-date_tail = date(2018, 8, 8)
+# date_head = date(2012, 6, 1)
+# date_tail = date(2018, 8, 8) + timedelta(days=date_axis_segs/6+4)
+date_head = date(2017, 7, 1)
+date_tail = date(2017, 8, 8)
+date_last = {}
+date_exceed_cnt = 0
+
 def initDate():
-    global date_all
+    global date_all, date_last
     date_delta = date_tail - date_head
 
     for i in range(date_delta.days + 1):
@@ -83,24 +88,41 @@ def initDate():
             date_tmp['minute']  = 0
             date_all.append(date_tmp)
         # print(date_this)
+    date_last['year']   = 2018
+    date_last['month']  = 8
+    date_last['day']    = 9
+    date_last['hour']   = 0
+    date_last['minute'] = 0
 
 view_num_list = [100, 200, 300, 400, 500, 1000]
 view_height_list = []
 def initViewRange():
     global view_height_list
     for i in view_num_list:
-        view_height_tmp = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=i*1e4, ratio=video_view_threshold/2)
+        view_height_tmp = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=i*1e4, offset=0.8e6, ratio=video_view_threshold/2)
         view_height_list.append(view_height_tmp)
 
 initViewRange()
-def drawViewAxis():
+def drawViewAxis(date_ptr):
+    global date_exceed_cnt
     tmp_cmds = []
+
+    current_date = date_all[date_ptr]
+
+    if compareDate(current_date, date_last) >= 0:
+        date_exceed_cnt += 1
+        axis_rr = axis_r - (axis_r-axis_l)/date_axis_segs * date_exceed_cnt
+        if axis_rr <= axis_l:
+            axis_rr = axis_l
+    else:
+        axis_rr = axis_r
+
     for i in range(len(view_height_list)):
         view_height_tmp = view_height_list[i]
         view_num_tmp = view_num_list[i]
         view_num_tmp_str = (str(view_num_tmp), '\\bm{$\\geqslant$} 1000')[view_num_tmp>=1000]
         tmp_cmds.extend([
-            f'\\draw [gray, opacity=0.6] ({axis_l}, {view_height_tmp}) -- ({axis_r},{view_height_tmp});',
+            f'\\draw [gray, opacity=0.6] ({axis_l}, {view_height_tmp}) -- ({axis_rr},{view_height_tmp});',
             '\\node [gray, opacity=0.6, align=right, anchor=east, font=\\fs{{17}}, inner sep=12] at ({},{}) {{{}}};'\
                 .format(axis_l, view_height_tmp, view_num_tmp_str+'万')
         ])
@@ -108,9 +130,10 @@ def drawViewAxis():
 
 date_onscreen = []
 video_fadeout = []
+
 initDate()
 def drawDateAxis(date_ptr):
-    global date_onscreen
+    global date_onscreen, date_exceed_cnt
 
     if date_ptr >= date_axis_segs+1:
         date_onscreen.pop(0)
@@ -128,17 +151,30 @@ def drawDateAxis(date_ptr):
         color_tmp = video_fadeout[-1].color
         width_tmp = video_fadeout[-1].radius
 
+    if compareDate(current_date, date_last) >= 0:
+        # date_exceed_cnt += 1
+        axis_rr = axis_r - (axis_r-axis_l)/date_axis_segs * date_exceed_cnt
+        if axis_rr <= axis_l:
+            axis_rr = axis_l
+        current_year, current_month, current_day = date_last['year'], date_last['month'], date_last['day']-1
+        # Ignore cases like: 2018-XX-01
+    else:
+        axis_rr = axis_r
+        current_year, current_month, current_day = current_date['year'], current_date['month'], current_date['day']
+
     tmp_cmds = []
     tmp_cmds.extend([
-        f'\\draw [line width=2, gray] ({axis_l},{axis_b}) -- ({axis_r},{axis_b});',
+        f'\\draw [line width=2, gray] ({axis_l},{axis_b}) -- ({axis_rr},{axis_b});',
         f'\\draw [line width={width_tmp}, draw={{rgb,1:red,{color_tmp[0]};green,{color_tmp[1]};blue,{color_tmp[2]}}}] ({axis_l},{axis_b}) -- ({axis_l},{axis_t});',
         # '\\draw [line width=2pt, green, opacity=0.5] ({0},{1}) -- ({0},{2});'.format(axis_r,axis_b,axis_t),
-        '\\node [text=white, align=right, font=\\fs{{20}}] at ({0},{1}) {{ {2} 年 {3:0>2d} 月 {4:0>2d} 日 }};' \
-            .format(1100, 680, current_date['year'], current_date['month'], current_date['day'])
-        ])
+            '\\node [text=white, align=right, font=\\fs{{20}}] at ({0},{1}) {{ {2} 年 {3:0>2d} 月 {4:0>2d} 日 }};' \
+                .format(1100, 680, current_year, current_month, current_day)
+            ])
 
     cnt = 0
     for date_tmp in date_onscreen:
+        if compareDate(date_tmp, date_last) >= 0:
+            break
         if date_tmp['hour'] == 0:
             date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
             if date_tmp['day'] == 1:
@@ -217,7 +253,7 @@ def drawVideoPoint():
                 video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (24 - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
             else:
                 video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (date_onscreen[-1]['hour'] - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
-            video_this.y = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=video_this.view_avg, ratio=video_view_threshold/2)
+            video_this.y = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=video_this.view_avg, offset=0.8e6, ratio=video_view_threshold/2)
             video_onscreen.append(video_this)
             if video_this.view_avg >= video_star_threshold:
                 videos_star = video_this
@@ -295,21 +331,23 @@ def drawCover():
             '\\node [videocover, xshift= 10pt] ({}) at ({}.south east) {{{:0>4d} 年 {:0>2d} 月 {:0>2d} 日 \\quad 投稿}};'\
                 .format(pubdate_id, face_id, \
                     videos_star.pubdate['year'], videos_star.pubdate['month'], videos_star.pubdate['day']),
+            '\\node [videocover] ({}) at ({}.north west) {{{}}};'\
+                .format(view_avg_id, pubdate_id, '播放数\\quad {}'.format(videos_star.view_avg)),
             '\\node [videocover, text=white] ({}) at ({}.north west) {{{}}};'\
-                .format(up_id, pubdate_id, escchar(videos_star.name)),
+                .format(up_id, view_avg_id, escchar(videos_star.name)),
             '\\node [videocover, text width=230pt] ({}) at ({}.north west) {{{}}};'\
                 .format(title_id, up_id, escchar(videos_star.title)),
 
-            '\\tikzstyle{{videodata}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=north east, align=right, font=\\fs{{15}}, inner sep=5pt];'\
-                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2]),
-            '\\node [videodata, xshift=-5pt] ({}) at ({}.north west) {{{}}};'\
-                .format(view_avg_id, pic_id, '{} 播放'.format(videos_star.view_avg)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
-                .format(favorite_id, view_avg_id, '{} 收藏'.format(videos_star.favorite)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
-                .format(coin_id, favorite_id, '{} 硬币'.format(videos_star.coin)),
-            '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
-                .format(danmaku_id, coin_id, '{} 弹幕'.format(videos_star.danmaku)),
+            # '\\tikzstyle{{videodata}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=north east, align=right, font=\\fs{{15}}, inner sep=5pt];'\
+            #     .format(videos_star.color[0], videos_star.color[1], videos_star.color[2]),
+            # '\\node [videodata, xshift=-5pt] ({}) at ({}.north west) {{{}}};'\
+            #     .format(view_avg_id, pic_id, '{} 播放'.format(videos_star.view_avg)),
+            # '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
+            #     .format(favorite_id, view_avg_id, '{} 收藏'.format(videos_star.favorite)),
+            # '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
+            #     .format(coin_id, favorite_id, '{} 硬币'.format(videos_star.coin)),
+            # '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
+            #     .format(danmaku_id, coin_id, '{} 弹幕'.format(videos_star.danmaku)),
         ]
 
         printTex(tmp_cmds)
@@ -364,16 +402,16 @@ if __name__ == '__main__':
     addPreamble()
     beginDoc()
     for i in range(0, len(date_all)):
-    # for i in range(0, 300):
+    # for i in range(0, 3):
         beginTikz()
 
         setSize(width, height, 'lb')
 
-        drawViewAxis()
+        drawViewAxis(i)
         drawDateAxis(i)
-        drawRegion()
         drawVideoPoint()
         drawHitAndBoard()
+        drawRegion()
         drawCover()
 
         endTikz()
@@ -384,11 +422,11 @@ if __name__ == '__main__':
     t2 = time.time()
 
     dt1 = t2 - t1
-    print('Elapsed time 1: {:.5} s'.format(dt1))
+    print('Elapsed time 1: {:.7} s'.format(dt1))
 
     # os.system('python pdf2mp4.py')
     # t3 = time.time()
 
     # dt2 = t3 - t2
-    # print('Elapsed time 1: {:.5} s'.format(dt1))
-    # print('Elapsed time 2: {:.5} s'.format(dt2))
+    # print('Elapsed time 1: {:.7} s'.format(dt1))
+    # print('Elapsed time 2: {:.7} s'.format(dt2))

@@ -12,7 +12,7 @@ def compileTex(cp_type='xelatex'):
     else:
         compile_type = '-pdf'
 
-    compile_tool = 'latexmk -pv '+ compile_type + ' '
+    compile_tool = 'latexmk -pool-size=10000000 -pv '+ compile_type + ' '
     absolute_tex_filename = os.path.join(os.getcwd(), tex_filename)
     os.system(compile_tool + absolute_tex_filename)
 

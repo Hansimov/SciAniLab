@@ -81,6 +81,8 @@ class VideoPoint(object):
         # self.radius = 10 * self.view_avg / 5e6
         self.radius = int(20 * logisticX(base=1.3, val=self.view_avg, ratio=video_view_threshold/2))
         self.textsize = int(2*self.radius + 5)
+        self.title_opacity = 1.5*logisticX(base=1.3, val=self.view_avg, ratio=video_view_threshold/2)
+
 
     def calcRegion(self):
         # https://github.com/uupers/BiliSpider/wiki/%E8%A7%86%E9%A2%91%E5%88%86%E5%8C%BA%E5%AF%B9%E5%BA%94%E8%A1%A8
@@ -137,7 +139,7 @@ class VideoPoint(object):
             '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, opacity={}, anchor=west, align=left, inner sep=4pt, font=\\fs{{{}}}] at ({}.east) {{{}}};' \
                 .format(self.color[0], self.color[1], self.color[2], \
                     # y=x/2 -> y=abs(x/2) -> y=abs((x-1)/2) -> y=0.5-abs((x-1)/2) x:[0,2]
-                    0.5*2*(0.5-abs(self.display_cnt-self.display_cnt_max/2)/self.display_cnt_max),\
+                    self.title_opacity*2*(0.5-abs(self.display_cnt-self.display_cnt_max/2)/self.display_cnt_max),\
                     self.textsize, self.aid, escchar(self.title))
         ]
         printTex(tmp_cmds)
