@@ -24,4 +24,4 @@ os.system(f'{ffmpeg_path} -framerate 60 -i ./frames/ani_view_%06d.png -pix_fmt y
 
 t3 = time.time()
 dt2 = t3 - t2
-print('Elapsed time 2: {:.7} s'.format(dt2))
+# print('Elapsed time 2: {:.7} s'.format(dt2))

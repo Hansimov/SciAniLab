@@ -6,13 +6,14 @@ tex_filename = 'ani_view.tex'
 all_cmds = []
 
 def compileTex(cp_type='xelatex'):
-    outputTex()
     if cp_type == 'xelatex' or cp_type == 'x':
         compile_type = '-xelatex'
     else:
         compile_type = '-pdf'
 
-    compile_tool = 'latexmk -pool-size=10000000 -pv '+ compile_type + ' '
+    # compile_limits = ' -pool-size=7999999 -main-memory=7999999 '
+    compile_limits = ' -pool-size=7999999 -extra-mem-top=20000000 -extra-mem-bot=20000000'
+    compile_tool = 'latexmk -pv '+ compile_limits + ' ' + compile_type + ' '
     absolute_tex_filename = os.path.join(os.getcwd(), tex_filename)
     os.system(compile_tool + absolute_tex_filename)
 

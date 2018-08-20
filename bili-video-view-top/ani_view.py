@@ -67,9 +67,11 @@ hit数 -> 小飞机打砖块
 date_all = []
 
 # date_head = date(2012, 6, 1)
-# date_tail = date(2018, 8, 8) + timedelta(days=date_axis_segs/6+4)
-date_head = date(2017, 7, 1)
-date_tail = date(2017, 8, 8)
+date_mark = date(2018, 8, 20)
+# date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
+
+date_head = date(2017, 2, 21)
+date_tail = date(2017, 3, 8)
 date_last = {}
 date_exceed_cnt = 0
 
@@ -77,6 +79,8 @@ def initDate():
     global date_all, date_last
     date_delta = date_tail - date_head
 
+    # divide one day to 6 parts
+    # convert date type to dict for ease of comparison
     for i in range(date_delta.days + 1):
         date_this = date_head + timedelta(days=i)
         for j in range(0, 6):
@@ -86,11 +90,13 @@ def initDate():
             date_tmp['day']   = date_this.day
             date_tmp['hour']  = 4*j
             date_tmp['minute']  = 0
+            date_tmp['second']  = 0
             date_all.append(date_tmp)
         # print(date_this)
-    date_last['year']   = 2018
-    date_last['month']  = 8
-    date_last['day']    = 9
+    # date_last is used to display the last scene when all videos are exceeded
+    date_last['year']   = date_mark.year
+    date_last['month']  = date_mark.month
+    date_last['day']    = date_mark.day
     date_last['hour']   = 0
     date_last['minute'] = 0
 
@@ -99,7 +105,7 @@ view_height_list = []
 def initViewRange():
     global view_height_list
     for i in view_num_list:
-        view_height_tmp = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=i*1e4, offset=0.8e6, ratio=video_view_threshold/2)
+        view_height_tmp = round(axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=i*1e4, offset=0.8e6, ratio=video_view_threshold/2), 1)
         view_height_list.append(view_height_tmp)
 
 initViewRange()
@@ -133,7 +139,7 @@ video_fadeout = []
 
 initDate()
 def drawDateAxis(date_ptr):
-    global date_onscreen, date_exceed_cnt
+    global date_onscreen
 
     if date_ptr >= date_axis_segs+1:
         date_onscreen.pop(0)
@@ -152,20 +158,19 @@ def drawDateAxis(date_ptr):
         width_tmp = video_fadeout[-1].radius
 
     if compareDate(current_date, date_last) >= 0:
-        # date_exceed_cnt += 1
         axis_rr = axis_r - (axis_r-axis_l)/date_axis_segs * date_exceed_cnt
         if axis_rr <= axis_l:
             axis_rr = axis_l
         current_year, current_month, current_day = date_last['year'], date_last['month'], date_last['day']-1
-        # Ignore cases like: 2018-XX-01
+        # Ignore cases like: 2018-XX-01, I don't bother to fix this ...
     else:
         axis_rr = axis_r
         current_year, current_month, current_day = current_date['year'], current_date['month'], current_date['day']
 
     tmp_cmds = []
     tmp_cmds.extend([
-        f'\\draw [line width=2, gray] ({axis_l},{axis_b}) -- ({axis_rr},{axis_b});',
-        f'\\draw [line width={width_tmp}, draw={{rgb,1:red,{color_tmp[0]};green,{color_tmp[1]};blue,{color_tmp[2]}}}] ({axis_l},{axis_b}) -- ({axis_l},{axis_t});',
+        f'\\draw [line width=2, gray] ({axis_l},{axis_b}) -- ({int(axis_rr)},{axis_b});',
+        # f'\\draw [line width={width_tmp}, draw={{rgb,1:red,{color_tmp[0]};green,{color_tmp[1]};blue,{color_tmp[2]}}}] ({axis_l},{axis_b}) -- ({axis_l},{axis_t});',
         # '\\draw [line width=2pt, green, opacity=0.5] ({0},{1}) -- ({0},{2});'.format(axis_r,axis_b,axis_t),
             '\\node [text=white, align=right, font=\\fs{{20}}] at ({0},{1}) {{ {2} 年 {3:0>2d} 月 {4:0>2d} 日 }};' \
                 .format(1100, 680, current_year, current_month, current_day)
@@ -176,7 +181,7 @@ def drawDateAxis(date_ptr):
         if compareDate(date_tmp, date_last) >= 0:
             break
         if date_tmp['hour'] == 0:
-            date_tmp_x = axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs))
+            date_tmp_x = round(axis_l + (axis_r-axis_l)*(1-(len(date_onscreen)-1-cnt)/(date_axis_segs)), 1)
             if date_tmp['day'] == 1:
                 tmp_cmds.extend([
                     '\\node [text=white, align=center, font=\\fs{{15}}] at ({0},{1}) {{ {2}-{3:0>2d} }};' \
@@ -199,13 +204,15 @@ def drawDateAxis(date_ptr):
 video_all = []
 def initVideo():
     global video_all
-    df = pd.read_csv('./data/view_gt100w_180808_x.csv', sep=',')
+    df = pd.read_csv('./data/view_gt100w_180820x_out.csv', sep=',')
     # view, videos, view_avg, title, coin, favorite, danmaku, aid, name, mid, pubdate, tid, duration, copyright, pic, face
+    # add property of video point
     for i in range(len(df)):
         video_tmp = VideoPoint()
         video_tmp.view     = int(df['view'][i])
         video_tmp.videos   = int(df['videos'][i])
-        video_tmp.view_avg = int(df['view_avg'][i])
+        # video_tmp.view_avg = int(df['view_avg'][i])
+        video_tmp.view_avg = int(df['view'][i])
         video_tmp.favorite = int(df['favorite'][i])
         video_tmp.coin     = int(df['coin'][i])
         video_tmp.danmaku  = int(df['danmaku'][i])
@@ -225,6 +232,7 @@ def initVideo():
         pubdate_tmp['day']     = pubdate_this.day
         pubdate_tmp['hour']    = pubdate_this.hour
         pubdate_tmp['minute']  = pubdate_this.minute
+        pubdate_tmp['second']  = pubdate_this.second
 
         video_tmp.pubdate = pubdate_tmp
         video_all.append(video_tmp)
@@ -242,11 +250,14 @@ videos_star = {}
 def drawVideoPoint():
     global video_ptr, total_hits, level_counter, videos_star
 
+
+    # append new videos which are on screen
     video_onscreen_len_old = len(video_onscreen)
     pop_cnt = 0
     while (len(date_onscreen) >= 1) and (video_ptr < len(video_all)) \
         and compareDate(video_all[video_ptr].pubdate, date_onscreen[-1]) <= 0:
         video_this = video_all[video_ptr]
+        video_ptr += 1
 
         if video_this.view_avg >= video_view_threshold and compareDate(video_this.pubdate, date_all[0]) > 0:
             if video_this.pubdate['hour'] >= 20:
@@ -254,13 +265,16 @@ def drawVideoPoint():
             else:
                 video_this.x = axis_r - (axis_r-axis_l)/date_axis_segs * (date_onscreen[-1]['hour'] - video_this.pubdate['hour'] - video_this.pubdate['minute']/60)
             video_this.y = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=video_this.view_avg, offset=0.8e6, ratio=video_view_threshold/2)
+            video_this.x = round(video_this.x, 3)
+            video_this.y = round(video_this.y, 3)
             video_onscreen.append(video_this)
             if video_this.view_avg >= video_star_threshold:
                 videos_star = video_this
             # updateLevelBoard(video_this)
-        video_ptr += 1
 
-    while (len(video_onscreen) >= 1)  \
+    # pop old videos which are not on screen
+    # put the popped videos to video_fadeout
+    while (len(video_onscreen) >= 1) \
         and (compareDate(video_onscreen[0].pubdate, date_onscreen[0]) <= 0 \
              or video_onscreen[0].x <= axis_l + 1.7*(axis_r-axis_l)/(date_axis_segs)):
         video_pop = video_onscreen.pop(0)
@@ -271,6 +285,7 @@ def drawVideoPoint():
 
     for i in range(0, video_onscreen_len_old-pop_cnt):
         video_onscreen[i].x -= (axis_r-axis_l)/(date_axis_segs)
+        video_onscreen[i].x = round(video_onscreen[i].x, 3)
 
     for video_tmp in video_onscreen:
         video_tmp.display()
@@ -417,6 +432,7 @@ if __name__ == '__main__':
         endTikz()
     endDoc()
 
+    outputTex()
     t1 = time.time()
     compileTex()
     t2 = time.time()

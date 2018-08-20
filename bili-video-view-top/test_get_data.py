@@ -38,12 +38,14 @@ video_top_file = './data/video_dynamic_180723_top1000.csv' # header = True,  all
 # where (d.aid=s.aid and s.mid=up.mid and (d.view<0 or d.view>=100000))
 
 select d.view, s.videos, s.title, up.name, s.pubdate, d.favorite, d.coin, d.danmaku, s.aid, up.mid, s.tid, s.duration, s.copyright, s.pic, up.face from
-(select * from video_dynamic_180808) as d,
+(select * from video_dynamic_180820) as d,
 (select * from video_static) as s,
 (select * from up_data) as up
 where (d.aid=s.aid and s.mid=up.mid and d.view>=1000000)
+ORDER BY s.pubdate
 
- # order by view desc limit 200000
+# 忽略的 tid： 33, 32, 153, 37, 178, 179, 180, 147, 145, 146, 83, 185, 187
+# 番剧区2个国创区1个和放映厅的10个
 
 
 # # Errors
