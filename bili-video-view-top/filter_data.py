@@ -5,8 +5,8 @@ import pandas as pd
 
 # 只选取 copyright=1 也即原创的
 if __name__ == '__main__':
-    input_file = './data/view_gt100w_180820x.csv'
-    output_file = './data/view_gt100w_180820x_out.csv'
+    input_file = './data/view_gt100w_180821x.csv'
+    output_file = './data/view_gt100w_180821x_out.csv'
     df = pd.read_csv(input_file, sep=',')
     # print(df.iloc[0]['copyright']==2)
 

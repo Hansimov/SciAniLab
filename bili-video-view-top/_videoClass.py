@@ -104,13 +104,13 @@ class VideoPoint(object):
         #     放映：  1   0.5  1
 
         # 动画：动画 + 番剧 + 国创
-        if  self.tid in [1, 24, 25, 47, 27,  13, 33, 32, 51, 152,  167, 153, 168, 169, 179]:
+        if  self.tid in [1, 24, 25, 47, 27,  13, 33, 32, 51, 152,  167, 153, 168, 169, 170]:
             self.region = 'donghua'
         # 音乐
         elif self.tid in [3, 28, 31, 30, 59, 29, 54, 130]:
             self.region = 'yinyue'
         # 舞蹈
-        elif self.tid in [129, 29, 154, 156]:
+        elif self.tid in [129, 20, 154, 156]:
             self.region = 'wudao'
         # 游戏
         elif self.tid in [4, 17, 171, 172, 65, 173, 121, 136, 19]:

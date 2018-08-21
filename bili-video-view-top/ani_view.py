@@ -66,12 +66,13 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-# date_head = date(2012, 6, 1)
-date_mark = date(2018, 8, 20)
-# date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
+date_mark = date(2018, 8, 21)
 
-date_head = date(2017, 2, 21)
-date_tail = date(2017, 3, 8)
+date_head = date(2012, 6, 1)
+date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
+# date_head = date(2014, 2, 19)
+# date_tail = date(2014, 2, 25)
+
 date_last = {}
 date_exceed_cnt = 0
 
@@ -249,7 +250,6 @@ videos_star = {}
 
 def drawVideoPoint():
     global video_ptr, total_hits, level_counter, videos_star
-
 
     # append new videos which are on screen
     video_onscreen_len_old = len(video_onscreen)
@@ -433,12 +433,12 @@ if __name__ == '__main__':
     endDoc()
 
     outputTex()
-    t1 = time.time()
-    compileTex()
-    t2 = time.time()
+    # t1 = time.time()
+    # compileTex()
+    # t2 = time.time()
 
-    dt1 = t2 - t1
-    print('Elapsed time 1: {:.7} s'.format(dt1))
+    # dt1 = t2 - t1
+    # print('Elapsed time 1: {:.7} s'.format(dt1))
 
     # os.system('python pdf2mp4.py')
     # t3 = time.time()

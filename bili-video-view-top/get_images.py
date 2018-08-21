@@ -71,7 +71,7 @@ pic_list = []
 face_list = []
 aid_list = []
 mid_list = []
-df = pd.read_csv('./data/view_gt100w_180820_out.csv', sep=',')
+df = pd.read_csv('./data/view_gt100w_180821x_out.csv', sep=',')
 
 def getInfoList():
     global pic_list, face_list
