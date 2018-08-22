@@ -16,7 +16,7 @@ all_cmds = []
 # width, height = 1280+5, 720+3
 width, height = 1280*8, 720+3
 
-axis_l, axis_r = 50, width - 50
+axis_l, axis_r = 50, width - 10
 axis_b, axis_t = 70, 650
 
 date_axis_segs = 200
@@ -244,6 +244,8 @@ def drawDateAxis():
     printTex(tmp_cmds)
 
 def drawGlobalView():
+    global all_cmds
+    all_cmds = []
     tex_filename = 'global_view.tex'
     t1 = time.time()
     clearTex(tex_filename)
@@ -275,7 +277,15 @@ def shiftGlobalView(shift_x):
     tmp_cmds = []
     tmp_cmds.extend([
         '\\node [anchor=west] at ({},{}) {{ \\includegraphics {{global_view.pdf}} }};' \
-            .format(round(width_local - shift_x, 2), round(height_local/2,1))
+            .format(round(width_local-shift_x, 2), round(height_local/2, 2))
+    ])
+    printTex(tmp_cmds)
+
+def zoomGlobalView(zoom_x):
+    tmp_cmds = []
+    tmp_cmds.extend([
+        '\\node [anchor=east] at ({},{}) {{ \\includegraphics [width={}pt] {{global_view.pdf}} }};' \
+            .format(round(width_local, 2), round(height_local/2, 2), round(zoom_x, 2))
     ])
     printTex(tmp_cmds)
 
@@ -290,7 +300,7 @@ def animateGlobalView():
     beginDoc()
 
     shift_frames_cnt = 60 * 5
-    shift_x_step = (width + width_local+100)/shift_frames_cnt
+    shift_x_step = (width + width_local)/shift_frames_cnt
 
     for i in range(0, shift_frames_cnt):
         beginTikz()
@@ -298,10 +308,20 @@ def animateGlobalView():
 
         shift_x = shift_x_step * i
         shiftGlobalView(shift_x)
+        endTikz()
+
+    zoom_frames_cnt = 60 * 2
+    # width_of_includegraphics: width -> width_local
+    for i in range(0, zoom_frames_cnt+1):
+        beginTikz()
+        setSize(width_local, height_local, 'lb')
+
+        zoom_x = width - (width - width_local) * i /zoom_frames_cnt
+        zoomGlobalView(zoom_x)
 
         endTikz()
-    endDoc()
 
+    endDoc()
     outputTex(tex_filename)
     compileTex(tex_filename)
     t2 = time.time()

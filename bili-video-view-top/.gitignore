@@ -3,6 +3,8 @@
 !*.py
 !*.bat
 
+!images/
+
 data/
 latex-temp/
 pic/
