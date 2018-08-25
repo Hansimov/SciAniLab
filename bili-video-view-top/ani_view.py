@@ -66,12 +66,12 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-date_mark = date(2018, 8, 21)
+date_mark = date(2018, 8, 24)
 
-date_head = date(2012, 6, 1)
-date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
-# date_head = date(2014, 2, 19)
-# date_tail = date(2014, 2, 25)
+# date_head = date(2012, 6, 1)
+# date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
+date_head = date(2016, 2, 15)
+date_tail = date(2016, 2, 25)
 
 date_last = {}
 date_exceed_cnt = 0
@@ -205,7 +205,7 @@ def drawDateAxis(date_ptr):
 video_all = []
 def initVideo():
     global video_all
-    df = pd.read_csv('./data/view_gt100w_180820x_out.csv', sep=',')
+    df = pd.read_csv('./data/view_gt100w_latest_out.csv', sep=',')
     # view, videos, view_avg, title, coin, favorite, danmaku, aid, name, mid, pubdate, tid, duration, copyright, pic, face
     # add property of video point
     for i in range(len(df)):
@@ -246,10 +246,10 @@ initVideo()
 board_onscreen = []
 hitbox_onscreen = []
 
-videos_star = {}
+video_star = {}
 
 def drawVideoPoint():
-    global video_ptr, total_hits, level_counter, videos_star
+    global video_ptr, total_hits, level_counter, video_star
 
     # append new videos which are on screen
     video_onscreen_len_old = len(video_onscreen)
@@ -267,9 +267,9 @@ def drawVideoPoint():
             video_this.y = axis_b + (axis_t-axis_b) * logisticX(base=1.3, val=video_this.view_avg, offset=0.8e6, ratio=video_view_threshold/2)
             video_this.x = round(video_this.x, 3)
             video_this.y = round(video_this.y, 3)
+
+            # updateVideoStar(video_this)
             video_onscreen.append(video_this)
-            if video_this.view_avg >= video_star_threshold:
-                videos_star = video_this
             # updateLevelBoard(video_this)
 
     # pop old videos which are not on screen
@@ -282,6 +282,8 @@ def drawVideoPoint():
         video_fadeout.append(video_pop)
         total_hits += 1
         updateHitBox(video_pop)
+
+    updateVideoStar()
 
     for i in range(0, video_onscreen_len_old-pop_cnt):
         video_onscreen[i].x -= (axis_r-axis_l)/(date_axis_segs)
@@ -304,68 +306,90 @@ def drawVideoPoint():
             idx_tmp += 1
 
 def drawCover():
-    if videos_star != {}:
-        pic_ext  = os.path.splitext(videos_star.pic)[1]
+    if video_star != {}:
+        pic_ext  = os.path.splitext(video_star.pic)[1]
         if not pic_ext in ['.jpg', '.png']:
             pic_ext = '.jpg'
 
-        face_ext  = os.path.splitext(videos_star.face)[1]
+        face_ext  = os.path.splitext(video_star.face)[1]
         if not face_ext in ['.jpg', '.png']:
             face_ext = '.jpg'
 
-        # img_name = os.path.splitext(videos_star.pic)[0]
-        pic_body = 'aid_{:0>10d}'.format(videos_star.aid)
+        # img_name = os.path.splitext(video_star.pic)[0]
+        pic_body = 'aid_{:0>10d}'.format(video_star.aid)
         pic_path = './pic/{}{}'.format(pic_body, pic_ext)
 
-        face_body = 'mid_{:0>10d}'.format(videos_star.mid)
+        face_body = 'mid_{:0>10d}'.format(video_star.mid)
         face_path = './face/{}{}'.format(face_body, face_ext)
 
-        pic_id     = 'pic'     + str(videos_star.aid)
-        title_id   = 'title'   + str(videos_star.aid)
-        pubdate_id = 'pubdate' + str(videos_star.aid)
+        pic_id     = 'pic'     + str(video_star.aid)
+        title_id   = 'title'   + str(video_star.aid)
+        pubdate_id = 'pubdate' + str(video_star.aid)
 
-        up_id      = 'up'      + str(videos_star.aid)
-        face_id    = 'face'    + str(videos_star.aid)
+        up_id      = 'up'      + str(video_star.aid)
+        face_id    = 'face'    + str(video_star.aid)
 
-        view_avg_id = 'viewavg'  + str(videos_star.aid)
-        favorite_id = 'favorite' + str(videos_star.aid)
-        coin_id     = 'coin'     + str(videos_star.aid)
-        danmaku_id  = 'danmaku'  + str(videos_star.aid)
+        view_avg_id = 'viewavg'  + str(video_star.aid)
+        favorite_id = 'favorite' + str(video_star.aid)
+        coin_id     = 'coin'     + str(video_star.aid)
+        danmaku_id  = 'danmaku'  + str(video_star.aid)
 
         tmp_cmds = [
             # '\\fill [green,radius={}] ({},{}) circle;'.format(radius,80+80*sin(i*0.2),80+80*cos(i*0.2)),
             '\\tikzstyle{{videocover}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=south west, align=left, font=\\fs{{15}}, inner sep=5pt];'\
-                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2]),
+                .format(video_star.color[0], video_star.color[1], video_star.color[2]),
             '\\node [draw={{rgb,1: red,{}; green,{}; blue,{}}}, line width=3, anchor=south east, opacity=0.7] ({}) at ({},{}) {{ \\includegraphics[width={}pt,height={}pt] {{{}}} }};'\
-                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2], pic_id, \
+                .format(video_star.color[0], video_star.color[1], video_star.color[2], pic_id, \
                     cover_x, cover_y, cover_w, cover_h, pic_path),
             '\\node [draw={{rgb,1: red,{}; green,{}; blue,{}}}, line width=2, anchor=south west, opacity=0.7] ({}) at ({}.north west) {{\\includegraphics[width={}pt] {{{}}}}};'\
-                .format(videos_star.color[0], videos_star.color[1], videos_star.color[2], \
+                .format(video_star.color[0], video_star.color[1], video_star.color[2], \
                      face_id, pic_id, 60, face_path),
 
             '\\node [videocover, xshift= 10pt] ({}) at ({}.south east) {{{:0>4d} 年 {:0>2d} 月 {:0>2d} 日 \\quad 投稿}};'\
                 .format(pubdate_id, face_id, \
-                    videos_star.pubdate['year'], videos_star.pubdate['month'], videos_star.pubdate['day']),
+                    video_star.pubdate['year'], video_star.pubdate['month'], video_star.pubdate['day']),
             '\\node [videocover] ({}) at ({}.north west) {{{}}};'\
-                .format(view_avg_id, pubdate_id, '播放数\\quad {}'.format(videos_star.view_avg)),
+                .format(view_avg_id, pubdate_id, '播放数\\quad {}'.format(calcApprox(video_star.view_avg))),
             '\\node [videocover, text=white] ({}) at ({}.north west) {{{}}};'\
-                .format(up_id, view_avg_id, escchar(videos_star.name)),
+                .format(up_id, view_avg_id, escChar(video_star.name)),
             '\\node [videocover, text width=230pt] ({}) at ({}.north west) {{{}}};'\
-                .format(title_id, up_id, escchar(videos_star.title)),
+                .format(title_id, up_id, escChar(video_star.title)),
 
             # '\\tikzstyle{{videodata}}=[text={{rgb,1: red,{}; green,{}; blue,{}}}, anchor=north east, align=right, font=\\fs{{15}}, inner sep=5pt];'\
-            #     .format(videos_star.color[0], videos_star.color[1], videos_star.color[2]),
+            #     .format(video_star.color[0], video_star.color[1], video_star.color[2]),
             # '\\node [videodata, xshift=-5pt] ({}) at ({}.north west) {{{}}};'\
-            #     .format(view_avg_id, pic_id, '{} 播放'.format(videos_star.view_avg)),
+            #     .format(view_avg_id, pic_id, '{} 播放'.format(video_star.view_avg)),
             # '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
-            #     .format(favorite_id, view_avg_id, '{} 收藏'.format(videos_star.favorite)),
+            #     .format(favorite_id, view_avg_id, '{} 收藏'.format(video_star.favorite)),
             # '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
-            #     .format(coin_id, favorite_id, '{} 硬币'.format(videos_star.coin)),
+            #     .format(coin_id, favorite_id, '{} 硬币'.format(video_star.coin)),
             # '\\node [videodata] ({}) at ({}.south east) {{{}}};'\
-            #     .format(danmaku_id, coin_id, '{} 弹幕'.format(videos_star.danmaku)),
+            #     .format(danmaku_id, coin_id, '{} 弹幕'.format(video_star.danmaku)),
         ]
 
         printTex(tmp_cmds)
+
+def updateVideoStar():
+    global video_star
+    # if video_this.view_avg >= video_star_threshold:
+    #     video_star = video_this
+
+    # if video_star == {}:
+    #     video_star_view_avg = 0
+    # else:
+    #     video_star_view_avg = video_star.view_avg
+
+    if len(video_onscreen) == 0:
+        return
+    else:
+        video_star_view_avg = 0
+        video_star_idx = 0
+        for i in range(0, len(video_onscreen)):
+            video_tmp = video_onscreen[i]
+            if video_tmp.view_avg >= video_star_view_avg:
+                video_star_idx = i
+                video_star_view_avg = video_tmp.view_avg
+        video_star = video_onscreen[video_star_idx]
 
 def updateHitBox(video_tmp):
     global hitbox_onscreen
@@ -433,9 +457,9 @@ if __name__ == '__main__':
     endDoc()
 
     outputTex()
-    # t1 = time.time()
-    # compileTex()
-    # t2 = time.time()
+    t1 = time.time()
+    compileTex()
+    t2 = time.time()
 
     # dt1 = t2 - t1
     # print('Elapsed time 1: {:.7} s'.format(dt1))

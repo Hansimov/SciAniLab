@@ -19,8 +19,12 @@ def convertGIFToJPG(rootpath):
                 # You can get the noface.gif from the mid with an 'failed' gif,
                 #   then convert the noface.gif to noface.jpg.
                 if not os.path.exists('./{}/{}.jpg'.format(rootpath, filename_body)):
-                    print('Copying noface.jpg to {}.jpg ...'.format(filename_body))
-                    copyfile(f'./{rootpath}/noface.jpg', './{}/{}.jpg'.format(rootpath, filename_body))
+                    if rootpath == 'face':
+                        print('Copying noface.jpg to {}.jpg ...'.format(filename_body))
+                        copyfile(f'./{rootpath}/noface.jpg', './{}/{}.jpg'.format(rootpath, filename_body))
+                    elif rootpath == 'pic':
+                        print('Copying nopic.png to {}.png ...'.format(filename_body))
+                        copyfile(f'./{rootpath}/nopic.png', './{}/{}.png'.format(rootpath, filename_body))
 
 if __name__ == '__main__':
     convertGIFToJPG('pic')

@@ -40,6 +40,7 @@ def getImage(img_link, img_name, retry_count=0):
         retry_count += 1
         if retry_count >= 5:
             print(f'--- Exceeded retry limits: {img_name}')
+            semlock.release()
             return
         else:
             print(f'*** Retry {retry_count} times to get: {img_name} ...')
@@ -50,7 +51,7 @@ def getImage(img_link, img_name, retry_count=0):
         print(f'+++ Successfully dumped: {img_name}')
         remaining_num -= 1
         print(f'=== Remaining: {remaining_num:{0}{5}}/{total_num:{0}{5}} ===')
-    semlock.release()
+        semlock.release()
 
 def createThread(img_link, img_ext, xid, xtype):
     xid_name = ('mid', 'aid')[xtype=='pic']
@@ -71,14 +72,14 @@ pic_list = []
 face_list = []
 aid_list = []
 mid_list = []
-df = pd.read_csv('./data/view_gt100w_180821x_out.csv', sep=',')
+df = pd.read_csv('./data/view_gt100w_latest_out.csv', sep=',')
 
 def getInfoList():
     global pic_list, face_list
     global total_num, remaining_num
 
     for i in range(len(df)):
-        if df['view'][i] >= 3e6:
+        if df['view'][i] >= 1e6:
             pic_list.append(df['pic'][i])
             face_list.append(df['face'][i])
             aid_list.append(df['aid'][i])
@@ -105,9 +106,10 @@ def getAllImages():
         pic_img_link = pic_img_link_body.format(pic_tmp)
         pic_img_ext = os.path.splitext(pic_tmp)[1]
 
+
         pic_thrd = createThread(pic_img_link, pic_img_ext, xid=aid_tmp, xtype='pic')
         startThread(pic_thrd)
-
+        # Error at: 328303954, 28087847
         face_img_link = face_img_link_body.format(face_tmp)
         face_img_ext = os.path.splitext(face_tmp)[1]
 

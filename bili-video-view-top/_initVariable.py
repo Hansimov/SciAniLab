@@ -55,7 +55,7 @@ def logistic(base=2, val=0, offset=0, ratio=1):
     # map [-∞, +∞] to [0, 1]
     return 1/(1+base**(-(val-offset)/ratio))
 
-def escchar(texstr):
+def escChar(texstr):
     # char_macro = ['~', '^', '\\']
     texstr = texstr.replace('\\','\\textbackslash ')
     # Put all after backslash
@@ -67,3 +67,13 @@ def escchar(texstr):
         texstr = texstr.replace(char, '\\'+char+' ')
 
     return texstr
+
+def calcApprox(num, precision=1):
+    if   num < 1e4:
+        return str(num)
+    elif num < 1e8:
+        return str(round(num/1e4)) + '万'
+    elif num < 1e12:
+        return str(round(num/1e8,precision)) + '亿'
+    else:
+        return str(num)

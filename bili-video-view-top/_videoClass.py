@@ -3,17 +3,19 @@ from _initVariable import *
 
 rgnclr = {} # region color
 
-rgnclr['donghua']  = [0.5, 0.5,  1 ]
-rgnclr['yinyue']   = [ 1 ,  1 ,  0 ]
-rgnclr['wudao']    = [ 1 , 0.5,  0 ]
-rgnclr['youxi']    = [ 1 , 0.1 ,0.1]
-rgnclr['keji']     = [ 0 , 0.5,  1 ]
-rgnclr['shenghuo'] = [ 0 , 0.5,  0 ]
-rgnclr['guichu']   = [0.5,  1 ,  1 ]
-rgnclr['qita']     = [ 1 , 0.5,  1 ]
+rgnclr['donghua']  = [0.6, 0.6,  1 ] # 动画
+rgnclr['yinyue']   = [ 1 ,  1 ,  0 ] # 音乐
+rgnclr['wudao']    = [ 1 , 0.5,  0 ] # 舞蹈
+rgnclr['youxi']    = [ 1 , 0.1, 0.1] # 游戏
+rgnclr['keji']     = [ 0 , 0.4,  1 ] # 科技
+rgnclr['shenghuo'] = [ 0 , 0.5,  0 ] # 生活
+rgnclr['guichu']   = [0.5,  1 ,  1 ] # 鬼畜
+rgnclr['yingshi']  = [ 1 , 0.5,  1 ] # 影视
+rgnclr['qita']     = [0.5, 0.5, 0.5] # 其他
 
-rgnname = ['动画','音乐','舞蹈','游戏','科技','生活','鬼畜','其他']
-rgnpinyin = ['donghua','yinyue','wudao','youxi','keji','shenghuo','guichu','qita']
+
+rgnname = ['动画','音乐','舞蹈','游戏','科技','生活','鬼畜','影视','其他']
+rgnpinyin = ['donghua','yinyue','wudao','youxi','keji','shenghuo','guichu','yingshi','qita']
 
 class RegionBlock(object):
     def display(self):
@@ -85,26 +87,9 @@ class VideoPoint(object):
 
     def calcRegion(self):
         # https://github.com/uupers/BiliSpider/wiki/%E8%A7%86%E9%A2%91%E5%88%86%E5%8C%BA%E5%AF%B9%E5%BA%94%E8%A1%A8
-        # 动画： 0.5  0.5  1
-        #     动画： 0.5  0.5  1
-        #     番剧： 0.5  0.5  1
-        #     国创： 0.5  0.5  1
-
-        # 音乐：  1    1   0
-        # 舞蹈：  1   0.5  0
-        # 游戏：  1    0   0
-        # 科技：  0   0.5  1
-        # 生活：  0   0.5  0 
-        # 鬼畜： 0.5   1   1
-        # 其他：  1   0.5  1
-        #     时尚：  1   0.5  1
-        #     广告：  1   0.5  1 
-        #     娱乐：  1   0.5  1
-        #     影视：  1   0.5  1
-        #     放映：  1   0.5  1
-
         # 动画：动画 + 番剧 + 国创
-        if  self.tid in [1, 24, 25, 47, 27,  13, 33, 32, 51, 152,  167, 153, 168, 169, 170]:
+        if  self.tid in [  1, 24, 25, 47, 27, 13, 33, 32, 51, 152,
+                         167, 153, 168, 169, 170,  46, 53]:
             self.region = 'donghua'
         # 音乐
         elif self.tid in [3, 28, 31, 30, 59, 29, 54, 130]:
@@ -113,17 +98,29 @@ class VideoPoint(object):
         elif self.tid in [129, 20, 154, 156]:
             self.region = 'wudao'
         # 游戏
-        elif self.tid in [4, 17, 171, 172, 65, 173, 121, 136, 19]:
+        elif self.tid in [4, 17, 171, 172, 65, 173, 121, 136, 19,  67]:
             self.region = 'youxi'
         # 科技
         elif self.tid in [36, 124, 122, 39, 96, 95, 98, 176]:
             self.region = 'keji'
         # 生活
-        elif self.tid in [160, 138, 21, 76, 75, 161, 162, 175, 163, 174]:
+        elif self.tid in [160, 138, 21, 76, 75, 161, 162, 175, 163, 174,  74]:
             self.region = 'shenghuo'
+        # # 娱乐（+时尚）
+        # elif self.tid in [155, 157, 158, 164, 159,  5, 71, 137, 131,  134]:
+        #     self.region = 'yule'
         # 鬼畜
         elif self.tid in [119, 22, 26, 126, 127]:
             self.region = 'guichu'
+        # 影视
+        elif self.tid in [181, 182, 183, 85, 184, 86]:
+            self.region = 'yingshi'
+        ## 放映厅
+        # elif self.tid in [177, 37, 178, 179, 180,  23, 147, 145, 146, 83,  11, 185, 187]:
+        #     self.region = 'fangyingting'
+        # # 广告
+        # elif self.tid in [165, 166]:
+        #     self.region = 'guanggao'
         # 其他：娱乐 + 广告 + 影视 + 时尚 + 放映厅
         else:
             self.region = 'qita'
@@ -139,7 +136,7 @@ class VideoPoint(object):
                 .format(self.color[0], self.color[1], self.color[2], \
                     # y=x/2 -> y=abs(x/2) -> y=abs((x-1)/2) -> y=0.5-abs((x-1)/2) x:[0,2]
                     round(self.title_opacity*2*(0.5-abs(self.display_cnt-self.display_cnt_max/2)/self.display_cnt_max),2),\
-                    self.textsize, self.aid, escchar(self.title))
+                    self.textsize, self.aid, escChar(self.title))
         ]
         printTex(tmp_cmds)
 
