@@ -39,7 +39,9 @@ def addPreamble():
         '\\newcommand{\\hupozh}{\\CJKfamily{hwhp}}',
         '\\newcommand{\\fs}[1]{\\fontsize{#1}{0pt}\\selectfont}',
         '\\setCJKmainfont{Microsoft YaHei}',
-        '\\setmainfont{Microsoft YaHei}'
+        '\\CJKsetecglue{\\hskip0.05em plus0.05em minus 0.05em}',
+        # '\\setmainfont{Microsoft YaHei}'，
+        '\\setmainfont{Arial Unicode MS}',
     ]
     printTex(preamble_list)
 

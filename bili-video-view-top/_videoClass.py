@@ -3,9 +3,9 @@ from _initVariable import *
 
 rgnclr = {} # region color
 
-rgnclr['donghua']  = [0.6, 0.6,  1 ] # 动画
+rgnclr['donghua']  = [0.6, 0.4, 0.9] # 动画
 rgnclr['yinyue']   = [ 1 ,  1 ,  0 ] # 音乐
-rgnclr['wudao']    = [ 1 , 0.5,  0 ] # 舞蹈
+rgnclr['wudao']    = [ 1 , 0.4,  0 ] # 舞蹈
 rgnclr['youxi']    = [ 1 , 0.1, 0.1] # 游戏
 rgnclr['keji']     = [ 0 , 0.4,  1 ] # 科技
 rgnclr['shenghuo'] = [ 0 , 0.5,  0 ] # 生活
@@ -20,7 +20,7 @@ rgnpinyin = ['donghua','yinyue','wudao','youxi','keji','shenghuo','guichu','ying
 class RegionBlock(object):
     def display(self):
         tmp_cmds = [
-            '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{15}}, inner sep=3] ({}) at ({},{}) {{{}}};' \
+            '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, shape=rectangle, font=\\fs{{18}}, inner sep=3] ({}) at ({},{}) {{{}}};' \
                 .format(self.color[0], self.color[1], self.color[2], self.pinyin, self.x, self.y, self.name)
         ]
         printTex(tmp_cmds)
@@ -35,7 +35,7 @@ def initRegion():
         region_tmp.name = name
         region_tmp.pinyin = pinyin
         region_tmp.x = width - 80
-        region_tmp.y = height - 100 - 30 * rgn_cnt
+        region_tmp.y = height - 100 - 28 * rgn_cnt
         region_all[pinyin] = region_tmp
         rgn_cnt += 1
 

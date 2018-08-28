@@ -66,12 +66,12 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-date_mark = date(2018, 8, 24)
+date_mark = date(2018, 8, 27)
 
-# date_head = date(2012, 6, 1)
-# date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
-date_head = date(2016, 2, 15)
-date_tail = date(2016, 2, 25)
+date_head = date(2009, 6, 26)
+date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
+# date_head = date(2016, 2, 15)
+# date_tail = date(2016, 3, 16)
 
 date_last = {}
 date_exceed_cnt = 0
@@ -461,12 +461,12 @@ if __name__ == '__main__':
     compileTex()
     t2 = time.time()
 
-    # dt1 = t2 - t1
-    # print('Elapsed time 1: {:.7} s'.format(dt1))
+    dt1 = t2 - t1
+    print('Elapsed time 1: {:.7} s'.format(dt1))
 
-    # os.system('python pdf2mp4.py')
-    # t3 = time.time()
+    os.system('python pdf2mp4.py')
+    t3 = time.time()
 
-    # dt2 = t3 - t2
-    # print('Elapsed time 1: {:.7} s'.format(dt1))
-    # print('Elapsed time 2: {:.7} s'.format(dt2))
+    dt2 = t3 - t2
+    print('Elapsed time 1: {:.7} s'.format(dt1))
+    print('Elapsed time 2: {:.7} s'.format(dt2))
