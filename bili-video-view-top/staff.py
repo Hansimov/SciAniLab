@@ -215,9 +215,9 @@ def drawStaff():
 
     staff_list = [
         ['狸子\\mbox{LePtC}', '策划'                     , './images/leptc.jpg'     ,[205, 20, 20],[255,255,255]],
-        ['yxlllc'          , '数据分析、审校'             , './images/yxlllc.jpg'    ,[ 2 , 91,142],[255,255,255]],
+        ['yxlllc'          , '审校'             , './images/yxlllc.jpg'    ,[ 2 , 91,142],[255,255,255]],
         ['霜落\\mbox{xss}'  , '数据库维护'                , './images/shuangluo.jpg' ,[167,110, 62],[255,255,255]],
-        ['Hansimov'        , '数据分析与处理、动效生成、后期制作', './images/hansimov.jpg'  ,[ 50, 50,255],[255,255,255]],
+        ['Hansimov'        , '数据处理、动效生成、后期制作', './images/hansimov.jpg',[ 50, 50,255],[255,255,255]],
     ]
 
     for i in range(0, len(staff_list)):
@@ -269,17 +269,19 @@ def drawOrg():
     ])
 
 
+    face    = './images/uupers.jpg'
     name_zh = '不科学的\\mbox{UP}组'
     # name_en = '{\\color{white}{\\color{red}U}nited {\\color{green}U}nscientific {\\color{blue}P}roducers}'
     name_en = 'United Unscientific Producers'
-    face    = './images/uupers.jpg'
+    link    = 'https://github.com/uupers'
 
     face_x = round(width/2, 2)
     face_y = 450
 
+    face_id = 'face'
     name_zh_id = 'namezh'
     name_en_id = 'nameen'
-    face_id = 'face'
+    link_id = 'link'
 
     tmp_cmds.extend([
         '\\node [anchor=center, circle, minimum size={}pt, fill overzoom image={}] ({}) at ({},{}) {{}} ;'\
@@ -288,13 +290,13 @@ def drawOrg():
             .format(-40, name_zh_id, face_id, name_zh),
         '\\node [anchor=north, yshift={}pt, text=white, font=\\fs{{30}}] ({}) at ({}.south) {{{}}} ;' \
             .format(-40, name_en_id, name_zh_id, name_en),
+        '\\node [anchor=north, yshift={}pt, text=white, font=\\fs{{30}}] ({}) at ({}.south) {{{}}} ;' \
+            .format(-40, link_id, name_en_id, link),
     ])
 
     printTex(tmp_cmds)
 
-
-
-def drawEnding():
+def drawStaff():
     global all_cmds
     all_cmds = []
 
@@ -330,4 +332,4 @@ def drawEnding():
 
 
 if __name__ == '__main__':
-    drawEnding()
+    drawStaff()

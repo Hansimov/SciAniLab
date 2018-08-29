@@ -66,10 +66,11 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-date_mark = date(2018, 8, 27)
+date_mark = date(2018, 8, 28)
 
 date_head = date(2009, 6, 26)
 date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
+
 # date_head = date(2016, 2, 15)
 # date_tail = date(2016, 3, 16)
 
@@ -309,7 +310,7 @@ def drawCover():
     if video_star != {}:
         pic_ext  = os.path.splitext(video_star.pic)[1]
         if not pic_ext in ['.jpg', '.png']:
-            pic_ext = '.jpg'
+            pic_ext = '.png'
 
         face_ext  = os.path.splitext(video_star.face)[1]
         if not face_ext in ['.jpg', '.png']:

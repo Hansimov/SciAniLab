@@ -9,7 +9,6 @@ from datetime import *
 import pandas as pd
 import time
 
-# tex_filename = 'global_view.tex'
 all_cmds = []
 
 # width, height = 1920+7, 1080+4
@@ -69,6 +68,7 @@ def addPreamble():
         '\\usepackage{tikz}',
         '\\usepackage[skins]{tcolorbox}',
         '\\usepackage{graphicx}',
+        # '\\usepackage{calc}',
         '\\usetikzlibrary{calc}',
         '\\usepackage{amssymb}',
         '\\usepackage{bm}',
@@ -81,6 +81,7 @@ def addPreamble():
         '\\newcommand{\\fs}[1]{\\fontsize{#1}{0pt}\\selectfont}',
         '\\setCJKmainfont{Microsoft YaHei}',
         '\\CJKsetecglue{\\hskip0.05em plus0.05em minus 0.05em}',
+        '\\ctexset{space=true}',
         # '\\setmainfont{Microsoft YaHei}',
         '\\setmainfont{Arial Unicode MS}',
         # '\\setmainfont{FreeSerif}',
@@ -212,8 +213,11 @@ class VideoPoint(object):
         # 生活
         elif self.tid in [160, 138, 21, 76, 75, 161, 162, 175, 163, 174,  74]:
             self.region = 'shenghuo'
-        # # 娱乐（+时尚）
-        # elif self.tid in [155, 157, 158, 164, 159,  5, 71, 137, 131,  134]:
+        # 时尚
+        # elif self.tid in [155, 157, 158, 164, 159]:
+        #   self.region = 'shishang'
+        # # 娱乐
+        # elif self.tid in [5, 71, 137,  131, 134]:
         #     self.region = 'yule'
         # 鬼畜
         elif self.tid in [119, 22, 26, 126, 127]:
@@ -227,7 +231,7 @@ class VideoPoint(object):
         # # 广告
         # elif self.tid in [165, 166]:
         #     self.region = 'guanggao'
-        # 其他：娱乐 + 广告 + 影视 + 时尚 + 放映厅
+        # 其他：广告 + 时尚 + ...
         else:
             self.region = 'qita'
 
@@ -241,8 +245,8 @@ class VideoPoint(object):
         printTex(tmp_cmds)
 
 video_all = []
-# df = pd.read_csv('./data/view_gt100w_latest_out.csv', sep=',')
-df = pd.read_csv('./data/view_gt100w_180826x_out.csv', sep=',')
+df = pd.read_csv('./data/view_gt100w_latest_out.csv', sep=',')
+# df = pd.read_csv('./data/view_gt100w_180826x_out.csv', sep=',')
 def initVideo():
     global video_all
     # view, videos, view_avg, title, coin, favorite, danmaku, aid, name, mid, pubdate, tid, duration, copyright, pic, face
@@ -321,32 +325,22 @@ def drawGlobalViewRaw():
     dt1 = t2 - t1
     print('Elapsed time 1: {:.7} s'.format(dt1))
 
-
-# ===================================================================
 width_local, height_local = 1280+5, 720+3
+
 
 def shiftGlobalView(shift_x):
     tmp_cmds = []
     tmp_cmds.extend([
-        '\\node [anchor=west] at ({},{}) {{ \\includegraphics {{global_view.pdf}} }};' \
+        '\\node [anchor=west] at ({},{}) {{ \\includegraphics {{ending_global_view_raw.pdf}} }};' \
             .format(round(width_local-shift_x, 2), round(height_local/2, 2))
     ])
     printTex(tmp_cmds)
 
-def zoomGlobalView(zoom_x):
-    tmp_cmds = []
-    tmp_cmds.extend([
-        '\\node [anchor=east] at ({},{}) {{ \\includegraphics [width={}pt] {{global_view.pdf}} }};' \
-            .format(round(width_local, 2), round(height_local/2, 2), round(zoom_x, 2))
-    ])
-    printTex(tmp_cmds)
-
-def drawGlobalViewAll():
-    drawGlobalViewRaw()
+def drawGlobalViewShift():
     global all_cmds
     all_cmds = []
 
-    tex_filename = 'ending_global_view_all.tex'
+    tex_filename = 'ending_global_view_shift.tex'
     t1 = time.time()
     clearTex(tex_filename)
     addPreamble()
@@ -363,6 +357,32 @@ def drawGlobalViewAll():
         shift_x = shift_x_step * i
         shiftGlobalView(shift_x)
         endTikz()
+
+    endDoc()
+    outputTex(tex_filename)
+    compileTex(tex_filename)
+    t2 = time.time()
+    dt1 = t2 - t1
+    print('Elapsed time 1: {:.7} s'.format(dt1))
+
+
+def zoomGlobalView(zoom_x):
+    tmp_cmds = []
+    tmp_cmds.extend([
+        '\\node [anchor=east] at ({},{}) {{ \\includegraphics [width={}pt] {{ending_global_view_raw.pdf}} }};' \
+            .format(round(width_local, 2), round(height_local/2, 2), round(zoom_x, 2))
+    ])
+    printTex(tmp_cmds)
+
+def drawGlobalViewZoom():
+    global all_cmds
+    all_cmds = []
+
+    tex_filename = 'ending_global_view_zoom.tex'
+    t1 = time.time()
+    clearTex(tex_filename)
+    addPreamble()
+    beginDoc()
 
     zoom_frames_cnt = 60 * 2
     # width_of_includegraphics: width -> width_local
@@ -381,6 +401,11 @@ def drawGlobalViewAll():
     t2 = time.time()
     dt1 = t2 - t1
     print('Elapsed time 1: {:.7} s'.format(dt1))
+
+def drawGlobalViewAll():
+    drawGlobalViewRaw()
+    drawGlobalViewShift()
+    drawGlobalViewZoom()
 
 # ===================================================================
 def drawRegionViewRaw():
@@ -411,7 +436,6 @@ def drawRegionViewRaw():
     print('Elapsed time 1: {:.7} s'.format(dt1))
 
 
-# ===================================================================
 def drawRegionSeperate():
     # draw seperate region
     tmp_cmds = []
@@ -499,6 +523,7 @@ def drawRegionChart():
         view_num_list[rgn_idx] += 1
         video_num += 1
         # if video_tmp.region == 'qita':
+        # if video_tmp.tid in [94, 120, 130, 39]:
         #     print(video_tmp.tid, video_tmp.aid, video_tmp.title)
 
     ratio_list = [0] * len(rgnname)
@@ -705,6 +730,10 @@ def drawChartsAll():
     print('Elapsed time 1: {:.7} s'.format(dt1))
 
 # ===================================================================
+top_video_num = 200
+top_video_height_each  = 50
+top_video_height_total = top_video_height_each * top_video_num
+
 def drawTopVideoRaw():
     global all_cmds
     all_cmds = []
@@ -716,7 +745,7 @@ def drawTopVideoRaw():
 
     df_sorted = df.sort_values(by='view', ascending=False)
     top_video = []
-    for i in range(200):
+    for i in range(top_video_num):
         # print('{} {} {} {}'.format(*list(map(lambda x: df_sorted.iloc[i][x], ['view', 'pubdate', 'aid', 'title']))))
         video_tmp = VideoPoint()
         video_tmp.view     = int(df_sorted.iloc[i]['view'])
@@ -742,18 +771,19 @@ def drawTopVideoRaw():
         top_video.append(video_tmp)
 
     tmp_cmds = []
+
     beginTikz()
-    # setSize(width_local, height_local, 'lb')
-    tmp_cmds.extend([
-        '\\node [text=white, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ TOP 100 }} ;' \
-            .format(round(width_local/2,2), round(height_local*6/7, 2)),
-    ])
+    setSize(width_local, -top_video_height_total, 'lb')
+    # tmp_cmds.extend([
+    #     '\\node [text=white, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ TOP 100 }} ;' \
+    #         .format(round(width_local/2,2), round(height_local*6/7, 2)),
+    # ])
 
     for i in range(0, len(top_video)):
         video_tmp = top_video[i]
         rgnclr_tmp = rgnclr[video_tmp.region]
-        text_x = 500
-        text_y = 500 - i * 40
+        text_x = 300
+        text_y = 0 - i * top_video_height_each
 
         title_id = 'title' + str(i)
         view_id  = 'view' + str(i)
@@ -767,17 +797,19 @@ def drawTopVideoRaw():
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2]),
             '\\tikzstyle{{drawcolor}}=[draw={{rgb,1:red,{}; green,{}; blue,{}}}];' \
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2]),
-            '\\tikzstyle{{textcolor}}=[text={{rgb,1:red,{}; green,{}; blue,{}}}, font=\\fs{{30}}];' \
+            '\\tikzstyle{{textcolor}}=[text={{rgb,1:red,{}; green,{}; blue,{}}}, font=\\fs{{25}}];' \
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2]),
-            '\\node [textcolor, anchor=west, align=left] ({}) at ({}, {}) {{{}}};' \
+            '\\node [textcolor, anchor=north west, align=left] ({}) at ({}, {}) {{{}}};' \
                 .format(title_id, text_x, text_y, escChar(video_tmp.title)),
             # '\\node [textcolor, anchor=east, align=left, xshift=-5pt] ({}) at ({}.west) {{{}}};' \
             #     .format(name_id, title_id, escChar(video_tmp.name)),
-            '\\node [textcolor, anchor=east, align=left, xshift=-5pt, circle, minimum size=30pt, fill overzoom image={}] ({}) at ({}.west) {{}};' \
-                .format(video_tmp.face_path, face_id, title_id),
-            '\\node [textcolor, anchor=east, align=right, xshift=-5pt] ({}) at ({}.west) {{{} 万}};' \
+            '\\node [textcolor, drawcolor, anchor=east, align=left, xshift=-15pt, circle, minimum size={}pt, fill overzoom image={}] ({}) at ({}.west) {{}};' \
+                .format(30,video_tmp.face_path, face_id, title_id),
+            '\\node [textcolor, anchor=east, align=right, xshift=-15pt, text width=100pt] ({}) at ({}.west) {{{}万}};' \
                 .format(view_id, face_id, round(video_tmp.view/1e4)),
-            '\\node [textcolor, drawcolor, circle, anchor=east, align=right, xshift=-5pt] ({}) at ({}.west) {{{}}};' \
+            # '\\node [textcolor, anchor=east, align=right, xshift=-5pt] ({}) at ({}.west) {{{}}};' \
+            #     .format(view_id, face_id, video_tmp.aid),
+            '\\node [textcolor, drawcolor, line width=2pt, circle, anchor=center, align=center, xshift=-15pt] ({}) at ({}.west) {{{}}};' \
                 .format(rank_id, view_id, i+1)
         ])
     printTex(tmp_cmds)
@@ -791,13 +823,55 @@ def drawTopVideoRaw():
     dt1 = t2 - t1
     print('Elapsed time 1: {:.7} s'.format(dt1))
 
+def pullTopVideo(pull_y):
+    tmp_cmds = []
+    border_bottom = 60
+    border_up = border_bottom+10*top_video_height_each
+    tmp_cmds.extend([
+        '\\begin{scope}',
+        '\\path[clip] ({},{}) rectangle ({},{});'\
+            .format(0, border_bottom , width_local, border_bottom+10*top_video_height_each),
+        '\\node [anchor=south] at ({},{}) {{ \\includegraphics {{ending_top_video_raw.pdf}} }};' \
+            .format(round(width_local/2, 2), round(height_local-pull_y+border_up-height_local, 2)),
+        '\\end{scope}'
+    ])
+    printTex(tmp_cmds)
+
+def drawTopvideoPull():
+    global all_cmds
+    all_cmds = []
+    tex_filename = 'ending_top_video_pull.tex'
+    t1 = time.time()
+    clearTex(tex_filename)
+    addPreamble()
+    beginDoc()
+
+    pull_frames_cnt = 60 * 10
+    pull_y_step = top_video_height_total / pull_frames_cnt
+
+    for i in range(0, pull_frames_cnt+1):
+        beginTikz()
+        setSize(width_local, height_local, 'lb')
+
+        pull_y = pull_y_step * i
+        pullTopVideo(pull_y)
+        endTikz()
+
+    endDoc()
+
+    outputTex(tex_filename)
+    compileTex(tex_filename)
+    t2 = time.time()
+    dt1 = t2 - t1
+    print('Elapsed time 1: {:.7} s'.format(dt1))
+
 def drawTopVideoAll():
     drawTopVideoRaw()
-
+    drawTopvideoPull()
 
 if __name__ == '__main__':
     # drawGlobalViewAll()
     # drawRegionViewAll()
-    drawChartsAll()
-    # drawTopVideoAll()
+    # drawChartsAll()
+    drawTopVideoAll()
 

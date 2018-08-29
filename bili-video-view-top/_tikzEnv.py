@@ -14,6 +14,7 @@ def compileTex(cp_type='xelatex'):
     # compile_limits = ' -pool-size=7999999 -main-memory=7999999 '
     compile_limits = ' -pool-size=7999999 -extra-mem-top=20000000 -extra-mem-bot=20000000'
     compile_tool = 'latexmk -pv '+ compile_limits + ' ' + compile_type + ' '
+    # latexmk -pv -pool-size=7999999 -extra-mem-top=20000000 -extra-mem-bot=20000000 -xelatex xxx.tex
     absolute_tex_filename = os.path.join(os.getcwd(), tex_filename)
     os.system(compile_tool + absolute_tex_filename)
 
@@ -40,6 +41,7 @@ def addPreamble():
         '\\newcommand{\\fs}[1]{\\fontsize{#1}{0pt}\\selectfont}',
         '\\setCJKmainfont{Microsoft YaHei}',
         '\\CJKsetecglue{\\hskip0.05em plus0.05em minus 0.05em}',
+        '\\ctexset{space=true}',
         # '\\setmainfont{Microsoft YaHei}'，
         '\\setmainfont{Arial Unicode MS}',
     ]
