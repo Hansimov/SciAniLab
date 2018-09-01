@@ -66,13 +66,13 @@ hit数 -> 小飞机打砖块
 
 date_all = []
 
-date_mark = date(2018, 8, 28)
+date_mark = date(2018, 8, 29)
 
 date_head = date(2009, 6, 26)
 date_tail = date_mark + timedelta(days=date_axis_segs/6+4)
 
-# date_head = date(2016, 2, 15)
-# date_tail = date(2016, 3, 16)
+# date_head = date(2016, 3, 15)
+# date_tail = date(2016, 4, 15)
 
 date_last = {}
 date_exceed_cnt = 0
@@ -290,6 +290,11 @@ def drawVideoPoint():
         video_onscreen[i].x -= (axis_r-axis_l)/(date_axis_segs)
         video_onscreen[i].x = round(video_onscreen[i].x, 3)
 
+    drawRegion() 
+    # ^ Why drawRegion() here? 
+    # > To make the references of region nodes used by laser()
+    #   I will drawRegion() again in the main loop,
+    #     to avoid region being overlapped by titles of video points
     for video_tmp in video_onscreen:
         video_tmp.display()
         video_tmp.laser()
@@ -438,13 +443,11 @@ def drawHitAndBoard():
     #         idx_tmp += 1
 
 if __name__ == '__main__':
-    clearTex()
-    addPreamble()
-    beginDoc()
-    for i in range(0, len(date_all)):
-    # for i in range(0, 3):
-        beginTikz()
 
+
+
+    for i in range(0, len(date_all)):
+        beginTikz()
         setSize(width, height, 'lb')
 
         drawViewAxis(i)
@@ -455,19 +458,13 @@ if __name__ == '__main__':
         drawCover()
 
         endTikz()
-    endDoc()
 
-    outputTex()
-    t1 = time.time()
-    compileTex()
-    t2 = time.time()
+    tex_filename = 'ani_view.tex'
+    outputTex(tex_filename, parts=4, threads=4, merge=False, pdf2png=True, png2mp4=True)
 
-    dt1 = t2 - t1
-    print('Elapsed time 1: {:.7} s'.format(dt1))
+    # os.system('python pdf2mp4.py')
+    # t3 = time.time()
 
-    os.system('python pdf2mp4.py')
-    t3 = time.time()
-
-    dt2 = t3 - t2
-    print('Elapsed time 1: {:.7} s'.format(dt1))
-    print('Elapsed time 2: {:.7} s'.format(dt2))
+    # dt2 = t3 - t2
+    # print('Elapsed time 1: {:.7} s'.format(dt1))
+    # print('Elapsed time 2: {:.7} s'.format(dt2))

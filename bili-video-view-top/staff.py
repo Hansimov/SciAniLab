@@ -47,10 +47,14 @@ def addPreamble():
         '\\usepackage{bm}',
         '\\usetikzlibrary{backgrounds}',
         '\\usepackage[scheme=plain]{ctex}',
-        '\\newfontfamily\\hupo{STXingkai}',
-        '\\setCJKfamilyfont{hwhp}{STXingkai}',
+        # '\\newfontfamily\\hupo{STXingkai}',
+        # '\\setCJKfamilyfont{hwhp}{STXingkai}',
+        '\\newfontfamily\\romanfont{Times New Roman}',
+        '\\newcommand{\\romanft}{\\romanfont\\selectfont}',
         '\\newcommand{\\hupozh}{\\CJKfamily{hwhp}}',
         '\\newcommand{\\fs}[1]{\\fontsize{#1}{0pt}\\selectfont}',
+        '\\CJKsetecglue{\\hskip0.05em plus0.05em minus 0.05em}',
+        '\\ctexset{space=true}',
         '\\setCJKmainfont{Microsoft YaHei}',
         '\\setmainfont{Microsoft YaHei}'
     ]
@@ -61,6 +65,10 @@ def addPreamble():
         \\newcommand\\shadetext[2][]{%
         \\setbox0=\\hbox{{\\special{pdf:literal 7 Tr }#2}}%
         \\tikz[baseline=0]\\path [#1] \\pgfextra{\\rlap{\\copy0}} (0,-\\dp0) rectangle (\\wd0,\\ht0);%
+        }
+
+        \\newcommand{\\clr}[2]{%
+        \\textcolor{#1}{#2}\\color{white}
         }
         '''
     ])
@@ -119,51 +127,50 @@ def escChar(texstr):
 
     return texstr
 
-def drawIntroText():
-    pass
-
-def drawOriginalText():
-    pass
-
-def drawCornerText():
-    pass
-
-# 本视频展示了：B 站播放数超过 100 万的“用户原创视频”
-# 时间范围：2009 年 06 月 26 日 -- 2018 年 08 月 XX 日
-# 横轴：投稿时间
-# 纵轴：播放数（为使纵向分布更加合理，将纵坐标用 logistic 函数重新映射）
-# 右下角：当前屏幕中播放数最高的视频信息
-
-# 本视频中的“用户原创视频”是指：
-# 1. 投稿者标明为“原创”（即后台接口中 copyright 值为 1）；
-# 2. 尽可能为 UGC（用户生产内容） 而非 PGC（专业生产内容）。
-#     因此剔除了如下分区中的视频：（括号内为分区在后台对应的 tid 值）
-#     a. “动画”区：“番剧”和“国创”中的官方内容：
-#           番剧：  连载动画（33）、 完结动画（32）
-#           国创：  国产动画（153）
-#     b. “其他”区 ：“放映厅”下的全部子分区：
-#           纪录片：人文历史（37）、 科学探索（178）、热血军事（179）、舌尖上的旅行（180）
-#           电影：  华语电影（147）、欧美电影（145）、日本电影（146）、其他国家（83）
-#           电视剧：国产剧（185）、  海外剧（187）
-
-
-
 def drawBgm():
-    pass
+    tmp_cmds = []
+
+    tmp_cmds.extend([
+        '\\node [text=yellow!50, anchor=center, align=center, font=\\fs{{42}}] at ({},{}) {{ 背~景~音~乐 }} ;' \
+            .format(round(width/2,2), round(height*6/7, 2))
+    ])
+
+    tmp_cmds.extend([
+        '\\node [text=white, anchor=north, align=center, font=\\fs{{30}}] at ({}, {}) {{{}}};'\
+            .format(round(width/2, 2), round(height*6/7-100, 2), \
+                """
+                \\color{green!50} Bach Prelude Variation (J.S. Bach) \\\\[20pt]
+                \\color{white} \\fs{20} Time Requiem \\\\[20pt]
+                \\color{blue!50} \\fs{20} The Inner Circle Of Reality\\\\[50pt]
+
+                \\color{green!50} 千本桜（古筝） \\\\[20pt]
+                \\color{white} \\fs{20} 墨韵随步摇 \\\\[20pt]
+                \\color{blue!50} \\fs{20} 哔哩哔哩 av1250357 \\\\[50pt]
+
+                \\color{green!50} Avast Your Ass \\\\[20pt]
+                \\color{white} \\fs{20} Kitsune² \\\\[20pt]
+                \\color{blue!50} \\fs{20} Squaredance
+
+                """
+
+                )
+    ])
+
+    printTex(tmp_cmds)
 
 def drawTool():
     tmp_cmds = []
 
     tmp_cmds.extend([
-        '\\node [text=white, anchor=center, align=center, font=\\fs{{42}}] at ({},{}) {{ 软~件~工~具 }} ;' \
+        '\\node [text=yellow!50, anchor=center, align=center, font=\\fs{{42}}] at ({},{}) {{ 软~件~工~具 }} ;' \
             .format(round(width/2,2), round(height*6/7, 2))
     ])
 
     # Python, LaTeX, Ghostscript, FFmpeg, Premiere
 
     tool_list = [
-        ['Python'             , '数据处理' , './images/python.png'      , [ 55,116,167], [255,209, 65]] ,
-        ['LaTeX'              , '图形绘制' , './images/latex.png'       , [255,255,255], [120,120,120]] ,
+        ['Python'             , '数据处理、动效逻辑' , './images/python.png'      , [ 55,116,167], [255,209, 65]] ,
+        ['LaTeX'              , '图形绘制、文本排版' , './images/latex.png'       , [255,255,255], [120,120,120]] ,
         ['Ghostscript'        , '图像转换' , './images/ghostscript.png' , [  0,117,208], [120,120,120]] ,
         ['FFmpeg'             , '视频转换' , './images/ffmpeg.png'      , [255,255,255], [  0,120,  8]] ,
         ['Adobe Premiere Pro' , '后期制作' , './images/premiere.png'    , [234,119,255], [182,  0,182]]
@@ -209,15 +216,15 @@ def drawStaff():
     tmp_cmds = []
 
     tmp_cmds.extend([
-        '\\node [text=white, anchor=center, align=center, font=\\fs{{42}}] at ({},{}) {{ 工~作~人~员 }} ;' \
+        '\\node [text=yellow!50, anchor=center, align=center, font=\\fs{{42}}] at ({},{}) {{ 工~作~人~员 }} ;' \
             .format(round(width/2,2), round(height*6/7, 2))
     ])
 
     staff_list = [
-        ['狸子\\mbox{LePtC}', '策划'                     , './images/leptc.jpg'     ,[205, 20, 20],[255,255,255]],
-        ['yxlllc'          , '审校'             , './images/yxlllc.jpg'    ,[ 2 , 91,142],[255,255,255]],
-        ['霜落\\mbox{xss}'  , '数据库维护'                , './images/shuangluo.jpg' ,[167,110, 62],[255,255,255]],
         ['Hansimov'        , '数据处理、动效生成、后期制作', './images/hansimov.jpg',[ 50, 50,255],[255,255,255]],
+        ['霜落xss'  , '数据库维护'                , './images/shuangluo.jpg' ,[167,110, 62],[255,255,255]],
+        ['yxlllc'          , '审校'             , './images/yxlllc.jpg'    ,[ 2 , 91,142],[255,255,255]],
+        ['狸子LePtC', '策划'                     , './images/leptc.jpg'     ,[205, 20, 20],[255,255,255]],
     ]
 
     for i in range(0, len(staff_list)):
@@ -264,16 +271,16 @@ def drawOrg():
     tmp_cmds = []
 
     tmp_cmds.extend([
-        '\\node [text=white, anchor=center, align=center, font=\\fs{{42}}] at ({},{}) {{ 出~品 }} ;' \
+        '\\node [text=yellow!50, anchor=center, align=center, font=\\fs{{42}}] at ({},{}) {{ 出~品 }} ;' \
             .format(round(width/2,2), round(height*6/7, 2))
     ])
 
-
     face    = './images/uupers.jpg'
-    name_zh = '不科学的\\mbox{UP}组'
-    # name_en = '{\\color{white}{\\color{red}U}nited {\\color{green}U}nscientific {\\color{blue}P}roducers}'
+    # name_zh = '{\\shadetext [left color=red, right color=blue, middle color=green, shading angle=45]{不科学的UP组}}'
+    name_zh = '不科学的UP组'
+    # name_en = '{\\clr{red}{U}nited \\clr{green}{U}nscientific \\clr{blue}{P}roduc\\shadetext[left color=red, right color=blue, middle color=green, shading angle=45]{ers}}'
     name_en = 'United Unscientific Producers'
-    link    = 'https://github.com/uupers'
+    link    = '{\\romanft https://github.com/uupers}'
 
     face_x = round(width/2, 2)
     face_y = 450
@@ -289,14 +296,14 @@ def drawOrg():
         '\\node [anchor=north, yshift={}pt, text=white, font=\\fs{{30}}] ({}) at ({}.south) {{{}}} ;' \
             .format(-40, name_zh_id, face_id, name_zh),
         '\\node [anchor=north, yshift={}pt, text=white, font=\\fs{{30}}] ({}) at ({}.south) {{{}}} ;' \
-            .format(-40, name_en_id, name_zh_id, name_en),
+            .format(-20, name_en_id, name_zh_id, name_en),
         '\\node [anchor=north, yshift={}pt, text=white, font=\\fs{{30}}] ({}) at ({}.south) {{{}}} ;' \
-            .format(-40, link_id, name_en_id, link),
+            .format(-60, link_id, name_en_id, link),
     ])
 
     printTex(tmp_cmds)
 
-def drawStaff():
+def drawStaffAll():
     global all_cmds
     all_cmds = []
 
@@ -307,7 +314,7 @@ def drawStaff():
     addPreamble()
 
     drawing_cmd_list = [
-        # 'drawBgm()',
+        'drawBgm()',
         'drawTool()',
         'drawStaff()',
         'drawOrg()'
@@ -332,4 +339,4 @@ def drawStaff():
 
 
 if __name__ == '__main__':
-    drawStaff()
+    drawStaffAll()

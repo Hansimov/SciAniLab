@@ -66,7 +66,7 @@ def printTex(commands):
         for line in commands:
             all_cmds.append(line)
 
-def outputTex(tex_filename, parts=1, compilex=True, threads=1):
+def outputTex(tex_filename, parts=1, compiletex=True, threads=1, preview=True, merge=False):
     global all_cmds
     if parts == 1:
         selected_cmds = all_cmds
@@ -77,10 +77,11 @@ def outputTex(tex_filename, parts=1, compilex=True, threads=1):
         part_cmds.extend(selected_cmds)
         part_cmds.extend(end_doc)
 
+        clearTex(tex_filename)
         with open(tex_filename, 'a', encoding='utf-8') as txf:
             for line in part_cmds:
                 print(line, file=txf)
-        if compilex == True:
+        if compiletex == True:
             compileTex(tex_filename)
     else:
         frame_row_bgn = []
@@ -97,7 +98,10 @@ def outputTex(tex_filename, parts=1, compilex=True, threads=1):
 
             row_num += 1
 
+        parts = min(frame_cnt, parts)
+
         tex_filename_list = []
+        pdf_filename_list = []
         frame_cnt_each_part = ceil(frame_cnt/parts)
         bgn_frame_cnt, end_frame_cnt = 0, -1
         for i in range(0, parts):
@@ -109,7 +113,6 @@ def outputTex(tex_filename, parts=1, compilex=True, threads=1):
 
             bgn_row_num = frame_row_bgn[bgn_frame_cnt][1]
             end_row_num = frame_row_end[end_frame_cnt][1]
-            print(bgn_frame_cnt, bgn_row_num, end_frame_cnt, end_row_num)
 
             selected_cmds = all_cmds[bgn_row_num : end_row_num+1]
 
@@ -120,22 +123,36 @@ def outputTex(tex_filename, parts=1, compilex=True, threads=1):
             part_cmds.extend(end_doc)
 
             tex_filename_tmp = os.path.splitext(tex_filename)[0] + '_{:0>4d}'.format(i+1) + '.tex'
+            pdf_filename_tmp = os.path.splitext(tex_filename)[0] + '_{:0>4d}'.format(i+1) + '.pdf'
             tex_filename_list.append(tex_filename_tmp)
+            pdf_filename_list.append(pdf_filename_tmp)
             clearTex(tex_filename_tmp)
             with open(tex_filename_tmp, 'a', encoding='utf-8') as txf:
                 for line in part_cmds:
                     print(line, file=txf)
-        if compilex == True:
+
+        if compiletex == True:
             threads_cnt_max = min(threads, parts)
             semlock = threading.BoundedSemaphore(threads_cnt_max)
             compile_tex_list=[]
-            for tex_filename_tmp in tex_filename_list:
+            for i in range(0, parts):
+                tex_filename_tmp = tex_filename_list[i]
                 semlock.acquire()
-                compile_tex_tmp = threading.Thread(target=compileTex, args=(tex_filename_tmp,), kwargs={'multithreads':True, 'semlock':semlock})
+                compile_tex_tmp = threading.Thread(target=compileTex, args=(tex_filename_tmp,), kwargs={'preview':False, 'semlock':semlock})
                 compile_tex_list.append(compile_tex_tmp)
                 compile_tex_tmp.start()
+                # Must monitor the last thread, in order to compile all texs before call mergePdf()
+                # Ignore other threads to max the utilization of processor
+                if i == parts-1:
+                    compile_tex_tmp.join()
 
-def compileTex(tex_filename, engine='xelatex', preview=True, multithreads=False, semlock={}):
+        if merge == True:
+            pdf_filename = os.path.splitext(tex_filename)[0] + '.pdf'
+            mergePdf(input_pdf_list=pdf_filename_list, output_pdf=pdf_filename)
+            if preview == True:
+                os.system('sumatrapdf '+ pdf_filename)
+
+def compileTex(tex_filename, engine='xelatex', preview=True, semlock={}):
     if engine == 'xelatex' or engine == 'x':
         engine_cfg = '-xelatex'
     else:
@@ -152,8 +169,16 @@ def compileTex(tex_filename, engine='xelatex', preview=True, multithreads=False,
     absolute_tex_filename = os.path.join(os.getcwd(), tex_filename)
     os.system(compile_tool + absolute_tex_filename)
 
-    if multithreads == True:
+    if semlock != {}:
         semlock.release()
+
+def mergePdf(input_pdf_list=[], output_pdf=''):
+    gs_cmd = 'gswin64c -dBATCH -dNOPAUSE -sDEVICE=pdfwrite '
+    out_cmd = '-o ' + output_pdf + ' '
+    input_cmd = ''
+    for input_pdf_tmp in input_pdf_list:
+        input_cmd = input_cmd + ' ' + input_pdf_tmp
+    os.system(gs_cmd + out_cmd + input_cmd)
 
 
 def addPreamble():
@@ -190,15 +215,14 @@ def setSize(width, height, anchor='lb'):
     printTex(set_size)
 
 
-if __name__ == '__main__':
-    
+def drawTex():
     width_local, height_local = 1280+5, 720+3
-    # global all_cmds
+    global all_cmds
     all_cmds = []
     tex_filename = 'test_divide.tex'
     t1 = time.time()
 
-    for i in range(0, 10):
+    for i in range(0, 1000):
         beginTikz()
         setSize(width_local, height_local, 'lb')
 
@@ -209,8 +233,11 @@ if __name__ == '__main__':
 
         endTikz()
 
-    outputTex(tex_filename, parts=4, threads=3)
+    outputTex(tex_filename, parts=4, threads=4, merge=True)
 
     t2 = time.time()
     dt1 = t2 - t1
     print('Elapsed time 1: {:.7} s'.format(dt1))
+
+if __name__ == '__main__':
+    drawTex()

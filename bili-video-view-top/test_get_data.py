@@ -38,7 +38,7 @@ video_top_file = './data/video_dynamic_180723_top1000.csv' # header = True,  all
 # where (d.aid=s.aid and s.mid=up.mid and (d.view<0 or d.view>=100000))
 
 select d.view, s.videos, s.title, up.name, s.pubdate, d.favorite, d.coin, d.danmaku, s.aid, up.mid, s.tid, s.duration, s.copyright, s.pic, up.face from
-(select * from video_dynamic_180828) as d,
+(select * from video_dynamic_180829) as d,
 (select * from video_static) as s,
 (select * from up_data) as up
 where (d.aid=s.aid and s.mid=up.mid and d.view>=1000000)

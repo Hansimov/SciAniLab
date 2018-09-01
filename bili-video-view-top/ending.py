@@ -13,7 +13,7 @@ all_cmds = []
 
 # width, height = 1920+7, 1080+4
 # width, height = 1280+5, 720+3
-width, height = 1280*8, 720+3
+width, height = 1280*9, 720+3
 
 axis_l, axis_r = 25, width - 25
 axis_b, axis_t = 70, 650
@@ -22,8 +22,8 @@ date_axis_segs = 200
 
 video_view_threshold = 1e6
 
-date_head = datetime(2009, 6, 24, 0, 0, 0)
-date_tail = datetime(2018, 8, 21, 0, 0, 0)
+date_head = datetime(2009, 6, 26, 0, 0, 0)
+date_tail = datetime(2018, 8, 28, 0, 0, 0)
 total_seconds_max = (date_tail - date_head).total_seconds()
 
 
@@ -71,6 +71,7 @@ def addPreamble():
         # '\\usepackage{calc}',
         '\\usetikzlibrary{calc}',
         '\\usepackage{amssymb}',
+        '\\usepackage{xcolor}',
         '\\usepackage{bm}',
         '\\usetikzlibrary{backgrounds}',
         '\\usepackage[scheme=plain]{ctex}',
@@ -78,7 +79,11 @@ def addPreamble():
         # '\\newfontfamily\\hupo{STXingkai}',
         # '\\setCJKfamilyfont{hwhp}{STXingkai}',
         # '\\newcommand{\\hupozh}{\\CJKfamily{hwhp}}',
+        '\\newfontfamily\\arialfont{Arial}',
+        '\\newcommand{\\arialft}{\\arialfont\\selectfont}',
         '\\newcommand{\\fs}[1]{\\fontsize{#1}{0pt}\\selectfont}',
+        '\\newfontfamily\\romanfont{Times New Roman}',
+        '\\newcommand{\\romanft}{\\romanfont\\selectfont}',
         '\\setCJKmainfont{Microsoft YaHei}',
         '\\CJKsetecglue{\\hskip0.05em plus0.05em minus 0.05em}',
         '\\ctexset{space=true}',
@@ -94,6 +99,10 @@ def addPreamble():
         \\setbox0=\\hbox{{\\special{pdf:literal 7 Tr }#2}}%
         \\tikz[baseline=0]\\path [#1] \\pgfextra{\\rlap{\\copy0}} (0,-\\dp0) rectangle (\\wd0,\\ht0);%
         }
+
+        \\newcommand{\\clr}[2]{%
+        \\textcolor{#1}{#2}\\color{white}}
+
         '''
     ])
     printTex(preamble_list)
@@ -166,8 +175,6 @@ rgnclr['keji']     = [ 0 , 0.4,  1 ] # 科技
 rgnclr['shenghuo'] = [ 0 , 0.5,  0 ] # 生活
 rgnclr['guichu']   = [0.5,  1 ,  1 ] # 鬼畜
 rgnclr['yingshi']  = [ 1 , 0.5,  1 ] # 影视
-# rgnclr['yule']     = [ 1 , 0.5,  1 ] # 娱乐
-# rgnclr['guanggao'] = [ 1 , 0.5,  1 ] # 广告
 rgnclr['qita']     = [0.5, 0.5, 0.5] # 其他
 
 rgnname = ['动画','音乐','舞蹈','游戏','科技','生活','鬼畜','影视','其他']
@@ -346,11 +353,11 @@ def drawGlobalViewShift():
     addPreamble()
     beginDoc()
 
-    shift_frames_cnt = 60 * 5
+    shift_frames_cnt = 60 * 8
     # shift_x_step = (width + width_local)/shift_frames_cnt
     shift_x_step = width / shift_frames_cnt
 
-    for i in range(0, shift_frames_cnt):
+    for i in range(0, shift_frames_cnt+1):
         beginTikz()
         setSize(width_local, height_local, 'lb')
 
@@ -384,7 +391,7 @@ def drawGlobalViewZoom():
     addPreamble()
     beginDoc()
 
-    zoom_frames_cnt = 60 * 2
+    zoom_frames_cnt = 60 * 5
     # width_of_includegraphics: width -> width_local
     for i in range(0, zoom_frames_cnt+1):
         beginTikz()
@@ -403,7 +410,7 @@ def drawGlobalViewZoom():
     print('Elapsed time 1: {:.7} s'.format(dt1))
 
 def drawGlobalViewAll():
-    drawGlobalViewRaw()
+    # drawGlobalViewRaw()
     drawGlobalViewShift()
     drawGlobalViewZoom()
 
@@ -448,7 +455,7 @@ def drawRegionSeperate():
         setSize(width_local, height_local, 'lb')
 
         tmp_cmds.extend([
-            '\\node [anchor=center] at ({},{}) {{ \\includegraphics [page={}, width={}pt] {{region_view.pdf}} }};' \
+            '\\node [anchor=center] at ({},{}) {{ \\includegraphics [page={}, width={}pt] {{ending_region_view_raw.pdf}} }};' \
                 .format(round(width_local/2,2), round(height_local/2, 2), i+1, width_local),
             '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, font=\\fs{{35}}] at ({},{}) {{ {} }};'\
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2], round(width_local/10,2), round(height_local/2, 2), rgnname_tmp)
@@ -472,7 +479,7 @@ def drawRegionCombination():
         x_tmp = round(width_local/2,2)
         y_tmp = round(height_local - i * (height_local/len(rgnname)) - height_per/2, 2)
         tmp_cmds.extend([
-            '\\node [anchor=center] at ({},{}) {{ \\includegraphics [page={}, height={}pt] {{region_view.pdf}} }};' \
+            '\\node [anchor=center] at ({},{}) {{ \\includegraphics [page={}, height={}pt] {{ending_region_view_raw.pdf}} }};' \
                 .format(x_tmp, y_tmp, i+1, height_per),
             '\\node [text={{rgb,1: red,{}; green,{}; blue,{}}}, font=\\fs{{35}}] at ({},{}) {{ {} }};'\
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2], round(width_local/10,2), y_tmp, rgnname_tmp)
@@ -485,11 +492,12 @@ def drawSumOfVideos():
     beginTikz()
     setSize(width_local, height_local, 'lb')
     tmp_cmds.extend([
-            '\\tikzstyle{{shadecolor}}=[left color={{rgb,1: red,{}; green,{}; blue,{}}}, middle color={{rgb,1: red,{}; green,{}; blue,{}}}, right color={{rgb,1: red,{}; green,{}; blue,{}}}, shading angle=45];' \
+            '\\tikzstyle{{shadecolor}}=[left color={{rgb,1: red,{}; green,{}; blue,{}}},  right color={{rgb,1: red,{}; green,{}; blue,{}}}, middle color={{rgb,1: red,{}; green,{}; blue,{}}}, shading angle=45];' \
             .format(rgnclr['youxi'][0], rgnclr['youxi'][1], rgnclr['youxi'][2],\
                     rgnclr['guichu'][0], rgnclr['guichu'][1], rgnclr['guichu'][2],\
                     rgnclr['shenghuo'][0], rgnclr['shenghuo'][1], rgnclr['shenghuo'][2]),
-        '\\node [text=white, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ 截至 2018 年 08 月 26 日 \\\\[40pt] 播放数超过100万的用户原创视频 \\\\[40pt] 共计 \\shadetext[shadecolor] {{{}}} 个 }} ;' .format(round(width_local/2,2), round(height_local/2+40, 2), len(video_all)),
+        # '\\node [text=white, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ 截至2018年08月28日 \\\\[40pt] \\clr{{green!50}}{{播放超过100万的}} \\\\[40pt] \\clr{{green!50}}{{用户原创视频}} \\\\[40pt] \\clr{{white}}{{总共约有}} \\\\[40pt] {{\\fs{{45}}\\shadetext[shadecolor] {{{}}} }} \\\\[40pt] \\clr{{white}}{{个}}}};' .format(round(width_local/2,2), round(height_local/2-20, 2), len(video_all)),
+        '\\node [text=white, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ 截 至 2018 年 08 月 28 日 \\\\[30pt] 播 放 超 过 100 万 的 \\\\[30pt] 用 户 原 创 视 频 \\\\[30pt] 总 共 约 有 \\\\[30pt] {{\\fs{{45}}\\clr{{green!50}}{{{}}} }} \\\\[30pt] \\clr{{white}}{{个}}}};' .format(round(width_local/2,2), round(height_local/2-20, 2), len(video_all)),
     ])
     printTex(tmp_cmds)
     endTikz()
@@ -503,11 +511,9 @@ def drawRegionChart():
     origin_y = height_local/3 + 40
 
     tmp_cmds.extend([
-        '\\node [text=white, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ 各分区对比 }} ;' \
+        '\\node [text=yellow!50, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ 各分区对比 }} ;' \
             .format(round(width_local/2,2), round(height_local*6/7, 2)),
-        # '\\node [text=white, anchor=north, align=center, font=\\fs{{20}}, yshift=-10pt] at (comp.south) {{ （播放数超过100万的用户原创视频共计{}个） }} ;' \
-        #     .format(len(video_all))
-        '\\tikzstyle{{shadecolor}}=[left color={{rgb,1: red,{}; green,{}; blue,{}}}, middle color={{rgb,1: red,{}; green,{}; blue,{}}}, right color={{rgb,1: red,{}; green,{}; blue,{}}}, shading angle=45];' \
+        '\\tikzstyle{{shadecolor}}=[left color={{rgb,1: red,{}; green,{}; blue,{}}}, right color={{rgb,1: red,{}; green,{}; blue,{}}}, middle color={{rgb,1: red,{}; green,{}; blue,{}}}, shading angle=45];' \
             .format(rgnclr['youxi'][0], rgnclr['youxi'][1], rgnclr['youxi'][2],\
                     rgnclr['guichu'][0], rgnclr['guichu'][1], rgnclr['guichu'][2],\
                     rgnclr['shenghuo'][0], rgnclr['shenghuo'][1], rgnclr['shenghuo'][2]),
@@ -572,7 +578,7 @@ def drawRegionChart():
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2]),
             '\\tikzstyle{{textcolor}}=[text={{rgb,1:red,{}; green,{}; blue,{}}}];' \
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2]),
-            '\\path [fillcolor, shift={{({},{})}}] (0,0) -- ({}:{}) arc ({}:{}:{}) -- ({}:{}) arc ({}:{}:{});'\
+            '\\path [fillcolor, draw=none, shift={{({},{})}}] (0,0) -- ({}:{}) arc ({}:{}:{}) -- ({}:{}) arc ({}:{}:{});'\
                 .format(round(origin_x,2), round(origin_y,2), \
                         ang_bgn, radius_outer, ang_bgn, ang_end, radius_outer, \
                         ang_end, radius_inner, ang_end, ang_bgn, radius_inner),
@@ -608,7 +614,7 @@ def drawLevelChart():
                     [ 10,  50, 130]]
 
     tmp_cmds.extend([
-        '\\node [text=white, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ 播放数等级对比 }} ;' \
+        '\\node [text=yellow!50, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ 播放数等级对比 }} ;' \
             .format(round(width_local/2,2), round(height_local*6/7, 2)),
         '\\tikzstyle{{shadecolor}}=[left color={{rgb,255: red,{}; green,{}; blue,{}}}, middle color={{rgb,255: red,{}; green,{}; blue,{}}}, right color={{rgb,255: red,{}; green,{}; blue,{}}}, shading angle=45];' \
             .format(level_color[0][0], level_color[0][1], level_color[0][2],\
@@ -633,7 +639,7 @@ def drawLevelChart():
     ratio_list = [0] * len(level_num)
     for i in range(0, len(ratio_list)):
         ratio_list[i] = round(level_num[i]/len(video_all), 4)
-        print(level_name[i], ratio_list[i])
+        # print(level_name[i], ratio_list[i])
 
     # calc level bar chart
     ratio_list_sorted = ratio_list.copy()
@@ -667,7 +673,7 @@ def drawLevelChart():
                 .format(level_color_tmp[0], level_color_tmp[1], level_color_tmp[2]),
             '\\tikzstyle{{textcolor}}=[text={{rgb,255:red,{}; green,{}; blue,{}}}];' \
                 .format(level_color_tmp[0], level_color_tmp[1], level_color_tmp[2]),
-            '\\path [fillcolor, shift={{({},{})}}] (0,0) -- ({}:{}) arc ({}:{}:{}) -- ({}:{}) arc ({}:{}:{});'\
+            '\\path [fillcolor, draw=none, shift={{({},{})}}] (0,0) -- ({}:{}) arc ({}:{}:{}) -- ({}:{}) arc ({}:{}:{});'\
                 .format(round(origin_x,2), round(origin_y,2), \
                         ang_bgn, radius_outer, ang_bgn, ang_end, radius_outer, \
                         ang_end, radius_inner, ang_end, ang_bgn, radius_inner),
@@ -688,7 +694,7 @@ def drawLevelChart():
     endTikz()
 
 def drawRegionViewAll():
-    # drawRegionViewRaw()
+    drawRegionViewRaw()
     global all_cmds
     all_cmds = []
     tex_filename = 'ending_region_view_all.tex'
@@ -697,8 +703,8 @@ def drawRegionViewAll():
     addPreamble()
     beginDoc()
 
-    # drawRegionSeperate()
-    # drawRegionCombination()
+    drawRegionSeperate()
+    drawRegionCombination()
 
     endDoc()
 
@@ -718,8 +724,8 @@ def drawChartsAll():
     clearTex(tex_filename)
     addPreamble()
     beginDoc()
-    # drawSumOfVideos()
-    # drawLevelChart()
+    drawSumOfVideos()
+    drawLevelChart()
     drawRegionChart()
     endDoc()
 
@@ -782,14 +788,16 @@ def drawTopVideoRaw():
     for i in range(0, len(top_video)):
         video_tmp = top_video[i]
         rgnclr_tmp = rgnclr[video_tmp.region]
-        text_x = 300
-        text_y = 0 - i * top_video_height_each
+        text_x = 400
+        text_y = 0 - i * top_video_height_each - 20
 
         title_id = 'title' + str(i)
-        view_id  = 'view' + str(i)
-        rank_id  = 'rank' + str(i)
-        name_id  = 'name' + str(i)
-        face_id  = 'name' + str(i)
+        view_id  = 'view'  + str(i)
+        rank_id  = 'rank'  + str(i)
+        name_id  = 'name'  + str(i)
+        face_id  = 'face'  + str(i)
+        aid_id   = 'aid'   + str(i)
+
 
         # rank 播放数 标题  up头像+昵称 [投稿时间 分区]
         tmp_cmds.extend([
@@ -797,15 +805,17 @@ def drawTopVideoRaw():
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2]),
             '\\tikzstyle{{drawcolor}}=[draw={{rgb,1:red,{}; green,{}; blue,{}}}];' \
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2]),
-            '\\tikzstyle{{textcolor}}=[text={{rgb,1:red,{}; green,{}; blue,{}}}, font=\\fs{{25}}];' \
+            '\\tikzstyle{{textcolor}}=[text={{rgb,1:red,{}; green,{}; blue,{}}}, font=\\fs{{20}}];' \
                 .format(rgnclr_tmp[0], rgnclr_tmp[1], rgnclr_tmp[2]),
-            '\\node [textcolor, anchor=north west, align=left] ({}) at ({}, {}) {{{}}};' \
-                .format(title_id, text_x, text_y, escChar(video_tmp.title)),
+            '\\node [textcolor, anchor=west, align=left, opacity=0.65] at ({},{}) {{ {{\\fs{{15}}av{} by {}}}}};' \
+                .format(text_x, text_y+12, video_tmp.aid, escChar(video_tmp.name)),
+            '\\node [textcolor, anchor=west, align=left] ({}) at ({}, {}) {{ {}}};' \
+                .format(title_id, text_x, text_y-8, escChar(video_tmp.title)),
             # '\\node [textcolor, anchor=east, align=left, xshift=-5pt] ({}) at ({}.west) {{{}}};' \
             #     .format(name_id, title_id, escChar(video_tmp.name)),
-            '\\node [textcolor, drawcolor, anchor=east, align=left, xshift=-15pt, circle, minimum size={}pt, fill overzoom image={}] ({}) at ({}.west) {{}};' \
-                .format(30,video_tmp.face_path, face_id, title_id),
-            '\\node [textcolor, anchor=east, align=right, xshift=-15pt, text width=100pt] ({}) at ({}.west) {{{}万}};' \
+            '\\node [circle, drawcolor, anchor=east, align=left, xshift=-{}pt, minimum size={}pt, fill overzoom image={}] ({}) at ({},{}) {{}};' \
+                .format(15, 35, video_tmp.face_path, face_id, text_x, text_y),
+            '\\node [textcolor, anchor=east, align=right, xshift=-15pt, text width=80pt] ({}) at ({}.west) {{{}万}};' \
                 .format(view_id, face_id, round(video_tmp.view/1e4)),
             # '\\node [textcolor, anchor=east, align=right, xshift=-5pt] ({}) at ({}.west) {{{}}};' \
             #     .format(view_id, face_id, video_tmp.aid),
@@ -827,12 +837,15 @@ def pullTopVideo(pull_y):
     tmp_cmds = []
     border_bottom = 60
     border_up = border_bottom+10*top_video_height_each
+
     tmp_cmds.extend([
+        '\\node [text=yellow!50, anchor=center, align=center, font=\\fs{{38}}] (comp) at ({},{}) {{ 榜 单 }} ;' \
+            .format(round(width_local/2,2), round(height_local*6/7, 2)),
         '\\begin{scope}',
         '\\path[clip] ({},{}) rectangle ({},{});'\
-            .format(0, border_bottom , width_local, border_bottom+10*top_video_height_each),
+            .format(0, border_bottom , width_local, border_bottom+10*top_video_height_each+10),
         '\\node [anchor=south] at ({},{}) {{ \\includegraphics {{ending_top_video_raw.pdf}} }};' \
-            .format(round(width_local/2, 2), round(height_local-pull_y+border_up-height_local, 2)),
+            .format(round(width_local/2, 2), round(height_local-pull_y+border_up-height_local-10, 2)),
         '\\end{scope}'
     ])
     printTex(tmp_cmds)
@@ -846,7 +859,7 @@ def drawTopvideoPull():
     addPreamble()
     beginDoc()
 
-    pull_frames_cnt = 60 * 10
+    pull_frames_cnt = 60 * 15
     pull_y_step = top_video_height_total / pull_frames_cnt
 
     for i in range(0, pull_frames_cnt+1):
@@ -871,7 +884,8 @@ def drawTopVideoAll():
 
 if __name__ == '__main__':
     # drawGlobalViewAll()
-    # drawRegionViewAll()
+    drawRegionViewAll()
     # drawChartsAll()
-    drawTopVideoAll()
+    # drawTopVideoAll()
+    pass
 

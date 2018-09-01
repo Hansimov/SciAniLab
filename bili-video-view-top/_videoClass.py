@@ -13,7 +13,6 @@ rgnclr['guichu']   = [0.5,  1 ,  1 ] # 鬼畜
 rgnclr['yingshi']  = [ 1 , 0.5,  1 ] # 影视
 rgnclr['qita']     = [0.5, 0.5, 0.5] # 其他
 
-
 rgnname = ['动画','音乐','舞蹈','游戏','科技','生活','鬼畜','影视','其他']
 rgnpinyin = ['donghua','yinyue','wudao','youxi','keji','shenghuo','guichu','yingshi','qita']
 
@@ -157,7 +156,8 @@ class VideoPoint(object):
                     # .format(self.color[0], self.color[1], self.color[2], self.laser_cnt/self.laser_cnt_max, \
                     #         self.region, self.radius, self.region, self.aid)
                 '\\fill [fill={{rgb,1: red,{}; green,{}; blue,{}}}, opacity={}] ({}.west) -- (tangent cs:node={},point={{({}.west)}},solution=1) -- ({}.center) -- (tangent cs:node={},point={{({}.west)}}, solution=2) -- cycle;'\
-                    .format(self.color[0], self.color[1], self.color[2], self.laser_cnt/self.laser_cnt_max-0.1, \
+                    .format(self.color[0], self.color[1], self.color[2], \
+                            round(self.laser_cnt/self.laser_cnt_max-0.1, 2), \
                             self.region, self.aid, self.region, self.aid, self.aid, self.region)
             ]
             self.laser_cnt -= 1
