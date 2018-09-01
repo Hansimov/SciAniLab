@@ -337,6 +337,29 @@ def drawStaffAll():
     dt1 = t2 - t1
     print('Elapsed time 1: {:.7} s'.format(dt1))
 
+'''
+# 标题：
+原创视频在B站播放过百万是怎样一种体验？
+【用音游的方式打开数据】B站那些播放过百万的原创视频
+【数据音游化】B站有哪些播放过百万的原创视频
+# 简介：
+本视频展示了 B 站播放数超过 100 万的“用户原创视频”。
+
+@Hansimov：数据处理、动效生成、后期制作
+@霜落xss：数据库维护
+@yxlllc：审校
+@狸子LePtC：策划
+
+背景音乐：
+1. Bach Prelude Variation (J.S. Bach) - Time Requiem 
+2. 千本桜（古筝） - 墨韵随步摇
+3. Avast Your Ass - Kitsune²
+
+@不科学的UP组 出品
+欢迎加入我们：https://github.com/uupers
+
+'''
+
 
 if __name__ == '__main__':
     drawStaffAll()
