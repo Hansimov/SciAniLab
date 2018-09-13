@@ -51,9 +51,10 @@ function innerCircle () {
         var sat = floor(k*cos(theta));
         var bri = floor(k*sin(theta));
         if (r>=130){
-            fill(main_hue, sat, bri-70);
+            fill(main_hue, sat, bri-80);
         } else if (r>=25) {
             fill(main_hue, sat, bri);
+            // fill(main_hue, sat, bri-100);
         } else {
             // fill(main_hue, sat-6, bri);
             fill(45, sat, 255)
