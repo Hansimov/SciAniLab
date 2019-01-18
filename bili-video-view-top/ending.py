@@ -884,7 +884,7 @@ def drawTopVideoAll():
 
 if __name__ == '__main__':
     # drawGlobalViewAll()
-    drawRegionViewAll()
+    # drawRegionViewAll()
     # drawChartsAll()
     # drawTopVideoAll()
     pass

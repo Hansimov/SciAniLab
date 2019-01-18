@@ -231,7 +231,6 @@ def mergePdf(input_pdf_list=[], output_pdf=''):
         input_cmd = input_cmd + ' ' + input_pdf_tmp
     os.system(gs_cmd + out_cmd + input_cmd)
 
-
 def addPreamble():
     printTex(preamble)
 
