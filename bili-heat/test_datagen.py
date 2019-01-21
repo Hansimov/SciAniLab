@@ -26,7 +26,7 @@ for i in range(0,90):
             circ.stroke_rgba = [0,0,0,0]
             # circ.is_stroke = False
             # circs.append(circ)
-    box(xy=[width-10,height-60], anchor='br',text='2018年01月{:0>2}日'.format(i//3), font_size=30)
+    box(xy=[width-10,height-60], anchor='br',text='2018年01月{:0>2}日'.format(i//3), font_size=40)
     newPage()
 
 outputImg()
