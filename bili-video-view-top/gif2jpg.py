@@ -14,7 +14,7 @@ def convertGIFToJPG(rootpath):
                 pass
             else:
                 print('Converting {} to {}.jpg ...'.format(filename, filename_body))
-                os.system('F:/Technology/ImageMagick/convert.exe -monitor ./{}/{}[0] ./{}/{}.jpg'.format(rootpath, filename, rootpath, filename_body))
+                os.system('convert.exe -monitor ./{}/{}[0] ./{}/{}.jpg'.format(rootpath, filename, rootpath, filename_body))
                 # Some up has no face image
                 # You can get the noface.gif from the mid with an 'failed' gif,
                 #   then convert the noface.gif to noface.jpg.

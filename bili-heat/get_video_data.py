@@ -4,6 +4,7 @@ import glob
 
 # # Get all videos of an upper.
 
+# # https://space.bilibili.com/ajax/member/getSubmitVideos?mid=122879&pagesize=100&tid=0&page=1&keyword=&order=pubdate
 # url_body = 'https://space.bilibili.com/ajax/member/getSubmitVideos?mid={}&page={}&pagesize={}'
 
 # def getJson(mid=122879, page=1, pagesize=100):
@@ -44,5 +45,3 @@ with open('jsons/ao.json', encoding='utf8', mode='r') as f:
         for video_idx in range(video_num):
             print(videos[page_idx]['data']['vlist'][video_idx]['title'])
 
-
-# https://space.bilibili.com/ajax/member/getSubmitVideos?mid=122879&pagesize=100&tid=0&page=1&keyword=&order=pubdate
