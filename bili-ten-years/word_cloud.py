@@ -1,4 +1,4 @@
-from tikz import *
+from tikzpy import *
 import os
 import csv
 import subprocess
@@ -11,7 +11,7 @@ if not os.path.exists(glyphsfolder):
 
 abspath = os.getcwd()
 # cmd_pdf2png = 'gswin64c -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -r{0} -sOutputFile="{1}\\glyphs\\glyphs_%05d.png" "{1}\\glyphs.pdf"'.format(72,abspath)
-cmd_pdf2png = 'gswin64c -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -r{0} -sOutputFile="{1}\\glyphs\\glyphs_%05d.png" "{1}\\glyphs.pdf"'.format(72,abspath)
+cmd_pdf2png = 'gswin64c -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -r{0} -sOutputFile="./glyphs/glyphs_%05d.png" "./glyphs.pdf"'.format(72)
 
 def glyphs2xy(glyphs,font_face="Arial Unicode MS",font_size=100):
     pw,ph=len(glyphs)*font_size+1,font_size+1
@@ -27,7 +27,7 @@ glyphs2xy("搞笑","微软雅黑",30)
 glyphs2xy("鬼畜","微软雅黑",30)
 outputImg()
 
-
+os.system(cmd_pdf2png)
 
 # word_freq_data = "./word-freq-data/"
 
