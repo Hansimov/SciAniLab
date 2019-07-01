@@ -19,29 +19,30 @@ var pi  = Math.PI,
 
 var FPS = 30;
 var INTERVAL = 40;
-var DURA = INTERVAL-5;
+var DURA = INTERVAL;
 
 var FREQ_MAX = 1200, FREQ_MIN = 200, FREQ_MID = FREQ_MAX/1.5;
+var SIZE = 30;
+var NOTE_LEFT_X = 50, NOTE_RIGHT_X=200, NOTE_Y = 100;
 
 var notes = [];
-
 
 function dispFPS() {
     var fpsx=50,fpsy=50;
     push();
-    textSize(20);
+    textSize(40);
     textAlign(LEFT);
     fill(255);
 
-    text(int(frameRate()), fpsx, fpsy);
-    text(frameCount, fpsx+50, fpsy);
+    text("FPS: "+ int(frameRate()), fpsx, fpsy);
+    text("Frame: "+frameCount, fpsx+200, fpsy);
     pop();
 }
 
 Note = function (freq=440,dura=30) {
-    this.x = 200;
-    this.y = 100 + (freq-FREQ_MIN)/(FREQ_MAX-FREQ_MIN) * (windowHeight-300);
-    this.size=20;
+    this.size=SIZE;
+    this.x = NOTE_LEFT_X;
+    this.y = NOTE_Y + (freq-FREQ_MIN)/(FREQ_MAX-FREQ_MIN) * (windowHeight-4*SIZE);
     this.hue = 255*(freq-FREQ_MIN)/(FREQ_MAX-FREQ_MIN);
     this.color=[this.hue,255,125,255];
     this.text;
@@ -79,7 +80,7 @@ Note = function (freq=440,dura=30) {
         fill.apply(null,this.color);
         circle(this.x,this.y,this.size);
 
-        textSize(30);
+        textSize(this.size);
         textAlign(LEFT,CENTER);
         text(""+this.freq.toFixed(0), this.x+50, this.y);
 
@@ -88,7 +89,7 @@ Note = function (freq=440,dura=30) {
 }
 
 function genNotes() {
-    if (frameCount%INTERVAL != 0) {
+    if (frameCount%INTERVAL != 1) {
         return false;
     }
 
@@ -106,9 +107,6 @@ function genNotes() {
     notes.push(note_tmp_1);
     notes.push(note_tmp_2);
 }
-
-
-// var rand = myArray[Math.floor(Math.random() * myArray.length)];
 
 
 function playNotes() {
@@ -129,18 +127,67 @@ function playNotes() {
 
 }
 
+var shutter_offset = NOTE_RIGHT_X;
+var shutter_step = 2;
+function dispShutter(){
+    push();
+    colorMode(HSL,255);
+    noStroke();
+    rectMode(CENTER);
+    // print(notes.length);
 
+    if (shutter_offset>=windowWidth-50){
+        shutter_offset = NOTE_RIGHT_X;
+        // background(0);
+        push();
+        colorMode(RGB,255);
+        rectMode(CORNER);
+        fill(0,0,0,255);
+        rect(NOTE_RIGHT_X,NOTE_Y, windowWidth,windowHeight);
+        pop();
+    }
+    for (let i=notes.length-3; i<notes.length;i++){
+        note = notes[i];
+        if (note.dura<=0){
+            continue;
+        }
+        rect_x = note.x + shutter_offset;
+        rect_y = note.y;
+        fill.apply(null,note.color);
+        rect(rect_x,rect_y,shutter_step,note.size);
+    }
+    shutter_offset += shutter_step;
+    pop();
+}
+
+var axis_x, axis_y;
+function dispAxis(){
+    axis_x = shutter_offset + NOTE_LEFT_X-2;
+    axis_y = windowHeight;
+    push();
+    stroke(255);
+    line(axis_x, NOTE_Y, axis_x, axis_y);
+    pop();
+}
 function setup(){
-    createCanvas(windowWidth, windowHeight);
+    createCanvas(windowWidth, windowHeight-SIZE);
     background(0);
     frameRate(FPS);
 }
 
 function draw(){
-    background(0);
+    // background(0);
+    push();
+    colorMode(RGB,255);
+    fill(0,0,0,255)
+    rect(0,0,NOTE_RIGHT_X, windowHeight);
+    rect(0,0,windowWidth,NOTE_Y);
+    pop();
     dispFPS();
     genNotes();
     playNotes();
+    dispShutter();
+    dispAxis();
 }
 
 </script>
