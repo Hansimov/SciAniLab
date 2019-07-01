@@ -22,7 +22,7 @@ var FPS = 30;
 var INTERVAL = 60;
 var DURA = INTERVAL;
 
-var FREQ_MAX = 1200, FREQ_MIN = 200, FREQ_MID = FREQ_MAX/1.75;
+var FREQ_MAX = 1200, FREQ_MIN = 200, FREQ_MID = FREQ_MAX/2;
 var SIZE = 30;
 var NOTE_LEFT_X = 50, NOTE_RIGHT_X=200, NOTE_Y = 80;
 
@@ -48,7 +48,8 @@ Note = function (freq=440,dura=30) {
     this.size=SIZE;
     this.x = NOTE_LEFT_X;
     this.y = NOTE_Y + (freq-FREQ_MIN)/(FREQ_MAX-FREQ_MIN) * (windowHeight-4*SIZE);
-    this.hue = 255*(freq-FREQ_MIN)/(FREQ_MAX-FREQ_MIN);
+
+    this.hue = 255*(freq-FREQ_MIN)/(FREQ_MAX-FREQ_MIN)+60;
     this.color=[this.hue,255,125,255];
     this.text;
     this.freq=freq;
@@ -104,6 +105,7 @@ function genNotes() {
         channel_num = 1+round(random()*CHANNEL_NUM_MAX);
         // channel_num = 4;
         for (let j=0; j<channel_num;++j){
+            // dura_tmp = random()*(DURA*2/3-15)+13;
             // freq_tmp = round(freq_base*pow(1.25,j));
             // freq_tmp = round(freq_base*(1+0.25*j));
             freq_tmp = round(freq_base*(4+j)/4);
@@ -213,7 +215,7 @@ function dispShutter(){
             rect_x = NOTE_LEFT_X + shutter_offset;
             rect_y = notesp[ip].y + gaps[idx]/(DURA-notesp[ip].durao)*(notesq[iq].y - notesp[ip].y);
             freq_mid = notesp[ip].freq + gaps[idx]/(DURA-notesp[ip].durao)*(notesq[iq].freq - notesp[ip].freq);
-            rect_hue = 255*(freq_mid-FREQ_MIN)/(FREQ_MAX-FREQ_MIN);
+            rect_hue = 255*(freq_mid-FREQ_MIN)/(FREQ_MAX-FREQ_MIN)+60;
             colorMode(HSL);
             fill(rect_hue,255,125,255);
             rect(rect_x,rect_y,shutter_step,SIZE);
@@ -225,8 +227,6 @@ function dispShutter(){
     pop();
 }
 
-
-
 var axis_x, axis_y;
 function dispAxis(){
     axis_x = shutter_offset + NOTE_LEFT_X-2;
@@ -234,10 +234,18 @@ function dispAxis(){
     axis_y = windowHeight;
     push();
     stroke(125);
-    line(axis_x, NOTE_Y, axis_x, axis_y);
+    line(axis_x, NOTE_Y-SIZE/2, axis_x, axis_y);
     // noStroke();
     // fill(125,125,125,125);
     // rect(axis_x, NOTE_Y, 2, axis_y-NOTE_Y);
+    pop();
+}
+
+function dispMask(){
+    colorMode(RGB,255);
+    fill(0,0,0,255)
+    rect(0,0,NOTE_RIGHT_X, windowHeight);
+    rect(0,0,windowWidth, NOTE_Y);
     pop();
 }
 function setup(){
@@ -248,13 +256,8 @@ function setup(){
 }
 
 function draw(){
-    // background(0);
     push();
-    colorMode(RGB,255);
-    fill(0,0,0,255)
-    rect(0,0,NOTE_RIGHT_X, windowHeight);
-    rect(0,0,windowWidth,NOTE_Y);
-    pop();
+    dispMask();
     dispFPS();
     playNotes();
     dispShutter();

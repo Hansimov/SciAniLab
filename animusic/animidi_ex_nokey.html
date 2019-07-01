@@ -1,0 +1,270 @@
+<html>
+<head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.sound.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+<body>
+<script>
+
+var print = console.log;
+var pi  = Math.PI,
+    sin = Math.sin,
+    cos = Math.cos,
+    floor = Math.floor,
+    round = Math.round,
+    ceil = Math.ceil,
+    random = Math.random,
+    pow = Math.pow;
+
+var FPS = 30;
+var INTERVAL = 60;
+var DURA = INTERVAL;
+
+var FREQ_MAX = 1200, FREQ_MIN = 200, FREQ_MID = FREQ_MAX/2;
+var SIZE = 30;
+var NOTE_LEFT_X = 50, NOTE_RIGHT_X=200, NOTE_Y = 80;
+
+var GEN_NUM = 300;
+var CHANNEL_NUM_MAX = 5;
+
+var notes_list = [];
+var gaps = new Array(GEN_NUM).fill(0);
+
+function dispFPS() {
+    var fpsx=50,fpsy=50;
+    push();
+    textSize(40);
+    textAlign(LEFT);
+    fill(255);
+
+    text("FPS: "+ int(frameRate()), fpsx, fpsy);
+    text("Frame: "+frameCount, fpsx+200, fpsy);
+    pop();
+}
+
+Note = function (freq=440,dura=30) {
+    this.size=SIZE;
+    this.x = NOTE_LEFT_X;
+    this.y = NOTE_Y + (freq-FREQ_MIN)/(FREQ_MAX-FREQ_MIN) * (windowHeight-4*SIZE);
+
+    this.hue = 255*(freq-FREQ_MIN)/(FREQ_MAX-FREQ_MIN)+60;
+    this.color=[this.hue,255,125,255];
+    this.text;
+    this.freq=freq;
+    this.durao=dura;
+    this.dura=dura;
+    this.osc = new p5.TriOsc();
+    this.osc.amp(1);
+    this.osc.freq(this.freq);
+    this.isStart = false;
+
+    this.play = function() {
+        if (this.isStart == false) {
+            this.osc.start();
+            this.isStart = true;
+        }
+        if (this.dura<=0) {
+            this.osc.stop();
+        } else {
+            if (this.dura<=5){
+                this.osc.amp(Math.min(1, 0.2*this.dura));
+            }
+            this.dura -= 1;
+        }
+    }
+
+    this.disp = function(){
+        if (this.dura<=0) {
+            return false;
+        }
+        push();
+        // colorMode(RGB,255);
+        colorMode(HSL,255);
+        noStroke();
+
+        fill.apply(null,this.color);
+        circle(this.x+90,this.y,this.size);
+
+        textSize(this.size);
+        textAlign(LEFT,CENTER);
+        text(""+this.freq.toFixed(0), this.x, this.y+5);
+
+        pop();
+    }
+}
+
+
+function genNotes() {
+    for (let i=0; i<GEN_NUM; ++i) {
+        dura_tmp = random()*(DURA*2/3-15)+13;
+        // print(i);
+        notes_tmp = [];
+        freq_base = round(FREQ_MIN+random()*(FREQ_MID-FREQ_MIN));
+        channel_num = 1+round(random()*CHANNEL_NUM_MAX);
+        // channel_num = 4;
+        for (let j=0; j<channel_num;++j){
+            // dura_tmp = random()*(DURA*2/3-15)+13;
+            // freq_tmp = round(freq_base*pow(1.25,j));
+            // freq_tmp = round(freq_base*(1+0.25*j));
+            freq_tmp = round(freq_base*(4+j)/4);
+            notes_tmp.push(new Note(freq_tmp,dura_tmp));
+        }
+        notes_list.push(notes_tmp);
+    }
+}
+
+var idx = 0;
+function playNotes() {
+    notes = notes_list[idx];
+    for(let i=0; i<notes.length; ++i) {
+        note = notes[i];
+        note.play();
+        note.disp();
+    }
+    if (notes[0].dura <= 0 && frameCount%INTERVAL==1){
+        idx++;
+    }
+}
+function calcConnection(num1,num2){
+    var connects = [];
+    var quot;
+    if (num1==num2) {
+        for (let i=0; i<num1; i++) {
+            connects.push([i,i]);
+        }
+    } else if (num1<num2){
+        quot = ceil(num2/num1);
+        let i;
+        for (i=0; i<num1; i++) {
+            if (num1-i<num2-i*quot) {
+                for (let j=0; j<quot&&i*quot+j<num2; j++) {
+                    connects.push([i,i*quot+j]);
+                }
+            } else {
+                break;
+            }
+        }
+        for (let k=i;k<num1; k++){
+            connects.push([k,num2-(num1-k)]);
+        }
+    } else {
+        quot = ceil(num1/num2);
+        let i;
+        for (i=0; i<num2; i++) {
+            if (num2-i<num1-i*quot) {
+                for (let j=0; j<quot&&i*quot+j<num1; j++) {
+                    connects.push([i*quot+j,i]);
+                }
+            } else {
+                break;
+            }
+        }
+        for (let k=i;k<num2; k++){
+            connects.push([num1-(num2-k),k]);
+        }
+    }
+
+    return connects;
+}
+
+var shutter_offset = NOTE_RIGHT_X;
+var shutter_step = 2;
+function dispShutter(){
+    push();
+    colorMode(HSL,255);
+    noStroke();
+    rectMode(CENTER);
+    // print(notes.length);
+
+    if (shutter_offset>=windowWidth-50){
+        shutter_offset = NOTE_RIGHT_X;
+        // background(0);
+        push();
+        colorMode(RGB,255);
+        rectMode(CORNER);
+        fill(0,0,0,255);
+        rect(NOTE_RIGHT_X,NOTE_Y, windowWidth,windowHeight);
+        pop();
+    }
+
+    push();
+    notes = notes_list[idx];
+    for (let i=0; i<notes.length;i++){
+        note = notes[i];
+        if (note.dura<=0){
+            break;
+        }
+        rect_x = note.x + shutter_offset;
+        rect_y = note.y;
+        fill.apply(null,note.color);
+        rect(rect_x,rect_y,shutter_step,note.size);
+    }
+    pop();
+
+    // push();
+    // if (notes[0].dura <= 0){
+    //     gaps[idx] += 1;
+    //     notesp = notes_list[idx];
+    //     notesq = notes_list[idx+1];
+    //     var connects = calcConnection(notesp.length,notesq.length);
+    //     for (let i=0; i<connects.length; i++) {
+    //         ip = connects[i][0];
+    //         iq = connects[i][1];
+    //         rect_x = NOTE_LEFT_X + shutter_offset;
+    //         rect_y = notesp[ip].y + gaps[idx]/(DURA-notesp[ip].durao)*(notesq[iq].y - notesp[ip].y);
+    //         freq_mid = notesp[ip].freq + gaps[idx]/(DURA-notesp[ip].durao)*(notesq[iq].freq - notesp[ip].freq);
+    //         rect_hue = 255*(freq_mid-FREQ_MIN)/(FREQ_MAX-FREQ_MIN)+60;
+    //         colorMode(HSL);
+    //         fill(rect_hue,255,125,255);
+    //         rect(rect_x,rect_y,shutter_step,SIZE);
+    //     }
+    // }
+    // pop();
+
+    shutter_offset += shutter_step;
+    pop();
+}
+
+var axis_x, axis_y;
+function dispAxis(){
+    axis_x = shutter_offset + NOTE_LEFT_X-2;
+    // axis_x = shutter_offset + NOTE_LEFT_X-2;
+    axis_y = windowHeight;
+    push();
+    stroke(125);
+    line(axis_x, NOTE_Y-SIZE/2, axis_x, axis_y);
+    // noStroke();
+    // fill(125,125,125,125);
+    // rect(axis_x, NOTE_Y, 2, axis_y-NOTE_Y);
+    pop();
+}
+
+function dispMask(){
+    colorMode(RGB,255);
+    fill(0,0,0,255)
+    rect(0,0,NOTE_RIGHT_X, windowHeight);
+    rect(0,0,windowWidth, NOTE_Y);
+    pop();
+}
+function setup(){
+    createCanvas(windowWidth, windowHeight-SIZE);
+    background(0);
+    frameRate(FPS);
+    genNotes();
+}
+
+
+function draw(){
+    push();
+    dispMask();
+    dispFPS();
+    playNotes();
+    dispShutter();
+    dispAxis();
+}
+
+</script>
+</body>
+</html>
