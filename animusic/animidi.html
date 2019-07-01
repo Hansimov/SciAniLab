@@ -8,18 +8,15 @@
 <body>
 <script>
 
-print = console.log;
+var print = console.log;
+var pi = Math.PI,
+    sin = Math.sin,
+    cos = Math.cos;
 
 var PITCH_NAME = "A",
     PITCH_NUM  = 4,
     PITCH_FREQ = 440;
-var BEAT = 4,
-    NOTE_VALUE = 4;
-var TIME_SIG = BEAT/NOTE_VALUE;
-var BPM = 120;
-// For any note value: dura_tmp = dura * beat/mva
-var DURA = 60/BPM;
-// C Major: C C# D D# E F F# G G# A A# B
+var FPS = 30;
 var PITCH_NAMES   = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 // var PITCH_NAMES_B = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 
@@ -33,39 +30,30 @@ var PITCH_NAMES   = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 // Can Can by Offenbach
 //   https://pianoletternotes.blogspot.com/2017/10/can-can-by-offenbach.html
 
-var oscs = [];
-// var notes = [[440,0,1],[300,1,1],[700,2,1]];
-// var song = "C C G G A A G \
-//             F F E E D D C \
-//             G G F F E E D \
-//             G G F F E E D \
-//             C C G G A A G \
-//             F F E E D D C";
-// song = "C3 C#3 D3 D#3 E3 F3 F#3 G3 G#3 A3 A#3 B3\
-//         C4 C#4 D4 D#4 E4 F4 F#4 G4 G#4 A4 A#4 B4\
-//         C5 C#5 D5 D#5 E5 F5 F#5 G5 G#5 A5 A#5 B5\
-//         C6 C#6 D6 D#6 E6 F6 F#6 G6 G#6 A6 A#6 B6";
-var song = [];
+var song = ` 
+1: C4>2
+`;
 
-var notes = song.split(/\s+/);
-print(notes);
+function parseSong() {
 
-function 
+}
 
-// // Note: pitch (X) - note value(1/N) - repeat
-// // C#4-4-2
-// // C# == C#4-4-1
-// function parseNote(note) {
-//     var info = note.match(/([CDEFGAB]#?)?(\d+)?(?:-(\d+)?)?(?:-(\d+)?)?/i);
-//     // "C#4-8-1": ["C#4-8-1", "C#", "4", "8", "1"]
-//     var pitch_name  = (info[1] || PITCH_NAME);
-//     var pitch_num   = (info[2] || PITCH_NUM);
-//     var note_value  = (info[3] || NOTE_VALUE);
-//     var repeat      = (info[4] || 1);
-//     var parsed_note = [pitch_name, pitch_num, note_value, repeat];
-//     // print(parsed_note);
-//     return parsed_note;
-// }
+// Note: pitch [duration (seconds)] [start time]
+//      duration: >n (dure n seconds) | (default, 0.5 seconds or 30 frames)
+//      start time: +/-n (shift +/- n seconds) | ^n (at n seconds) | (default, just after last note) 
+// C#4-4-2
+// C# == C#4-4-1
+function parseNote(note) {
+    var info = note.match(/([CDEFGAB]#?)?(\d+)?(?:-(\d+)?)?(?:-(\d+)?)?/i);
+    // "C#4-8-1": ["C#4-8-1", "C#", "4", "8", "1"]
+    var pitch_name  = (info[1] || PITCH_NAME);
+    var pitch_num   = (info[2] || PITCH_NUM);
+    var note_value  = (info[3] || NOTE_VALUE);
+    var repeat      = (info[4] || 1);
+    var parsed_note = [pitch_name, pitch_num, note_value, repeat];
+    // print(parsed_note);
+    return parsed_note;
+}
 
 // Piano key frequencies
 //   https://en.wikipedia.org/wiki/Piano_key_frequencies
@@ -80,38 +68,80 @@ function pitch2freq(pitch_name, pitch_num) {
     return pitch_freq;
 }
 
-var note, parsed_note, pitch_freq;
-var parsed_notes = [],
-    pitch_freqs  = [];
-for (var i=0; i<notes.length; ++i) {
-    note = notes[i];
-    parsed_note = parseNote(note);
-    pitch_freq = pitch2freq(parsed_note[0], parsed_note[1]);
-    pitch_freqs.push(pitch_freq);
-    // print(note,pitch_freq);
+function dispFPS() {
+    var fpsx=50,fpsy=50;
+    push();
+    textSize(20);
+    textAlign(LEFT);
+    fill(255);
+
+    text(int(frameRate()), fpsx, fpsy);
+    text(frameCount, fpsx+50, fpsy);
+    pop();
 }
 
-var cnt = 0;
-var step = 0.5;
-var dura;
-function setup(){
-    for (let i=0;i<notes.length;++i) {
-        note = notes[i];
-        parsed_note = parseNote(note);
+Letter = function () {
+    this.x;
+    this.y;
+    this.size;
+    this.color=[0,255,0,255];
+    this.text;
+    this.show = function(){
+        push();
 
-        oscs.push(new p5.TriOsc());
-        osc = oscs[oscs.length-1];
-        dura = 0.5*NOTE_VALUE/int(parsed_note[2]);
-        osc.freq(pitch_freqs[i]);
-        osc.start(cnt);
-        osc.amp(1);
-        osc.stop(cnt+dura);
-        cnt+=dura;
+        colorMode(RGB,255);
+        fill.apply(null,this.color);
+        noStroke();
+        textSize(30);
+
+        circle(this.x,this.y,this.size);
+
+        textAlign(CENTER,TOP);
+        text(this.text,this.x,this.y+50);
+
+        pop();
     }
 }
 
-function draw(){
+function dispOctave(){
+    var letterLeftX = 50, letterLeftY = 60;
+    var letterRightX = windowWidth-50, letterRightY = 60;
 
+    var leftOctave=3, rightOctave=5;
+    // var letterX=letterLeftX, letterY=letterLeftY;
+    var letterCX = windowWidth/2, letterCY = windowHeight/2;
+    var letterCR = windowHeight/2.5;
+    var letterNum = (rightOctave-leftOctave+1)*12;
+    var letterAngle = 0;
+    for (let i=leftOctave; i<=rightOctave; ++i) {
+        for (let j=0; j<PITCH_NAMES.length; ++j) {
+            letterName = PITCH_NAMES[j]+""+i;
+            // letterX += (letterRightX-letterLeftX)/((rightOctave-leftOctave+1)*12);
+            // letterY += (letterRightY-letterLeftY)/((rightOctave-leftOctave+1)*12);
+            letterAngle += 2*pi/letterNum; 
+            letterX = letterCX + letterCR * cos(letterAngle);
+            letterY = letterCY + letterCR * sin(letterAngle);
+            fill(255);
+            textSize(18);
+            text(letterName,letterX,letterY);
+        }
+    }
+}
+
+function genNotes(){
+    
+}
+
+function setup(){
+    createCanvas(windowWidth, windowHeight);
+    background(0);
+    frameRate(30);
+}
+
+function draw(){
+    background(0);
+    dispFPS();
+    dispOctave();
 }
 
 </script>
