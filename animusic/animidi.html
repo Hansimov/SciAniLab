@@ -18,7 +18,12 @@ var PITCH_NAME = "A",
     PITCH_FREQ = 440;
 var FPS = 30;
 var PITCH_NAMES   = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-// var PITCH_NAMES_B = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+// var chords = [
+    // ["C","E","G"],
+    // ["C","D#","G"],
+    // ["C","E","G#"],
+    // ["C","D#","F#"],
+// ];
 
 // MidiToTabConverter
 //   https://tabnabber.com/MidiToTabConverter.aspx
@@ -30,13 +35,7 @@ var PITCH_NAMES   = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 // Can Can by Offenbach
 //   https://pianoletternotes.blogspot.com/2017/10/can-can-by-offenbach.html
 
-var song = ` 
-1: C4>2
-`;
-
-function parseSong() {
-
-}
+var notes = [];
 
 // Note: pitch [duration (seconds)] [start time]
 //      duration: >n (dure n seconds) | (default, 0.5 seconds or 30 frames)
@@ -54,6 +53,8 @@ function parseNote(note) {
     // print(parsed_note);
     return parsed_note;
 }
+
+
 
 // Piano key frequencies
 //   https://en.wikipedia.org/wiki/Piano_key_frequencies
@@ -128,8 +129,38 @@ function dispOctave(){
     }
 }
 
-function genNotes(){
-    
+// note: pitch, duration
+function genNotes() {
+    if (frameCount%30 != 0) {
+        return false;
+    }
+
+    while (notes.length>=4) {
+        notes[0].stop();
+        notes.shift();
+    }
+
+    tmp = new p5.SinOsc();
+    tmpfreq = int(240+Math.random()*(640-240));
+    tmp.freq(tmpfreq);
+    tmp.amp(0.5);
+    notes.push(tmp);
+}
+
+
+function dispNotes() {
+
+}
+// var rand = myArray[Math.floor(Math.random() * myArray.length)];
+
+function playNotes() {
+    if (frameCount%30!=0) {
+        return false;
+    }
+    for(let i=0; i<notes.length-1; ++i) {
+        note = notes[i];
+        note.start();
+    }
 }
 
 function setup(){
@@ -141,7 +172,9 @@ function setup(){
 function draw(){
     background(0);
     dispFPS();
-    dispOctave();
+    // dispOctave();
+    genNotes();
+    playNotes();
 }
 
 </script>
