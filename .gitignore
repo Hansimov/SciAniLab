@@ -2,6 +2,12 @@ __pycache__/
 _ae_proj/
 _pr_proj/
 
+build-tmp/
+latex-temp/
+temp/
+
+frames/
+
 *.rar
 *.zip
 *.csv
@@ -9,12 +15,9 @@ log.txt
 
 *.pdf
 
-frames/
 *.mp4
 
 *.aux
 *.log
 *.fmt
 
-build-tmp/
-latex-temp/
