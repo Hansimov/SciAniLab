@@ -66,4 +66,4 @@ Animusic 2
             https://www.youtube.com/watch?v=DKUTYxJEB44
 ANIMUSIC 3
     ANIMUSIC 3 - Kickstarter Project - YouTube 
-        https://www.youtube.com/watch?v=JIh924CPk_c&t=28s
+        https://www.youtube.com/watch?v=JIh924CPk_c
