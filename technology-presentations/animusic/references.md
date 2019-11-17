@@ -12,8 +12,17 @@ ANIMUSIC 3 (DVD / Blu-ray) by ANIMUSIC — Kickstarter
 Animusic Wiki | FANDOM powered by Wikia 
     https://animusic.fandom.com/wiki/Animusic_Wiki
 
+Animusic | Animusic Wiki | FANDOM powered by Wikia 
+    https://animusic.fandom.com/wiki/Animusic
+
+Pipe Dream | Animusic Wiki | FANDOM powered by Wikia 
+    https://animusic.fandom.com/wiki/Pipe_Dream
+
 What the Fuck Is Animusic? - VICE 
     https://www.vice.com/en_us/article/ae3n38/what-the-fck-is-animusic
+
+The SIGGRAPH 2001 Computer Animation Festival: A Digital Odyssey | Animation World Network 
+    https://www.awn.com/animationworld/siggraph-2001-computer-animation-festival-digital-odyssey
 
 ## List of Animusic works
 Animusic
@@ -64,6 +73,8 @@ Animusic 2
     Heavy Light - 6:31
         Animusic HD - Heavy Light (1080p) - YouTube 
             https://www.youtube.com/watch?v=DKUTYxJEB44
-ANIMUSIC 3
-    ANIMUSIC 3 - Kickstarter Project - YouTube 
-        https://www.youtube.com/watch?v=JIh924CPk_c
+            
+Animusic 3
+    Kickstarter Project - 6:28
+        ANIMUSIC 3 - Kickstarter Project - YouTube 
+            https://www.youtube.com/watch?v=JIh924CPk_c
