@@ -1,16 +1,3 @@
-"""
-Revision: Pygame fundamentals — pygame v2.0.0.dev5 documentation 
-    https://www.pygame.org/docs/tut/tom_games2.html
-PyGame Tutorial: Fonts and Text : Nerd Paradise 
-    https://nerdparadise.com/programming/pygame/part5
-Python | Display text to PyGame window - GeeksforGeeks 
-    https://www.geeksforgeeks.org/python-display-text-to-pygame-window/
-python - How to display text in pygame? - Stack Overflow 
-    https://stackoverflow.com/questions/20842801/how-to-display-text-in-pygame
-pygame.time — pygame v2.0.0.dev5 documentation 
-    https://www.pygame.org/docs/ref/time.html?highlight=clock%20tick#pygame.time.Clock.tick
-"""
-
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame as pg

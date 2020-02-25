@@ -1,3 +1,5 @@
 *.*
 !*.py
 !.gitignore
+!_refs.txt
+!_pygame_refs.txt
