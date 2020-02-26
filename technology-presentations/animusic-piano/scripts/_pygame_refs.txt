@@ -18,3 +18,9 @@ python - How to designate where pygame creates the game window - Stack Overflow
 
 python - pygame blitting - center - Stack Overflow 
     https://stackoverflow.com/questions/32673965/pygame-blitting-center/32674593
+
+python - How to capture pygame screen? - Stack Overflow 
+    https://stackoverflow.com/questions/6087484/how-to-capture-pygame-screen
+
+python - How to save pygame Surface as an image to memory (and not to disk) - Stack Overflow 
+    https://stackoverflow.com/questions/19193187/how-to-save-pygame-surface-as-an-image-to-memory-and-not-to-disk
