@@ -25,12 +25,12 @@ frm = 0
 WIN_WH = (1200, 720//2)
 
 def sec_to_frm(sec):
-    frm = int(sec * FPS)
+    return int(sec * FPS)
 def frm_to_sec(frm):
-    sec = frm * FPS
+    return frm * FPS
 
 def gen_notes():
-    # return list of [start_sec, dura_sec, note_idx]
+    # return list of [start_frm, dura_frm, note_idx]
 
     # note_cnt = 200
     # whole note is 1
@@ -38,8 +38,8 @@ def gen_notes():
     # dura_divi_weights =    [    1,   1,   2,  20, 40, 20,   2, 2, 2, 1, 1,  1]
     # dura_divi_list = random.choices(division_population, division_weights, note_cnt)
 
-    note_cnt_population = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-    note_cnt_weights =    [1, 4,20,20,20, 4, 4, 1, 1]
+    note_cnt_population = [0, 1, 2, 3, 4,  5, 6, 7, 8]
+    note_cnt_weights =    [1, 4, 4,20,20, 20, 4, 1, 1]
     bar_cnt = 10
     main_note_divi = 4
     main_note_dura_sec = SEC_WHOLE_NOTE / main_note_divi
@@ -52,7 +52,8 @@ def gen_notes():
             tmp_note_cnt = random.choices(note_cnt_population, note_cnt_weights, k=1)[0]
             tmp_note_idx_list = random.sample(range(0,88),tmp_note_cnt)
             for tmp_note_idx in tmp_note_idx_list:
-                notes_list.append([tmp_start_sec,main_note_dura_sec,tmp_note_idx])
+                # notes_list.append([tmp_start_sec,main_note_dura_sec,tmp_note_idx])
+                notes_list.append([sec_to_frm(tmp_start_sec), sec_to_frm(main_note_dura_sec), tmp_note_idx])
             note_cnt_list.append(tmp_note_cnt)
             tmp_start_sec += main_note_dura_sec
 
@@ -71,7 +72,10 @@ def num_to_wb(num):
 
 # pit_list = ["C","Cs","D","Ds","E","F","Fs","G","Gs","A","As","B"]
 # b_pit_list = ["Bb","Db","Eb","Gb","Ab"]
-b_pit_list = ["As","Cs","Ds","Fs","Gs"]
+# b_pit_list = ["As","Cs","Ds","Fs","Gs"]
+# b_pit_list = ["A#","C#","D#","F#","G#"]
+b_pit_list = ["a","c","d","f","g"]
+
 def num_to_pit(num):
     # num:  1  2    3  4  5  6  7  8  9   10     52
     # pit: A0 B0 - C1 D1 E1 F1 G1 A1 B1 - C2 ... C8
@@ -145,7 +149,7 @@ clock = pg.time.Clock()
 
 fps_font = pg.font.SysFont("comicsansms", 30)
 num_font = pg.font.SysFont("arial bold", 20)
-pit_font = pg.font.SysFont("arial bold", 17)
+pit_font = pg.font.SysFont("sans mono", 20)
 
 class Key():
     def __init__(self, num):
@@ -153,7 +157,7 @@ class Key():
         self.num_to_all()
         self.rect = pg.Rect(self.x, self.y, self.w, self.h)
         self.is_play = False
-        self.end_frm = -1
+        self.dura_frm = 0
 
     def num_to_all(self):
         self.wb = num_to_wb(self.num)
@@ -186,13 +190,16 @@ class Key():
         else:
             self.color = num_to_color(self.num)
 
-        
     def disp_rect(self):
         # self.color = (125,255,random.randint(0,255))
-        if self.is_play:
-            self.color = (0,255,0)
-        else:
-            self.color = num_to_color(self.num)
+        if self.dura_frm == 0:
+            self.is_play = False
+        self.dura_frm -= 1
+
+        # if self.is_play:
+        #     self.color = (0,255,0)
+        # else:
+        #     self.color = num_to_color(self.num)
         pg.draw.rect(screen,self.color,self.rect)
 
     def disp(self):
@@ -224,22 +231,29 @@ def draw_fps():
     fps_text = fps_font.render(str(frm),1,(0,255,0))
     screen.blit(fps_text,(0,0))
 
-def notes_into_keys():
-    # list of [start_sec, dura_sec, note_idx]
-    # notes_list = gen_notes()
-    # for note in gen_notes:
-    #     start_frm_tmp, dura_frm_tmp = sec_to_frm(note[0]), sec_to_frm(note[1])
-    #     key_list[note[2]].notes_list.append([start_frm_tmp,dura_frm_tmp])
-    pass
-
 def main():
     create_key_list()
+    notes_list = gen_notes()
     
+    note_ptr = 0
+    notes_list_len = len(notes_list)
     while True:
         quiter()
         screen.fill((0,0,0))
         draw_fps()
-        key_list[3].is_play = True if frm%2==1 else False
+        if note_ptr >= notes_list_len or notes_list[note_ptr][0] > frm:
+            pass
+        else:
+            for i in range(note_ptr,notes_list_len):
+                note = notes_list[note_ptr]
+                if note[0] <= frm:
+                    key_tmp = key_list[note[2]]
+                    key_tmp.is_play = True
+                    key_tmp.dura_frm = max(key_tmp.dura_frm, note[1])
+                    note_ptr += 1
+                else:
+                    break
+
         draw_key_list()
         pg.display.update()
         # pg.image.save(screen,img_path+"/{:0>5d}.jpg".format(frm))
