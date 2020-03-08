@@ -22,7 +22,7 @@ SEC_WHOLE_NOTE = SEC_PER_BEAT * DENO
 SEC_QUART_NOTE = SEC_PER_BEAT * DENO / 4
 
 frm = 0
-WIN_WH = (1200, 720//2)
+WIN_WH = (1200, 400)
 
 def sec_to_frm(sec):
     return int(sec * FPS)
@@ -206,6 +206,42 @@ class Key():
         self.disp_rect()
         self.disp_text()
 
+
+class Arm():
+    def __init__(self):
+        # self.rect = 
+        # # [start_frm, dura_frm, note_idx]
+        # self.playlist = 
+        # self.note_idx = -1
+
+        # # "idle", "moving", "hitting"
+        # self.state = "idle"
+
+        # self.pos = 
+
+        # self.target = 
+        # self.hit_frm = 
+        # self.hit_cnt = 
+        # self.move_frm = 
+        # self.move_cnt = 
+        pass
+
+    @property
+    def state(self):
+        return self._state
+    @state.setter
+    def state(self, val):
+        self._state = val
+        pass
+
+    # def dist_to_move_frm():
+    # def dura_to_hit_frm():
+
+    # def move():
+    # def hit():
+    # def disp():
+
+
 key_list = []
 def create_key_list():
     global key_list
@@ -216,6 +252,14 @@ def create_key_list():
 def draw_key_list():
     for key in key_list:
         key.disp()
+
+arm_list = []
+def create_arm_list():
+    pass
+
+def draw_arm_list():
+    for arm in arm_list:
+        arm.disp()
 
 def quiter():
     clock.tick_busy_loop(FPS)
@@ -237,6 +281,8 @@ def main():
     
     note_ptr = 0
     notes_list_len = len(notes_list)
+    create_arm_list()
+
     while True:
         quiter()
         screen.fill((0,0,0))
