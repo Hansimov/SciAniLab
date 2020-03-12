@@ -3,3 +3,5 @@
 !.gitignore
 !_refs.txt
 !_pygame_refs.txt
+!__arm.c4d
+!__common-kits.c4d

@@ -22,3 +22,27 @@ Piano key frequencies - Wikipedia
 
 Scientific pitch notation - Wikipedia 
     https://en.wikipedia.org/wiki/Scientific_pitch_notation
+
+机器人学之逆运动学数值解法及SVD算法_C/C++_Brian的博客-CSDN博客 
+    https://blog.csdn.net/libing403/article/details/89035960
+
+The Process of 3D Animation | Media-Freaks.com 
+    https://www.media-freaks.com/the-process-of-3d-animation/
+
+Robotics, maths, python: A fledgling computer scientist’s guide to inverse kinematics | Robohub 
+    https://robohub.org/robotics-maths-python-a-fledgling-computer-scientists-guide-to-inverse-kinematics/
+
+Inverse Kinematics in Robotics using Reinforcement Learning 
+    https://medium.com/@alishbai734/inverse-kinematics-in-robotics-using-reinforcement-learning-2c252980b4cf
+
+逆运动学_人工智能_尘埃落定-CSDN博客 
+    https://blog.csdn.net/u011280600/article/details/80452022
+
+机械臂运动学逆解（Analytical solution）_C/C++_qq_24624539的博客-CSDN博客 
+    https://blog.csdn.net/qq_24624539/article/details/87027167?depth_1-utm_source=distribute.pc_relevant.none-task&utm_source=distribute.pc_relevant.none-task
+
+机械臂运动学逆解（Analytical solution） - XXX已失联 - 博客园 
+    https://www.cnblogs.com/21207-iHome/p/9452896.html
+
+机器人学一(Robotics (1)) | Coursera 
+    https://zh-tw.coursera.org/learn/robotics1
