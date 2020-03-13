@@ -7,13 +7,19 @@ import c4d_utils
 reload(c4d_utils)
 from c4d_utils import *
 
+# print("hello")
 c4d.CallCommand(13957) # Clear Console
 
-obj_list = find_obj_in_root("Cube", "Cube.3")
+# obj_list = find_obj_in_root("Cube","")
+obj_list = find_obj_in_root(".*Rot.*", "Arm_.*",case_sensitive=[1,0])
+doc.SetActiveObject(None,c4d.SELECTION_NEW)
 for obj in obj_list:
     print(obj.GetName())
-# arm_list = []
+    doc.SetActiveObject(obj,c4d.SELECTION_ADD)
+c4d.EventAdd()
 
+
+# arm_list = []
 # for i in dir(arm1):
 #     print(i)
 # print(arm1.GetChildren()[0].GetChildren())
