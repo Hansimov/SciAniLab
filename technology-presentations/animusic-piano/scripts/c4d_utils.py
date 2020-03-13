@@ -1,7 +1,9 @@
 import c4d
-
 # c4d.CallCommand(13957) # Clear Console
-# doc = c4d.documents.GetActiveDocument()
+
+# Must add the line below when importing this module, otherwise:
+#   "NameError: Global Name `doc` is not defined"
+doc = c4d.documents.GetActiveDocument()
 
 def return_true(obj):
     return True
@@ -31,7 +33,7 @@ def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
 
     return bro_list
 
-def find_obj(name, root="", case_sensitive=True):
+def find_obj_in_root(name, root="", case_sensitive=True):
     # doc = c4d.documents.GetActiveDocument()
     first_obj = doc.GetFirstObject()
     if first_obj == None:
@@ -58,7 +60,7 @@ def find_obj(name, root="", case_sensitive=True):
     # Depth First Search
     while stack != []:
         obj = stack.pop()
-        print(obj.GetName())
+        # print(obj.GetName())
         if obj.GetName() == name:
             obj_list.append(obj)
         for child in obj.GetChildren()[::-1]:
@@ -69,5 +71,3 @@ def find_obj(name, root="", case_sensitive=True):
     # return stack
 
     return obj_list
-
-# find_obj("Cube","")
