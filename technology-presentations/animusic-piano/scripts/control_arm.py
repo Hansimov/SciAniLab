@@ -21,6 +21,11 @@ v_rot_1 = find_obj_in_root("v_rot_1",arm_1)[0]
 v_rot_2 = find_obj_in_root("v_rot_2",arm_1)[0]
 h_rot_1 = find_obj_in_root("h_rot_1",arm_1)[0]
 h_rot_2 = find_obj_in_root("h_rot_2",arm_1)[0]
+h_rot_3 = find_obj_in_root("h_rot_3",arm_1)[0]
+locator = find_obj_in_root("locator",arm_1)[0]
+ball = find_obj_in_root("ball",arm_1)[0]
+
+cube = find_obj_in_root("cube_test","")[0]
 
 # print(arm_1.GetName())
 # print("=========")
@@ -36,15 +41,27 @@ add_undo(c4d.UNDOTYPE_CHANGE, arm_1)
 # set_rel_rot(v_rot_1,[180,0,0])
 # print(type(arm_1))
 # print(type(v_rot_1))
-print(h_rot_1.GetMg())
-print(h_rot_2.GetMg())
-v1 = h_rot_1.GetMg().off
-v2 = h_rot_2.GetMg().off
-v3 = v1 - v2
-print(v3)
-dist = sqrt(v3[1]*v3[1]+v3[2]*v3[2])
-print(dist)
+# print(h_rot_1.GetMg())
+# print(h_rot_2.GetMg())
+# v1 = h_rot_1.GetMg().off
+# v2 = h_rot_2.GetMg().off
+# v3 = v1 - v2
+# print(v3)
+# dist = sqrt(v3[1]*v3[1]+v3[2]*v3[2])
+# print(dist)
+# print(v_rot_1.GetMg())
+# print(v_rot_2.GetMg().off)
+# print(locator.GetMg().off)
+# print(ball.GetMg().off)
+# print(ball.GetMl().off)
+# print(get_rel_pos(ball))
+# print(get_rel_rot(ball))
+# print(get_rel_scale(ball))
+add_undo(c4d.UNDOTYPE_CHANGE, cube)
+print(get_world_pos(cube))
+set_world_pos(cube,[100,200,300])
 end_undo()
 event_add()
+print(get_world_pos(cube))
 # print(get_rel_rot(v_rot_1))
 # print(v_rot_1.GetAbsRot())

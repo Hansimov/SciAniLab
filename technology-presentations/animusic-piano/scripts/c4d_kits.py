@@ -120,31 +120,32 @@ def get_arf_psr(arf,psr,obj):
 
     if psr == "pos":
         if arf == "abs":
-            x,y,z = obj.GetAbsPos()
+            xyz = obj.GetAbsPos()
         elif arf == "rel":
-            x,y,z = obj.GetRelPos()
+            xyz = obj.GetRelPos()
         else: # arf == "frozen"
-            x,y,z = obj.GetFrozenPos()
+            xyz = obj.GetFrozenPos()
+        x,y,z = xyz[0],xyz[1],xyz[2]
         return c4d.Vector(x,y,z)
 
     elif psr == "rot":
         if arf == "abs":
-            arf_rot = obj.GetAbsRot()
+            hpb = obj.GetAbsRot()
         elif arf == "rel":
-            arf_rot = obj.GetRelRot()
+            hpb = obj.GetRelRot()
         else: # arf == "frozen"
-            arf_rot = obj.GetFrozenRot()
-
-        h,p,b = arf_rot[0], arf_rot[1], arf_rot[2]
+            hpb = obj.GetFrozenRot()
+        h,p,b = hpb[0], hpb[1], hpb[2]
         return c4d.Vector(*list(map(rad2deg,[h,p,b])))
 
     else: # psr == "scale"
         if arf == "abs":
-            x,y,z = obj.GetAbsScale()
+            xyz = obj.GetAbsScale()
         elif arf == "rel":
-            x,y,z = obj.GetRelScale()
+            xyz = obj.GetRelScale()
         else: # arf == "frozen"
-            x,y,z = obj.GetFrozenScale()
+            xyz = obj.GetFrozenScale()
+        x,y,z = xyz[0],xyz[1],xyz[2]
         return c4d.Vector(x,y,z)
 
 def set_arf_psr(arf,psr,obj,xyz):
@@ -186,6 +187,17 @@ PSR = ["pos","rot","scale"]
 
 def_set_arf_psr = "def set_{0}_{1}(obj,xyz): set_arf_psr(\"{0}\",\"{1}\",obj,xyz)"
 def_get_arf_psr = "def get_{0}_{1}(obj): return get_arf_psr(\"{0}\",\"{1}\",obj)"
+
+def get_world_pos(obj):
+    return obj.GetMg().off
+
+# Be careful to use this!
+def set_world_pos(obj,xyz):
+    mg = obj.GetMg()
+    v1,v2,v3 = mg.v1,mg.v2,mg.v3
+    off_new = c4d.Vector(xyz[0],xyz[1],xyz[2])
+    c4d_mat_mg = c4d.Matrix(off_new,v1,v2,v3)
+    obj.SetMg(c4d_mat_mg)
 
 for arf in ARF:
     for psr in PSR:
