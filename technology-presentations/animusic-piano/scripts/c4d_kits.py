@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 import c4d
 import re
-from math import pi
+from math import pi, sin, cos, sqrt, floor, ceil
 # c4d.CallCommand(13957) # Clear Console
 
 # Must add the line below when importing this module, otherwise:

@@ -1,6 +1,7 @@
 *.*
 !*.py
 !.gitignore
+!_ideas.txt
 !_refs.txt
 !_pygame_refs.txt
 !__arm.c4d
