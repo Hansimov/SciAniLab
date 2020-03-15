@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 import c4d
 import re
-from math import pi, sin, cos, sqrt, floor, ceil
+from math import pi,sin,cos,asin,acos,sqrt,floor,ceil
 # c4d.CallCommand(13957) # Clear Console
 
 # Must add the line below when importing this module, otherwise:
@@ -15,6 +15,12 @@ event_add = c4d.EventAdd
 
 def clear_console():
     c4d.CallCommand(13957) # Clear Console
+
+def activate_none():
+    doc.SetActiveObject(None,c4d.SELECTION_NEW)
+
+def activate(obj,mode=c4d.SELECTION_NEW):
+    doc.SetActiveObject(obj,mode)
 
 def return_true(obj):
     return True
@@ -44,7 +50,7 @@ def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
 
     return bro_list
 
-def find_obj_in_root(name, root="", case_insensitive=[True,True], use_regex=[True,True]):
+def find_obj(name, root="", case_insensitive=[True,True], use_regex=[True,True]):
     # doc = c4d.documents.GetActiveDocument()
     first_obj = doc.GetFirstObject()
     if first_obj == None:
@@ -105,11 +111,6 @@ def rot_vec_in_deg(h,p,b):
     # h,p,b are in degrees
     return c4d.Vector(deg2rad(h),deg2rad(p),deg2rad(b))
 
-# def get_abs_rot(obj):
-#     abs_rot = obj.GetAbsRot()
-#     h,p,b = abs_rot[0], abs_rot[1], abs_rot[2]
-#     # vector is in degrees
-#     
 
 def get_arf_psr(arf,psr,obj):
     # return c4d.Vector(x,y,z)
@@ -181,12 +182,37 @@ def set_arf_psr(arf,psr,obj,xyz):
         else: # arf == "frozen"
             obj.SetFrozenScale(c4d_vec_xyz)
 
+# ARF = ["abs","rel","frozen"]
+# PSR = ["pos","rot","scale"]
 
-ARF = ["abs","rel","frozen"]
-PSR = ["pos","rot","scale"]
+# def_set_arf_psr = "def set_{0}_{1}(obj,xyz): set_arf_psr(\"{0}\",\"{1}\",obj,xyz)"
+# def_get_arf_psr = "def get_{0}_{1}(obj): return get_arf_psr(\"{0}\",\"{1}\",obj)"
 
-def_set_arf_psr = "def set_{0}_{1}(obj,xyz): set_arf_psr(\"{0}\",\"{1}\",obj,xyz)"
-def_get_arf_psr = "def get_{0}_{1}(obj): return get_arf_psr(\"{0}\",\"{1}\",obj)"
+# for arf in ARF:
+#     for psr in PSR:
+#         exec(def_set_arf_psr.format(arf,psr))
+#         exec(def_get_arf_psr.format(arf,psr))
+
+# I use these tedious definitions just to activate auto completions of Sublime
+def get_abs_pos(obj):       return get_arf_psr("abs","pos",obj)
+def get_abs_rot(obj):       return get_arf_psr("abs","rot",obj)
+def get_abs_scale(obj):     return get_arf_psr("abs","scale",obj)
+def get_rel_pos(obj):       return get_arf_psr("rel","pos",obj)
+def get_rel_rot(obj):       return get_arf_psr("rel","rot",obj)
+def get_rel_scale(obj):     return get_arf_psr("rel","scale",obj)
+def get_frozen_pos(obj):    return get_arf_psr("frozen","pos",obj)
+def get_frozen_rot(obj):    return get_arf_psr("frozen","rot",obj)
+def get_frozen_scale(obj):  return get_arf_psr("frozen","scale",obj)
+
+def set_abs_pos(obj,xyz):       set_arf_psr("abs","pos",obj,xyz)
+def set_abs_rot(obj,xyz):       set_arf_psr("abs","rot",obj,xyz)
+def set_abs_scale(obj,xyz):     set_arf_psr("abs","scale",obj,xyz)
+def set_rel_pos(obj,xyz):       set_arf_psr("rel","pos",obj,xyz)
+def set_rel_rot(obj,xyz):       set_arf_psr("rel","rot",obj,xyz)
+def set_rel_scale(obj,xyz):     set_arf_psr("rel","scale",obj,xyz)
+def set_frozen_pos(obj,xyz):    set_arf_psr("frozen","pos",obj,xyz)
+def set_frozen_rot(obj,xyz):    set_arf_psr("frozen","rot",obj,xyz)
+def set_frozen_scale(obj,xyz):  set_arf_psr("frozen","scale",obj,xyz)
 
 def get_world_pos(obj):
     return obj.GetMg().off
@@ -199,7 +225,62 @@ def set_world_pos(obj,xyz):
     c4d_mat_mg = c4d.Matrix(off_new,v1,v2,v3)
     obj.SetMg(c4d_mat_mg)
 
-for arf in ARF:
-    for psr in PSR:
-        exec(def_set_arf_psr.format(arf,psr))
-        exec(def_get_arf_psr.format(arf,psr))
+
+def get_x_axis_vec(obj): return obj.GetMg().v1
+def get_y_axis_vec(obj): return obj.GetMg().v2
+def get_z_axis_vec(obj): return obj.GetMg().v3
+
+def p_to_p_dist(p1,p2):
+    return (p1-p2).GetLength()
+
+def p_to_v_dist(p,q,v):
+    # p: point (c4d.Vector)
+    # q: point on vector (c4d.Vector)
+    # v: vector (c4d.Vector)
+    # https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Vector_formulation
+    return ((q-p)-((q-p)*v)*v).GetLength()
+
+def p_to_v_foot(p,q,v):
+    # similar to p_to_v_dist()
+    return q + ((p-q)*v)*v
+
+def v_angle(v1,v2):
+    return acos(v1*v2/(v1.GetLength()*v2.GetLength()))/pi*180
+
+def p_angle(p1,p2,p3):
+    return v_angle(p1-p2,p3-p2)
+
+def is_target_reachable(len_list,origin,target):
+    total_len = sum(len_list)
+    origin_to_target_dist = p_to_p_dist(origin,target)
+    if origin_to_target_dist > total_len:
+        return False
+    if origin_to_target_dist < len_list[0]-(total_len-len_list[0]):
+        return False
+
+    return True
+
+# Only works on current arm, need to be extended
+def get_joint_angle_new(target, end, joint_list):
+    # target: target position (c4d.Vector)
+    # end: arm end (c4d.Vector)
+    # joint_list: arm rotation axises (BaseObject list)
+    old_axis_list, old_point_list, old_angle_list = [],[],[]
+    for joint in joint_list:
+        old_axis_list.append(get_y_axis_vec(joint))
+        old_point_list.append(get_world_pos(joint))
+        old_angle_list.append(get_rel_rot(joint)[0])
+
+    anchor_list = []
+    for old_point, old_axis in zip(old_point_list,old_axis_list):
+        anchor_list.append(p_to_v_foot(end,old_point,old_axis))
+    anchor_list.append(end)
+
+    len_list = []
+    for i in range(len(anchor_list)-1):
+        len_list.append(p_to_p_dist(anchor_list[i],anchor_list[i+1]))
+
+    # return is_target_reachable(len_list,anchor_list[0],target)
+    # new_pos -> new_abs_angle -> delta_angle
+
+    # return new_angle_list
