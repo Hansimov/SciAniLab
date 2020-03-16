@@ -26,29 +26,29 @@ def return_true(obj):
     return True
 
 def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
-    bro_list = []
+    bro_L = []
 
     # next brothers
     bro = obj.GetNext()
     while bro != None:
         if condition(bro):
-            bro_list.append(bro)
+            bro_L.append(bro)
         bro = bro.GetNext()
 
     # append obj itself
     if with_obj:
         if condition(obj):
-            bro_list.append(obj)
+            bro_L.append(obj)
 
     # previous brothers
     if next_only == False:
         bro = obj.GetPred()
         while bro != None:
             if condition(bro):
-                bro_list.append(bro)
+                bro_L.append(bro)
             bro = bro.GetPred()
 
-    return bro_list
+    return bro_L
 
 def find_obj(name, root="", case_insensitive=[True,True], use_regex=[True,True]):
     # doc = c4d.documents.GetActiveDocument()
@@ -56,7 +56,7 @@ def find_obj(name, root="", case_insensitive=[True,True], use_regex=[True,True])
     if first_obj == None:
         return []
 
-    stack, obj_list = [], []
+    stack, obj_L = [], []
 
     # Get first level parents
     if type(root) == str:
@@ -92,15 +92,15 @@ def find_obj(name, root="", case_insensitive=[True,True], use_regex=[True,True])
         # print(obj.GetName())
         if use_regex[0]:
             if re.match(name+"\Z", obj_name):
-                obj_list.append(obj)
+                obj_L.append(obj)
         else:
             if name == obj_name:
-                obj_list.append(obj)
+                obj_L.append(obj)
 
         for child in obj.GetChildren()[::-1]:
             stack.append(child)
 
-    return obj_list
+    return obj_L
 
 def rad2deg(rad):
     return rad/pi*180
@@ -250,37 +250,105 @@ def v_angle(v1,v2):
 def p_angle(p1,p2,p3):
     return v_angle(p1-p2,p3-p2)
 
-def is_target_reachable(len_list,origin,target):
-    total_len = sum(len_list)
-    origin_to_target_dist = p_to_p_dist(origin,target)
-    if origin_to_target_dist > total_len:
-        return False
-    if origin_to_target_dist < len_list[0]-(total_len-len_list[0]):
+def is_points_collinear(p1,p2,p3):
+    if v_angle(p1-p2,p1-p3) == 0:
+        return True
+    else:
         return False
 
-    return True
+def plane_perp(p1,p2,ref1,ref2=c4d.Vector(0,0,0)):
+    ref = ref1
+    if is_points_collinear(p1,p2,ref1):
+        ref = ref2
+        print("Warning: Collinear points detected!")
+    return (p1-ref).Cross(p2-ref)
+
+def two_circle_intersection(p1,r1,p2,r2,ref):
+    # ref: reference point to determine plane orientation (c4d.Vector)
+    # p1,p2: center of circle 
+    # r1,r2: radius of circle
+    # q: intersection(s)
+    # return list of q (c4d.Vector)
+
+    # https://math.stackexchange.com/questions/256100/how-can-i-find-the-points-at-which-two-circles-intersect
+    # https://en.wikipedia.org/wiki/Heron%27s_formula
+    # https://en.wikipedia.org/wiki/Cross_product
+    p1p2_len = (p1-p2).GetLength()
+    if p1p2_len > r1+r2:
+        return []
+    if p1p2_len < abs(r2-r1):
+        return []
+    if p1p2_len == r1+r2:
+        return [p1+(p2-p1)*r1/p1p2_len]
+
+    a,b,c = r1,r2,p1p2_len
+    s = (a+b+c)/2
+    area = sqrt(s*(s-a)*(s-b)*(s-c))
+    height = 2*area/c
+    leg = sqrt(pow(r1,2)-pow(height,2))
+    foot = p1 + (p2-p1)*(leg/c)
+
+    plane_perp_vec = plane_perp(p1,p2,ref)
+    # Q: What if ref,p1,p2 are collinear?
+    # A1: Drop the result of next status of arm which makes them collinear.
+        # Q: What if only one solution of intersection?
+        # A: ...
+    # A2: [Y] Or add one more ref to reduce the chances of this condition.
+        # Q: What if the other ref also collinear?
+        # A: ...
+    # Do not worry about too many small things ... 
+
+    p1p2_perp_vec = (p2-p1).Cross(plane_perp_vec).GetNormalized()
+
+    intersection_L = []
+    intersection_L.append(foot + p1p2_perp_vec * height)
+    intersection_L.append(foot - p1p2_perp_vec * height)
+
+    return intersection_L
+
 
 # Only works on current arm, need to be extended
-def get_joint_angle_new(target, end, joint_list):
-    # target: target position (c4d.Vector)
-    # end: arm end (c4d.Vector)
-    # joint_list: arm rotation axises (BaseObject list)
-    old_axis_list, old_point_list, old_angle_list = [],[],[]
-    for joint in joint_list:
-        old_axis_list.append(get_y_axis_vec(joint))
-        old_point_list.append(get_world_pos(joint))
-        old_angle_list.append(get_rel_rot(joint)[0])
+class Arm:
+    def __init__(self,joint_L=[],end=None):
+        # joint: rotation object (c4d.BaseObject)
+        self.joint_L = joint_L
+        # end: arm end (c4d.Vector)
+        self.end = end
+        self.calc_constants()
 
-    anchor_list = []
-    for old_point, old_axis in zip(old_point_list,old_axis_list):
-        anchor_list.append(p_to_v_foot(end,old_point,old_axis))
-    anchor_list.append(end)
+    def calc_constants(self):
+        self.old_axis_L  = []
+        self.old_center_L = []
+        self.old_angle_L = []
+        self.len_L = []
 
-    len_list = []
-    for i in range(len(anchor_list)-1):
-        len_list.append(p_to_p_dist(anchor_list[i],anchor_list[i+1]))
+        for joint in self.joint_L:
+            self.old_axis_L.append(get_y_axis_vec(joint))
+            self.old_center_L.append(get_world_pos(joint))
+            self.old_angle_L.append(get_rel_rot(joint)[0])
 
-    # return is_target_reachable(len_list,anchor_list[0],target)
+
+        self.old_anchor_L = []
+        for old_center, old_axis in zip(self.old_center_L,self.old_axis_L):
+            self.old_anchor_L.append(p_to_v_foot(self.end, old_center, old_axis))
+        self.old_anchor_L.append(self.end)
+
+        self.start = self.old_anchor_L[0]
+
+        self.len_L = []
+        for i in range(len(self.old_anchor_L)-1):
+            self.len_L.append(p_to_p_dist(self.old_anchor_L[i],self.old_anchor_L[i+1]))
+
+    def is_target_reachable(self,target):
+        # target: target position (c4d.Vector)
+        total_len = sum(self.len_L)
+        start_to_target_dist = p_to_p_dist(self.start,target)
+        if start_to_target_dist > total_len:
+            return False
+        if start_to_target_dist < self.len_L[0]-(total_len-self.len_L[0]):
+            return False
+        return True
+
     # new_pos -> new_abs_angle -> delta_angle
 
-    # return new_angle_list
+    # return new_angle_L
