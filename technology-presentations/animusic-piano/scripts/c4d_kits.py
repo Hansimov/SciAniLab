@@ -25,6 +25,9 @@ def activate(obj,mode=c4d.SELECTION_NEW):
 def return_true(obj):
     return True
 
+def sign(num):
+    return int(num>0)-int(num<0)
+
 def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
     bro_L = []
 
@@ -244,24 +247,46 @@ def p_to_v_foot(p,q,v):
     # similar to p_to_v_dist()
     return q + ((p-q)*v)*v
 
-def v_angle(v1,v2):
-    return acos(v1*v2/(v1.GetLength()*v2.GetLength()))/pi*180
+def v_angle(v1,v2,normal=None):
+    # https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
+    # NOTE: Left-handed coordinate sytem! (Cross is influenced!)
+    # v1->v2 anticlockwise is positive
+    sign = 1
+    if normal != None:
+        if v1.Cross(v2).Dot(normal) > 0:
+            sign = -1
+
+    return sign*acos(v1*v2/(v1.GetLength()*v2.GetLength()))/pi*180
 
 def p_angle(p1,p2,p3):
-    return v_angle(p1-p2,p3-p2)
+    return v_angle(p2-p1,p2-p3)
 
 def is_points_collinear(p1,p2,p3):
-    if v_angle(p1-p2,p1-p3) == 0:
+    if p_angle(p1,p2,p3) == 0:
         return True
     else:
         return False
 
-def plane_perp(p1,p2,ref1,ref2=c4d.Vector(0,0,0)):
+def v_plane_normal(v1,v2):
+    return v1.Cross(v2).GetNormalized()
+
+def p_plane_normal(p1,p2,ref1,ref2=c4d.Vector(0,0,0)):
     ref = ref1
     if is_points_collinear(p1,p2,ref1):
         ref = ref2
         print("Warning: Collinear points detected!")
-    return (p1-ref).Cross(p2-ref)
+    return v_plane_normal(p2-p1,p2-ref)
+
+def rotate_vec(v,axis,angle):
+    # https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+    # angle: anticlockwise is positive
+    # NOTE: C4D uses left-handed coordinate system,
+    #       while Rodrigues rotation formula here uses right-hand,
+    #       so we should change the sign of the angle
+    ta = -deg2rad(angle)
+    k = axis.GetNormalized()
+
+    return v*cos(ta) + k.Cross(v)*sin(ta)+k*(k.Dot(v))*(1-cos(ta))
 
 def two_circle_intersection(p1,r1,p2,r2,ref):
     # ref: reference point to determine plane orientation (c4d.Vector)
@@ -288,7 +313,8 @@ def two_circle_intersection(p1,r1,p2,r2,ref):
     leg = sqrt(pow(r1,2)-pow(height,2))
     foot = p1 + (p2-p1)*(leg/c)
 
-    plane_perp_vec = plane_perp(p1,p2,ref)
+    plane_normal_vec = p_plane_normal(p1,p2,ref)
+
     # Q: What if ref,p1,p2 are collinear?
     # A1: Drop the result of next status of arm which makes them collinear.
         # Q: What if only one solution of intersection?
@@ -298,35 +324,31 @@ def two_circle_intersection(p1,r1,p2,r2,ref):
         # A: ...
     # Do not worry about too many small things ... 
 
-    p1p2_perp_vec = (p2-p1).Cross(plane_perp_vec).GetNormalized()
+    p1p2_perp_vec = (p2-p1).Cross(plane_normal_vec).GetNormalized()
 
-    intersection_L = []
-    intersection_L.append(foot + p1p2_perp_vec * height)
-    intersection_L.append(foot - p1p2_perp_vec * height)
+    intsect_L = []
+    intsect_L.append(foot + p1p2_perp_vec * height)
+    intsect_L.append(foot - p1p2_perp_vec * height)
 
-    return intersection_L
+    return intsect_L
 
-
-# Only works on current arm, need to be extended
+# Only works on current 3-rot arm, need to be extended
 class Arm:
     def __init__(self,joint_L=[],end=None):
         # joint: rotation object (c4d.BaseObject)
         self.joint_L = joint_L
         # end: arm end (c4d.Vector)
         self.end = end
-        self.calc_constants()
+        self.init_constants()
 
-    def calc_constants(self):
+    def init_constants(self):
         self.old_axis_L  = []
         self.old_center_L = []
-        self.old_angle_L = []
-        self.len_L = []
-
+        self.old_rot_L = []
         for joint in self.joint_L:
             self.old_axis_L.append(get_y_axis_vec(joint))
             self.old_center_L.append(get_world_pos(joint))
-            self.old_angle_L.append(get_rel_rot(joint)[0])
-
+            self.old_rot_L.append(get_rel_rot(joint)[0])
 
         self.old_anchor_L = []
         for old_center, old_axis in zip(self.old_center_L,self.old_axis_L):
@@ -335,9 +357,26 @@ class Arm:
 
         self.start = self.old_anchor_L[0]
 
+        self.old_vec_L = []
         self.len_L = []
         for i in range(len(self.old_anchor_L)-1):
-            self.len_L.append(p_to_p_dist(self.old_anchor_L[i],self.old_anchor_L[i+1]))
+            self.old_vec_L.append(self.old_anchor_L[i+1]-self.old_anchor_L[i])
+            self.len_L.append(self.old_vec_L[i].GetLength())
+
+        h_vec = c4d.Vector(0,-1,0)
+        # h_vec might be replaced with v_rot
+        # self.plane_normal = v_plane_normal(h_vec,self.old_vec_L[0])
+        self.plane_normal = self.old_axis_L[0].GetNormalized()
+
+        self.old_angle_L = []
+        self.old_angle_L.append(v_angle(h_vec,self.old_vec_L[0],self.plane_normal))
+        for i in range(len(self.old_vec_L)-1):
+            self.old_angle_L.append(v_angle(-self.old_vec_L[i],self.old_vec_L[i+1],self.plane_normal))
+        # for angle in self.old_angle_L:
+        #     print(angle)
+        # for vec in self.old_vec_L:
+        #     print(vec)
+        # print(rotate_vec(self.old_vec_L[0],self.plane_normal,540)+self.start)
 
     def is_target_reachable(self,target):
         # target: target position (c4d.Vector)
@@ -349,6 +388,40 @@ class Arm:
             return False
         return True
 
-    # new_pos -> new_abs_angle -> delta_angle
+    # new_pos -> new_abs_rot -> delta_angle
+    # return new_rot_L
+    def calc_new_rot(self,target):
+        if not self.is_target_reachable(target):
+            print("Warning: Cannot reach target!")
+            return None
+        intsect_L = two_circle_intersection(self.start,self.len_L[0], target, self.len_L[-1]+self.len_L[-2],self.old_anchor_L[1])
+        # print(intsect_L)
 
-    # return new_angle_L
+        if len(intsect_L) == 1:
+            pass
+            # todo
+
+        joint_1_start_pos = intsect_L[0]
+        joint_1_end_pos = intsect_L[1]
+
+        joint_1_total_spin_delta = v_angle(joint_1_start_pos-self.start,joint_1_end_pos-self.start,normal=self.old_axis_L[0])
+        print(joint_1_total_spin_delta)
+
+        spin_deg_safe_margin = 0.5
+        if abs(joint_1_total_spin_delta) < spin_deg_safe_margin*2:
+            pass
+            # todo
+        else:
+            joint_1_total_spin_delta -= sign(joint_1_total_spin_delta)*spin_deg_safe_margin*2
+
+        joint_1_start_vec = rotate_vec(joint_1_start_pos-self.start, self.old_axis_L[0], spin_deg_safe_margin)
+
+        subdiv_num = 10
+        joint_1_spin_step = joint_1_total_spin_delta/subdiv_num
+        joint_1_tmp_pos_L = []
+        for i in range(subdiv_num+1):
+            joint_1_tmp_pos = self.start+rotate_vec(joint_1_start_vec,self.old_axis_L[0],i*joint_1_spin_step)
+            joint_1_tmp_pos_L.append(joint_1_tmp_pos)
+        for tmp_pos in joint_1_tmp_pos_L:
+            print(tmp_pos)
+
