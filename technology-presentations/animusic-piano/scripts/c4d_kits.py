@@ -2,6 +2,8 @@ from __future__ import division, print_function
 import c4d
 import re
 from math import pi,sin,cos,asin,acos,sqrt,floor,ceil
+from operator import add,sub,mul,div
+
 # c4d.CallCommand(13957) # Clear Console
 
 # Must add the line below when importing this module, otherwise:
@@ -27,6 +29,12 @@ def return_true(obj):
 
 def sign(num):
     return int(num>0)-int(num<0)
+
+def sum_abs(num_L):
+    return sum(list(map(abs,num_L)))
+
+def min_abs(num_L):
+    return min(list(map(abs,num_L)))
 
 def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
     bro_L = []
@@ -113,7 +121,6 @@ def deg2rad(deg):
 def rot_vec_in_deg(h,p,b):
     # h,p,b are in degrees
     return c4d.Vector(deg2rad(h),deg2rad(p),deg2rad(b))
-
 
 def get_arf_psr(arf,psr,obj):
     # return c4d.Vector(x,y,z)
@@ -289,6 +296,7 @@ def rotate_vec(v,axis,angle):
     return v*cos(ta) + k.Cross(v)*sin(ta)+k*(k.Dot(v))*(1-cos(ta))
 
 def two_circle_intersection(p1,r1,p2,r2,ref):
+    """ return intsect_L """
     # ref: reference point to determine plane orientation (c4d.Vector)
     # p1,p2: center of circle 
     # r1,r2: radius of circle
@@ -332,7 +340,41 @@ def two_circle_intersection(p1,r1,p2,r2,ref):
 
     return intsect_L
 
-# Only works on current 3-rot arm, need to be extended
+def center_axis_to_anchor(end,center_L,axis_L):
+    """ return anchor_L """
+    anchor_L = []
+    for center, axis in zip(center_L, axis_L):
+        anchor_L.append(p_to_v_foot(end, center, axis))
+    anchor_L.append(end)
+    return anchor_L
+
+def anchor_to_vec(base_vec,anchor_L):
+    """ return vec_L """
+    vec_L = []
+    vec_L.append(base_vec)
+    for i in range(len(anchor_L)-1):
+        vec_L.append(anchor_L[i+1]-anchor_L[i])
+    return vec_L
+
+def vec_to_len(vec_L):
+    """ return len_L """
+    len_L = []
+    for vec in vec_L[1:]:
+        len_L.append(vec.GetLength())
+    return len_L
+
+def vec_to_angle(vec_L,normal):
+    """ return angle_L """
+    angle_L = []
+    for i in range(len(vec_L)-1):
+        angle_L.append(v_angle(-vec_L[i],vec_L[i+1],normal))
+    return angle_L
+
+def angle_delta(old_angle_L,new_angle_L):
+    """ return float_L """
+    return list(map(sub, new_angle_L, old_angle_L))
+
+# Only works on current 3-h-rot arm, need to be extended
 class Arm:
     def __init__(self,joint_L=[],end=None):
         # joint: rotation object (c4d.BaseObject)
@@ -340,6 +382,7 @@ class Arm:
         # end: arm end (c4d.Vector)
         self.end = end
         self.init_constants()
+
 
     def init_constants(self):
         self.old_axis_L  = []
@@ -350,28 +393,18 @@ class Arm:
             self.old_center_L.append(get_world_pos(joint))
             self.old_rot_L.append(get_rel_rot(joint)[0])
 
-        self.old_anchor_L = []
-        for old_center, old_axis in zip(self.old_center_L,self.old_axis_L):
-            self.old_anchor_L.append(p_to_v_foot(self.end, old_center, old_axis))
-        self.old_anchor_L.append(self.end)
+        self.old_anchor_L = center_axis_to_anchor(self.end,self.old_center_L,self.old_axis_L)
 
         self.start = self.old_anchor_L[0]
+        # h_vec might be replaced with v_rot axis
+        self.h_vec = c4d.Vector(0,1,0)
+        self.old_vec_L = anchor_to_vec(self.h_vec,self.old_anchor_L)
+        self.len_L = vec_to_len(self.old_vec_L)
 
-        self.old_vec_L = []
-        self.len_L = []
-        for i in range(len(self.old_anchor_L)-1):
-            self.old_vec_L.append(self.old_anchor_L[i+1]-self.old_anchor_L[i])
-            self.len_L.append(self.old_vec_L[i].GetLength())
-
-        h_vec = c4d.Vector(0,-1,0)
-        # h_vec might be replaced with v_rot
-        # self.plane_normal = v_plane_normal(h_vec,self.old_vec_L[0])
         self.plane_normal = self.old_axis_L[0].GetNormalized()
 
-        self.old_angle_L = []
-        self.old_angle_L.append(v_angle(h_vec,self.old_vec_L[0],self.plane_normal))
-        for i in range(len(self.old_vec_L)-1):
-            self.old_angle_L.append(v_angle(-self.old_vec_L[i],self.old_vec_L[i+1],self.plane_normal))
+        self.old_angle_L = vec_to_angle(self.old_vec_L,self.plane_normal)
+
         # for angle in self.old_angle_L:
         #     print(angle)
         # for vec in self.old_vec_L:
@@ -390,7 +423,8 @@ class Arm:
 
     # new_pos -> new_abs_rot -> delta_angle
     # return new_rot_L
-    def calc_new_rot(self,target):
+
+    def get_new_rot(self,target):
         if not self.is_target_reachable(target):
             print("Warning: Cannot reach target!")
             return None
@@ -405,7 +439,7 @@ class Arm:
         joint_1_end_pos = intsect_L[1]
 
         joint_1_total_spin_delta = v_angle(joint_1_start_pos-self.start,joint_1_end_pos-self.start,normal=self.old_axis_L[0])
-        print(joint_1_total_spin_delta)
+        # print(joint_1_total_spin_delta)
 
         spin_deg_safe_margin = 0.5
         if abs(joint_1_total_spin_delta) < spin_deg_safe_margin*2:
@@ -418,10 +452,43 @@ class Arm:
 
         subdiv_num = 10
         joint_1_spin_step = joint_1_total_spin_delta/subdiv_num
-        joint_1_tmp_pos_L = []
+        joint_1_pos_L = []
+        joint_pos_LL = []
         for i in range(subdiv_num+1):
             joint_1_tmp_pos = self.start+rotate_vec(joint_1_start_vec,self.old_axis_L[0],i*joint_1_spin_step)
-            joint_1_tmp_pos_L.append(joint_1_tmp_pos)
-        for tmp_pos in joint_1_tmp_pos_L:
-            print(tmp_pos)
+            # joint_1_tmp_pos_L.append(joint_1_tmp_pos)
+            joint_2_tmp_pos_L = two_circle_intersection(joint_1_tmp_pos,self.len_L[1],target,self.len_L[2],self.old_axis_L[0])
+            for joint_2_tmp_pos in joint_2_tmp_pos_L:
+                joint_pos_LL.append([self.start,joint_1_tmp_pos,joint_2_tmp_pos,target])
+        # print(joint_pos_LL)
+        best_joint_pos_L = []
+        # sum_abs_angle_delta = 0
+        min_abs_angle_delta = float("Inf")
+        # print(self.old_angle_L)
+        for joint_pos_L in joint_pos_LL:
+            # print(joint_pos_L)
+            tmp_new_angle_L = vec_to_angle(anchor_to_vec(self.h_vec,joint_pos_L),self.plane_normal)
+            # new_sum_abs_angle_delta = sum_abs(angle_delta(self.old_angle_L,tmp_new_angle_L))
+            tmp_angle_delta = angle_delta(self.old_angle_L,tmp_new_angle_L)
+            new_min_abs_angle_delta = min_abs(tmp_angle_delta)
+            # print(joint_pos_L,sum_abs_angle_delta)
+            # print(tmp_new_angle_L)
+            # if new_sum_abs_angle_delta < sum_abs_angle_delta:
+                # sum_abs_angle_delta = new_sum_abs_angle_delta
+            if new_min_abs_angle_delta < min_abs_angle_delta:
+                best_joint_pos_L = joint_pos_L
+                min_abs_angle_delta = new_min_abs_angle_delta
+            print(min_abs_angle_delta)
+        print(best_joint_pos_L)
+
+        # for tmp_pos in joint_1_tmp_pos_L:
+        #     print(tmp_pos)
+
+        # joint_2_tmp_pos_L = []
+        # for joint_1_tmp_pos in joint_1_tmp_pos_L:
+        #     tmp_intsect_L = two_circle_intersection(joint_1_tmp_pos,self.len_L[1],target,self.len_L[2],self.old_axis_L[0])
+        #     if len(tmp_intsect_L)>1:
+        #         tmp_angle_L = []
+        #         for tmp_intsect in tmp_intsect_L:
+        #             tmp_anchor_L = 
 
