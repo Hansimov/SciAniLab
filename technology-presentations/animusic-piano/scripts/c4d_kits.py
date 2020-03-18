@@ -33,10 +33,11 @@ def sign(num):
 def sum_abs(num_L):
     return sum(list(map(abs,num_L)))
 
-def min_abs(num_L):
-    return min(list(map(abs,num_L)))
+def max_abs(num_L,weights=[]):
+    return max(list(map(abs,num_L)))
 
 def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
+    """ c4d.BaseObject list """
     bro_L = []
 
     # next brothers
@@ -62,6 +63,7 @@ def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
     return bro_L
 
 def find_obj(name, root="", case_insensitive=[True,True], use_regex=[True,True]):
+    """ c4d.BaseObject list """
     # doc = c4d.documents.GetActiveDocument()
     first_obj = doc.GetFirstObject()
     if first_obj == None:
@@ -268,19 +270,26 @@ def v_angle(v1,v2,normal=None):
 def p_angle(p1,p2,p3):
     return v_angle(p2-p1,p2-p3)
 
-def is_points_collinear(p1,p2,p3):
-    if p_angle(p1,p2,p3) == 0:
+def is_points_collinear(p1,p2,p3,threshold=1):
+    abs_angle = abs(p_angle(p1,p2,p3))
+    # print(abs_angle)
+    if abs_angle <= threshold or abs_angle>=180-threshold :
+        # print("collinear!!")
         return True
     else:
         return False
 
 def v_plane_normal(v1,v2):
+    """ c4d.Vector """
     return v1.Cross(v2).GetNormalized()
 
-def p_plane_normal(p1,p2,ref1,ref2=c4d.Vector(0,0,0)):
-    ref = ref1
-    if is_points_collinear(p1,p2,ref1):
-        ref = ref2
+def p_plane_normal(p1,p2,p3,p4=None):
+    """ c4d.Vector list
+    > p4: c4d.Vector - Reserved point to deal with p1,p2,p3 collinear
+    """
+    ref = p3
+    if is_points_collinear(p1,p2,p3):
+        ref = p4
         print("Warning: Collinear points detected!")
     return v_plane_normal(p2-p1,p2-ref)
 
@@ -295,9 +304,11 @@ def rotate_vec(v,axis,angle):
 
     return v*cos(ta) + k.Cross(v)*sin(ta)+k*(k.Dot(v))*(1-cos(ta))
 
-def two_circle_intersection(p1,r1,p2,r2,ref):
-    """ return intsect_L """
-    # ref: reference point to determine plane orientation (c4d.Vector)
+def two_circle_intersection(p1,r1,p2,r2,p3,p4=None):
+    """ c4d.Vector list (len:0-2) 
+    > p3: c4d.Vector - reference point to determine plane normal
+    > p4: c4d.Vector - Reserved reference point avoid p1,p2,p3 collinear
+    """
     # p1,p2: center of circle 
     # r1,r2: radius of circle
     # q: intersection(s)
@@ -321,7 +332,7 @@ def two_circle_intersection(p1,r1,p2,r2,ref):
     leg = sqrt(pow(r1,2)-pow(height,2))
     foot = p1 + (p2-p1)*(leg/c)
 
-    plane_normal_vec = p_plane_normal(p1,p2,ref)
+    plane_normal_vec = p_plane_normal(p1,p2,p3,p4)
 
     # Q: What if ref,p1,p2 are collinear?
     # A1: Drop the result of next status of arm which makes them collinear.
@@ -330,7 +341,7 @@ def two_circle_intersection(p1,r1,p2,r2,ref):
     # A2: [Y] Or add one more ref to reduce the chances of this condition.
         # Q: What if the other ref also collinear?
         # A: ...
-    # Do not worry about too many small things ... 
+    # Do not worry about too many tiny things ... 
 
     p1p2_perp_vec = (p2-p1).Cross(plane_normal_vec).GetNormalized()
 
@@ -341,7 +352,7 @@ def two_circle_intersection(p1,r1,p2,r2,ref):
     return intsect_L
 
 def center_axis_to_anchor(end,center_L,axis_L):
-    """ return anchor_L """
+    """ c4d.Vector list """
     anchor_L = []
     for center, axis in zip(center_L, axis_L):
         anchor_L.append(p_to_v_foot(end, center, axis))
@@ -349,7 +360,7 @@ def center_axis_to_anchor(end,center_L,axis_L):
     return anchor_L
 
 def anchor_to_vec(base_vec,anchor_L):
-    """ return vec_L """
+    """ c4d.Vector list """
     vec_L = []
     vec_L.append(base_vec)
     for i in range(len(anchor_L)-1):
@@ -357,21 +368,21 @@ def anchor_to_vec(base_vec,anchor_L):
     return vec_L
 
 def vec_to_len(vec_L):
-    """ return len_L """
+    """ float list """
     len_L = []
     for vec in vec_L[1:]:
         len_L.append(vec.GetLength())
     return len_L
 
 def vec_to_angle(vec_L,normal):
-    """ return angle_L """
+    """ float list """
     angle_L = []
     for i in range(len(vec_L)-1):
         angle_L.append(v_angle(-vec_L[i],vec_L[i+1],normal))
     return angle_L
 
 def angle_delta(old_angle_L,new_angle_L):
-    """ return float_L """
+    """ float list """
     return list(map(sub, new_angle_L, old_angle_L))
 
 # Only works on current 3-h-rot arm, need to be extended
@@ -382,7 +393,6 @@ class Arm:
         # end: arm end (c4d.Vector)
         self.end = end
         self.init_constants()
-
 
     def init_constants(self):
         self.old_axis_L  = []
@@ -428,7 +438,7 @@ class Arm:
         if not self.is_target_reachable(target):
             print("Warning: Cannot reach target!")
             return None
-        intsect_L = two_circle_intersection(self.start,self.len_L[0], target, self.len_L[-1]+self.len_L[-2],self.old_anchor_L[1])
+        intsect_L = two_circle_intersection(self.start,self.len_L[0], target, self.len_L[-1]+self.len_L[-2],self.old_anchor_L[1],self.old_anchor_L[2])
         # print(intsect_L)
 
         if len(intsect_L) == 1:
@@ -457,29 +467,35 @@ class Arm:
         for i in range(subdiv_num+1):
             joint_1_tmp_pos = self.start+rotate_vec(joint_1_start_vec,self.old_axis_L[0],i*joint_1_spin_step)
             # joint_1_tmp_pos_L.append(joint_1_tmp_pos)
-            joint_2_tmp_pos_L = two_circle_intersection(joint_1_tmp_pos,self.len_L[1],target,self.len_L[2],self.old_axis_L[0])
+            joint_2_tmp_pos_L = two_circle_intersection(joint_1_tmp_pos,self.len_L[1],target,self.len_L[2],self.old_anchor_L[0],self.old_anchor_L[2])
             for joint_2_tmp_pos in joint_2_tmp_pos_L:
                 joint_pos_LL.append([self.start,joint_1_tmp_pos,joint_2_tmp_pos,target])
         # print(joint_pos_LL)
         best_joint_pos_L = []
+        best_angle_delta = []
         # sum_abs_angle_delta = 0
-        min_abs_angle_delta = float("Inf")
+        min_max_abs_angle_delta = float("Inf")
         # print(self.old_angle_L)
         for joint_pos_L in joint_pos_LL:
             # print(joint_pos_L)
             tmp_new_angle_L = vec_to_angle(anchor_to_vec(self.h_vec,joint_pos_L),self.plane_normal)
             # new_sum_abs_angle_delta = sum_abs(angle_delta(self.old_angle_L,tmp_new_angle_L))
             tmp_angle_delta = angle_delta(self.old_angle_L,tmp_new_angle_L)
-            new_min_abs_angle_delta = min_abs(tmp_angle_delta)
+            tmp_max_abs_angle_delta = max_abs(tmp_angle_delta)
             # print(joint_pos_L,sum_abs_angle_delta)
             # print(tmp_new_angle_L)
             # if new_sum_abs_angle_delta < sum_abs_angle_delta:
                 # sum_abs_angle_delta = new_sum_abs_angle_delta
-            if new_min_abs_angle_delta < min_abs_angle_delta:
+            if tmp_max_abs_angle_delta < min_max_abs_angle_delta:
                 best_joint_pos_L = joint_pos_L
-                min_abs_angle_delta = new_min_abs_angle_delta
-            print(min_abs_angle_delta)
+                min_max_abs_angle_delta = tmp_max_abs_angle_delta
+                best_angle_delta = tmp_angle_delta
+            # print(tmp_angle_delta)
+            print(joint_pos_L[1],joint_pos_L[2])
+            # print(joint_pos_L[1],joint_pos_L[2])
         print(best_joint_pos_L)
+        print(best_angle_delta)
+        print(min_max_abs_angle_delta)
 
         # for tmp_pos in joint_1_tmp_pos_L:
         #     print(tmp_pos)
@@ -491,4 +507,10 @@ class Arm:
         #         tmp_angle_L = []
         #         for tmp_intsect in tmp_intsect_L:
         #             tmp_anchor_L = 
+    def set_joint_rot(self):
+        pass
 
+
+if __name__ == '__main__':
+    clear_console()
+    print("You are calling definitions!")
