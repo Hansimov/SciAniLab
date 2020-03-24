@@ -5,10 +5,13 @@
     Bad Apple、超电磁炮、千本樱（镇站之宝）
     （谷村新司）
     光能使者变身+OP
+    西部世界
+    钢铁洪流进行曲
 
 周杰伦：晴天+四手联弹+斗琴（两架琴）+Secret（破碎特效）
 
 模型修改：
     Add three locators
-    Add more margins to head
-    Add portraits of musicians
+    + Add more margins to head
+    Add portraits of musicians?
+    Make v-rot cross with h-rot-1
