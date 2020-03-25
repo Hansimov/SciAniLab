@@ -434,7 +434,7 @@ class Arm:
     # new_pos -> new_abs_rot -> delta_angle
     # return new_rot_L
 
-    def get_new_rot(self,target):
+    def get_best_joint_rot(self,target):
         if not self.is_target_reachable(target):
             print("Warning: Cannot reach target!")
             return None
@@ -491,11 +491,17 @@ class Arm:
                 min_max_abs_angle_delta = tmp_max_abs_angle_delta
                 best_angle_delta = tmp_angle_delta
             # print(tmp_angle_delta)
-            print(joint_pos_L[1],joint_pos_L[2])
             # print(joint_pos_L[1],joint_pos_L[2])
-        print(best_joint_pos_L)
-        print(best_angle_delta)
-        print(min_max_abs_angle_delta)
+            # print(joint_pos_L[1],joint_pos_L[2])
+        # print(best_joint_pos_L)
+        # print(best_angle_delta)
+        best_joint_rot_L = list(map(add,self.old_rot_L,best_angle_delta))
+        print(best_joint_rot_L)
+        return best_joint_rot_L
+        # return 
+        # print(min_max_abs_angle_delta)
+        # return best_angle_delta
+
 
         # for tmp_pos in joint_1_tmp_pos_L:
         #     print(tmp_pos)
@@ -507,8 +513,61 @@ class Arm:
         #         tmp_angle_L = []
         #         for tmp_intsect in tmp_intsect_L:
         #             tmp_anchor_L = 
-    def set_joint_rot(self):
-        pass
+
+    def set_joint_rot(self,new_rot_L):
+        for i, (joint,new_rot) in enumerate(zip(self.joint_L,new_rot_L)):
+            old_rot_vec = get_rel_rot(joint)
+            old_rot_vec[0] = new_rot
+            set_rel_rot(joint,old_rot_vec)
+            self.old_rot_L[i] = new_rot
+
+    def set_best_joint_rot(self,target,frm=0):
+        best_rot_L = self.get_best_joint_rot(target)
+        self.set_joint_rot(best_rot_L)
+
+# https://www.cineversity.com/wiki/Python%3A_DescIDs_and_Animation/
+# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/DescLevel/index.html#c4d-desclevel
+# https://developers.maxon.net/docs/Cinema4DCPPSDK/html/page_manual_descid.html#page_manual_descid_desclevel
+# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/Description/index.html#c4d-description
+
+def get_desc_id(arf,psr,dim=-1):
+    arf_L = ["abs","rel","frozen"]
+    arf_str_L = ["ABS","REL","FROZEN"]
+    psr_L = ["pos","rot","scale"]
+    psr_str_L = ["POSITION","ROTATION","SCALE"]
+
+    arf_str = arf_str_L[arf_L.index(arf.lower())]
+    psr_str = psr_str_L[psr_L.index(psr.lower())]
+
+    desc_level_1_1 = eval("_".join(["c4d.ID_BASEOBJECT",arf_str,psr_str]))
+    desc_level_1 = c4d.DescLevel(desc_level_1_1,c4d.DTYPE_VECTOR,0)
+
+    xyz_str = ["X","Y","Z"]
+    if dim == -1:
+        desc_id = c4d.DescID(desc_level_1)
+    else:
+        desc_level_2_1 = eval(("c4d.VECTOR_"+xyz_str[dim]))
+        desc_level_2 = c4d.DescLevel(desc_level_2_1,c4d.DTYPE_REAL,0)
+        desc_id = c4d.DescID(desc_level_1,desc_level_2)
+
+    return desc_id
+
+    # Drag and drop element derectly to python console to get DescID name
+    # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/misc/descriptions.html
+
+def get_abs_pos_desc_id(dim=-1):        return get_desc_id("abs","pos",dim)
+def get_abs_rot_desc_id(dim=-1):        return get_desc_id("abs","rot",dim)
+def get_abs_scale_desc_id(dim=-1):      return get_desc_id("abs","scale",dim)
+def get_rel_pos_desc_id(dim=-1):        return get_desc_id("rel","pos",dim)
+def get_rel_rot_desc_id(dim=-1):        return get_desc_id("rel","rot",dim)
+def get_rel_scale_desc_id(dim=-1):      return get_desc_id("rel","scale",dim)
+def get_frozen_pos_desc_id(dim=-1):     return get_desc_id("frozen","pos",dim)
+def get_frozen_rot_desc_id(dim=-1):     return get_desc_id("frozen","rot",dim)
+def get_frozen_scale_desc_id(dim=-1):   return get_desc_id("frozen","scale",dim)
+
+def set_key(obj):
+    # tr=c4d.CTrack(obj, get_rel_pos_desc_id(0))
+    print(obj[get_rel_pos_desc_id(1)])
 
 
 if __name__ == '__main__':

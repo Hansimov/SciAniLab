@@ -19,6 +19,7 @@ arm_1 = find_obj("arm_1","")[0]
 loc_null = find_obj("loc_null",arm_1)[0]
 loc_ball = find_obj("loc_ball",arm_1)[0]
 cube_test = find_obj("cube_test","")[0]
+sphe_test = find_obj("sphe_test","")[0]
 
 start_undo()
 add_undo(c4d.UNDOTYPE_CHANGE, arm_1)
@@ -29,9 +30,13 @@ end_undo()
 # print(p_angle(p2,p3,o))
 # print(get_world_pos(cube_test))
 # print(get_rel_rot(h_rot_3)[0])
-joints = find_obj("h_joint_.*","arm_1")
 # get_joint_angle_new(get_world_pos(cube_test),get_world_pos(loc_ball),joints)
-arm = Arm(joints,get_world_pos(loc_ball))
 # print(two_circle_intersection(arm.start,arm.len_L[0], get_world_pos(cube_test),arm.len_L[1]+arm.len_L[2], arm.end))
-arm.get_new_rot(get_world_pos(cube_test))
+# print(get_abs_pos(sphe_test))
+# joints = find_obj("h_joint_.*","arm_1")
+# arm = Arm(joints,get_world_pos(loc_ball))
+# arm.set_best_joint_rot(get_world_pos(cube_test))
+
+set_key(cube_test)
+
 event_add()
