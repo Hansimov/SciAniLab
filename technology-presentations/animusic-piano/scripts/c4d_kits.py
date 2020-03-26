@@ -4,6 +4,8 @@ import re
 from math import pi,sin,cos,asin,acos,sqrt,floor,ceil
 from operator import add,sub,mul,div
 
+FPS = doc.GetFps()
+
 # c4d.CallCommand(13957) # Clear Console
 
 # Must add the line below when importing this module, otherwise:
@@ -35,6 +37,24 @@ def sum_abs(num_L):
 
 def max_abs(num_L,weights=[]):
     return max(list(map(abs,num_L)))
+
+def sort_abs(num_L,weights=[]):
+    abs_num_L = list(map(abs,num_L))
+    return sorted(abs_num_L,reverse=True)
+
+def cmp_list(list1,list2):
+    for i,j in zip(list1,list2):
+        if i>j:
+            return 1
+        elif i==j:
+            continue
+        else:
+            return -1
+
+    return 0
+
+def frm2bt(frm):
+    return c4d.BaseTime(frm,doc.GetFps())
 
 def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
     """ c4d.BaseObject list """
@@ -124,8 +144,8 @@ def rot_vec_in_deg(h,p,b):
     # h,p,b are in degrees
     return c4d.Vector(deg2rad(h),deg2rad(p),deg2rad(b))
 
-def get_arf_psr(arf,psr,obj):
-    # return c4d.Vector(x,y,z)
+def get_arf_psr(arf,psr,obj,dim=-1):
+    # return c4d.Vector(x,y,z) or float
 
     arf, psr = arf.lower(), psr.lower()
     # arf: abs, rel, frozen
@@ -139,7 +159,11 @@ def get_arf_psr(arf,psr,obj):
         else: # arf == "frozen"
             xyz = obj.GetFrozenPos()
         x,y,z = xyz[0],xyz[1],xyz[2]
-        return c4d.Vector(x,y,z)
+
+        if dim == -1:
+            return c4d.Vector(x,y,z)
+        else:
+            return xyz[dim]
 
     elif psr == "rot":
         if arf == "abs":
@@ -149,7 +173,11 @@ def get_arf_psr(arf,psr,obj):
         else: # arf == "frozen"
             hpb = obj.GetFrozenRot()
         h,p,b = hpb[0], hpb[1], hpb[2]
-        return c4d.Vector(*list(map(rad2deg,[h,p,b])))
+
+        if dim == -1:
+            return c4d.Vector(*list(map(rad2deg,[h,p,b])))
+        else:
+            return rad2deg(hpb[dim])
 
     else: # psr == "scale"
         if arf == "abs":
@@ -159,15 +187,24 @@ def get_arf_psr(arf,psr,obj):
         else: # arf == "frozen"
             xyz = obj.GetFrozenScale()
         x,y,z = xyz[0],xyz[1],xyz[2]
-        return c4d.Vector(x,y,z)
 
-def set_arf_psr(arf,psr,obj,xyz):
+        if dim == -1:
+            return c4d.Vector(x,y,z)
+        else:
+            return xyz[dim]
+
+def set_arf_psr(arf,psr,obj,xyz,dim=-1):
     arf, psr = arf.lower(), psr.lower()
-    # xyz can be list, tuple, c4d.Vector, ...
+    # xyz can be list, tuple, c4d.Vector, float, ...
     # arf: abs, rel, frozen
     # psr: pos, scale, rot
-    x,y,z = xyz[0],xyz[1],xyz[2]
-    c4d_vec_xyz = c4d.Vector(x,y,z)
+    if dim==-1:
+        x,y,z = xyz[0],xyz[1],xyz[2]
+        c4d_vec_xyz = c4d.Vector(x,y,z)
+    else:
+        x,y,z = get_arf_psr(arf,psr,obj)
+        c4d_vec_xyz = c4d.Vector(x,y,z)
+        c4d_vec_xyz[dim] = xyz
 
     if psr == "pos":
         if arf == "abs":
@@ -206,25 +243,25 @@ def set_arf_psr(arf,psr,obj,xyz):
 #         exec(def_get_arf_psr.format(arf,psr))
 
 # I use these tedious definitions just to activate auto completions of Sublime
-def get_abs_pos(obj):       return get_arf_psr("abs","pos",obj)
-def get_abs_rot(obj):       return get_arf_psr("abs","rot",obj)
-def get_abs_scale(obj):     return get_arf_psr("abs","scale",obj)
-def get_rel_pos(obj):       return get_arf_psr("rel","pos",obj)
-def get_rel_rot(obj):       return get_arf_psr("rel","rot",obj)
-def get_rel_scale(obj):     return get_arf_psr("rel","scale",obj)
-def get_frozen_pos(obj):    return get_arf_psr("frozen","pos",obj)
-def get_frozen_rot(obj):    return get_arf_psr("frozen","rot",obj)
-def get_frozen_scale(obj):  return get_arf_psr("frozen","scale",obj)
+def get_abs_pos(obj,dim=-1):       return get_arf_psr("abs","pos",obj,dim)
+def get_abs_rot(obj,dim=-1):       return get_arf_psr("abs","rot",obj,dim)
+def get_abs_scale(obj,dim=-1):     return get_arf_psr("abs","scale",obj,dim)
+def get_rel_pos(obj,dim=-1):       return get_arf_psr("rel","pos",obj,dim)
+def get_rel_rot(obj,dim=-1):       return get_arf_psr("rel","rot",obj,dim)
+def get_rel_scale(obj,dim=-1):     return get_arf_psr("rel","scale",obj,dim)
+def get_frozen_pos(obj,dim=-1):    return get_arf_psr("frozen","pos",obj,dim)
+def get_frozen_rot(obj,dim=-1):    return get_arf_psr("frozen","rot",obj,dim)
+def get_frozen_scale(obj,dim=-1):  return get_arf_psr("frozen","scale",obj,dim)
 
-def set_abs_pos(obj,xyz):       set_arf_psr("abs","pos",obj,xyz)
-def set_abs_rot(obj,xyz):       set_arf_psr("abs","rot",obj,xyz)
-def set_abs_scale(obj,xyz):     set_arf_psr("abs","scale",obj,xyz)
-def set_rel_pos(obj,xyz):       set_arf_psr("rel","pos",obj,xyz)
-def set_rel_rot(obj,xyz):       set_arf_psr("rel","rot",obj,xyz)
-def set_rel_scale(obj,xyz):     set_arf_psr("rel","scale",obj,xyz)
-def set_frozen_pos(obj,xyz):    set_arf_psr("frozen","pos",obj,xyz)
-def set_frozen_rot(obj,xyz):    set_arf_psr("frozen","rot",obj,xyz)
-def set_frozen_scale(obj,xyz):  set_arf_psr("frozen","scale",obj,xyz)
+def set_abs_pos(obj,xyz,dim=-1):       set_arf_psr("abs","pos",obj,xyz,dim)
+def set_abs_rot(obj,xyz,dim=-1):       set_arf_psr("abs","rot",obj,xyz,dim)
+def set_abs_scale(obj,xyz,dim=-1):     set_arf_psr("abs","scale",obj,xyz,dim)
+def set_rel_pos(obj,xyz,dim=-1):       set_arf_psr("rel","pos",obj,xyz,dim)
+def set_rel_rot(obj,xyz,dim=-1):       set_arf_psr("rel","rot",obj,xyz,dim)
+def set_rel_scale(obj,xyz,dim=-1):     set_arf_psr("rel","scale",obj,xyz,dim)
+def set_frozen_pos(obj,xyz,dim=-1):    set_arf_psr("frozen","pos",obj,xyz,dim)
+def set_frozen_rot(obj,xyz,dim=-1):    set_arf_psr("frozen","rot",obj,xyz,dim)
+def set_frozen_scale(obj,xyz,dim=-1):  set_arf_psr("frozen","scale",obj,xyz,dim)
 
 def get_world_pos(obj):
     return obj.GetMg().off
@@ -474,21 +511,21 @@ class Arm:
         best_joint_pos_L = []
         best_angle_delta = []
         # sum_abs_angle_delta = 0
-        min_max_abs_angle_delta = float("Inf")
+        min_sort_abs_angle_delta = [float("Inf"),float("Inf"),float("Inf")]
         # print(self.old_angle_L)
         for joint_pos_L in joint_pos_LL:
             # print(joint_pos_L)
             tmp_new_angle_L = vec_to_angle(anchor_to_vec(self.h_vec,joint_pos_L),self.plane_normal)
             # new_sum_abs_angle_delta = sum_abs(angle_delta(self.old_angle_L,tmp_new_angle_L))
             tmp_angle_delta = angle_delta(self.old_angle_L,tmp_new_angle_L)
-            tmp_max_abs_angle_delta = max_abs(tmp_angle_delta)
+            tmp_sort_abs_angle_delta = sort_abs(tmp_angle_delta)
             # print(joint_pos_L,sum_abs_angle_delta)
             # print(tmp_new_angle_L)
             # if new_sum_abs_angle_delta < sum_abs_angle_delta:
                 # sum_abs_angle_delta = new_sum_abs_angle_delta
-            if tmp_max_abs_angle_delta < min_max_abs_angle_delta:
+            if cmp_list(tmp_sort_abs_angle_delta,min_sort_abs_angle_delta) == -1:
                 best_joint_pos_L = joint_pos_L
-                min_max_abs_angle_delta = tmp_max_abs_angle_delta
+                min_sort_abs_angle_delta = tmp_sort_abs_angle_delta
                 best_angle_delta = tmp_angle_delta
             # print(tmp_angle_delta)
             # print(joint_pos_L[1],joint_pos_L[2])
@@ -525,12 +562,12 @@ class Arm:
         best_rot_L = self.get_best_joint_rot(target)
         self.set_joint_rot(best_rot_L)
 
-# https://www.cineversity.com/wiki/Python%3A_DescIDs_and_Animation/
-# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/DescLevel/index.html#c4d-desclevel
-# https://developers.maxon.net/docs/Cinema4DCPPSDK/html/page_manual_descid.html#page_manual_descid_desclevel
+# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/misc/descriptions.html
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/Description/index.html#c4d-description
-
+# https://developers.maxon.net/docs/Cinema4DCPPSDK/html/page_manual_descid.html#page_manual_descid_desclevel
+# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/DescLevel/index.html#c4d-desclevel
 def get_desc_id(arf,psr,dim=-1):
+    # Drag and drop element directly to python console to get DescID expression
     arf_L = ["abs","rel","frozen"]
     arf_str_L = ["ABS","REL","FROZEN"]
     psr_L = ["pos","rot","scale"]
@@ -552,9 +589,6 @@ def get_desc_id(arf,psr,dim=-1):
 
     return desc_id
 
-    # Drag and drop element derectly to python console to get DescID name
-    # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/misc/descriptions.html
-
 def get_abs_pos_desc_id(dim=-1):        return get_desc_id("abs","pos",dim)
 def get_abs_rot_desc_id(dim=-1):        return get_desc_id("abs","rot",dim)
 def get_abs_scale_desc_id(dim=-1):      return get_desc_id("abs","scale",dim)
@@ -565,10 +599,42 @@ def get_frozen_pos_desc_id(dim=-1):     return get_desc_id("frozen","pos",dim)
 def get_frozen_rot_desc_id(dim=-1):     return get_desc_id("frozen","rot",dim)
 def get_frozen_scale_desc_id(dim=-1):   return get_desc_id("frozen","scale",dim)
 
+# https://www.cineversity.com/wiki/Python%3A_DescIDs_and_Animation/
+# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/C4DAtom/GeListNode/BaseList2D/CTrack/index.html?highlight=ctrack#c4d-ctrack
+# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/C4DAtom/GeListNode/BaseList2D/CCurve/index.html?highlight=ctrack#c4d-ccurve
+# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/C4DAtom/CKey/index.html?highlight=ctrack#c4d-ckey
+# https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/BaseTime/index.html#c4d-basetime
+
 def set_key(obj):
     # tr=c4d.CTrack(obj, get_rel_pos_desc_id(0))
-    print(obj[get_rel_pos_desc_id(1)])
+    # print(obj[get_rel_pos_desc_id(dim=-1)])
+    # print(get_rel_pos_desc_id(),get_rel_pos_desc_id(0))
+    trk = obj.FindCTrack(get_rel_pos_desc_id(0))
+    if not trk:
+        trk = c4d.CTrack(obj,get_rel_pos_desc_id(0))
+        obj.InsertTrackSorted(trk)
+    # trk = c4d.CTrack(obj,get_rel_pos_desc_id(0))
+    crv = trk.GetCurve()
+    # added = crv.AddKey(frm2bt(0))
+    # key = added["key"]
+    # print(key)
+    # key = c4d.CKey()
+    # key.SetTime(crv,frm2bt(10))
+    # key.SetValue(crv,200)
+    # crv.InsertKey(key)
+    key = crv.FindKey(frm2bt(10))["key"]
+    key.SetValue(crv,200)
+    # print(trk)
+    # print(crv.GetKeyCount())
+    # trks = obj.GetCTracks()
+    # print(trks)
+    # crv = trks[0].GetCurve()
+    # key = crv.FindKey(c4d.BaseTime(30,30),c4d.FINDANIM_LEFT)
+    # key["key"].SetTime(crv,c4d.BaseTime(10,30))
+    # print(key)
 
+
+# def set_arf_psr_key(arf,psr,obj,xyz,dim=-1,frm=-1):
 
 if __name__ == '__main__':
     clear_console()
