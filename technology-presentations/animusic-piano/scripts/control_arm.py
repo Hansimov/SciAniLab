@@ -23,6 +23,7 @@ sphe_test = find_obj("sphe_test","")[0]
 
 start_undo()
 add_undo(c4d.UNDOTYPE_CHANGE, arm_1)
+add_undo(c4d.UNDOTYPE_CHANGE, cube_test)
 end_undo()
 
 # print(p_to_v_dist(o,p2,v))
@@ -37,6 +38,6 @@ end_undo()
 # arm = Arm(joints,get_world_pos(loc_ball))
 # arm.set_best_joint_rot(get_world_pos(cube_test))
 
-set_key(cube_test)
+set_key_test(cube_test)
 
 event_add()

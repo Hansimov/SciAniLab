@@ -4,8 +4,6 @@ import re
 from math import pi,sin,cos,asin,acos,sqrt,floor,ceil
 from operator import add,sub,mul,div
 
-FPS = doc.GetFps()
-
 # c4d.CallCommand(13957) # Clear Console
 
 # Must add the line below when importing this module, otherwise:
@@ -55,6 +53,12 @@ def cmp_list(list1,list2):
 
 def frm2bt(frm):
     return c4d.BaseTime(frm,doc.GetFps())
+
+def get_fps():
+    return doc.GetFps()
+
+def get_current_frm():
+    return doc.GetTime().GetFrame(doc.GetFps())
 
 def get_bros(obj, next_only=False, with_obj=True, condition=return_true):
     """ c4d.BaseObject list """
@@ -198,13 +202,18 @@ def set_arf_psr(arf,psr,obj,xyz,dim=-1):
     # xyz can be list, tuple, c4d.Vector, float, ...
     # arf: abs, rel, frozen
     # psr: pos, scale, rot
+
+    old_xyz = get_arf_psr(arf,psr,obj)
+
     if dim==-1:
-        x,y,z = xyz[0],xyz[1],xyz[2]
-        c4d_vec_xyz = c4d.Vector(x,y,z)
+        new_xyz = [None,None,None]
+        for i in range(3):
+            new_xyz[i] = xyz[i] if xyz[i]!=None else old_xyz[i]
+        c4d_vec_xyz = c4d.Vector(*new_xyz)
     else:
-        x,y,z = get_arf_psr(arf,psr,obj)
-        c4d_vec_xyz = c4d.Vector(x,y,z)
-        c4d_vec_xyz[dim] = xyz
+        c4d_vec_xyz = old_xyz
+        if xyz != None:
+            c4d_vec_xyz[dim] = xyz
 
     if psr == "pos":
         if arf == "abs":
@@ -605,16 +614,80 @@ def get_frozen_scale_desc_id(dim=-1):   return get_desc_id("frozen","scale",dim)
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/C4DAtom/CKey/index.html?highlight=ctrack#c4d-ckey
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/BaseTime/index.html#c4d-basetime
 
-def set_key(obj):
+def get_key_with_id(obj,desc_id,frm):
+    trk = obj.FindCTrack(desc_id)
+    if trk == None:
+        return -2
+    else:
+        crv = trk.GetCurve()
+        key = crv.FindKey(frm2bt(frm))
+        if key != None:
+            return key["key"]
+        else:
+            return -1
+
+def get_arf_psr_key(arf,psr,obj,frm=None,dim=-1):
+    if frm == None:
+        frm = get_current_frm()
+
+    if dim == -1:
+        desc_id_L = [get_desc_id(arf,psr,i) for i in range(3)]
+        key_L = []
+        for desc_id in desc_id_L:
+            key_L.append(get_key_with_id(obj,desc_id,frm))
+        return key_L
+    else: # dim != 1
+        desc_id = get_desc_id(arf,psr,dim)
+        return get_key_with_id(obj,desc_id,frm)
+
+def set_key_with_id(obj,desc_id,val,frm):
+    key = get_key_with_id(obj,desc_id,frm)
+    if type(key) == int:
+        if key == -2:
+            trk = c4d.CTrack(obj,desc_id)
+            obj.InsertTrackSorted(trk)
+        else:
+            trk = obj.FindCTrack(desc_id)
+        crv = trk.GetCurve()
+        key = c4d.CKey()
+        key.SetTime(crv,frm2bt(frm))
+        crv.InsertKey(key)
+    else:
+        crv = key.GetCurve()
+    key.SetValue(crv,val)
+    # http://www.plugincafe.com/forum/forum_posts.asp?TID=14107&PID=56307#56307
+    # https://plugincafe.maxon.net/topic/11698/beginner-how-can-i-set-a-key-frame-and-value-to-a-cube-by-python/3
+    key.SetInterpolation(crv,c4d.CINTERPOLATION_SPLINE)
+    kidx = crv.FindKey(frm2bt(frm))["idx"]
+    crv.SetKeyDefault(doc,kidx)
+    # key.SetAutomaticTangentMode(crv,c4d.CAUTOMODE_CLASSIC)
+    # key.SetTimeLeft(crv,frm2bt(0))
+
+def set_arf_psr_key(arf,psr,obj,val,frm=None,dim=-1):
+    if frm == None:
+        frm = get_current_frm()
+
+    if dim == -1:
+        desc_id_L = [get_desc_id(arf,psr,i) for i in range(3)]
+        for i,desc_id in enumerate(desc_id_L):
+            set_key_with_id(obj,desc_id,val[i],frm)
+    else:
+        desc_id = get_desc_id(arf,psr,dim)
+        set_key_with_id(obj,desc_id,val,frm)
+
+def set_key_test(obj):
+    set_arf_psr_key("rel","pos",obj,val=[300,400,500],frm=15)
+    set_arf_psr_key("rel","pos",obj,val=[200,100,300],frm=30)
+    set_arf_psr_key("rel","pos",obj,val=[600,800,-100],frm=45)
     # tr=c4d.CTrack(obj, get_rel_pos_desc_id(0))
     # print(obj[get_rel_pos_desc_id(dim=-1)])
     # print(get_rel_pos_desc_id(),get_rel_pos_desc_id(0))
-    trk = obj.FindCTrack(get_rel_pos_desc_id(0))
-    if not trk:
-        trk = c4d.CTrack(obj,get_rel_pos_desc_id(0))
-        obj.InsertTrackSorted(trk)
+    # trk = obj.FindCTrack(get_rel_pos_desc_id(0))
+    # if trk == None:
+    #     trk = c4d.CTrack(obj,get_rel_pos_desc_id(0))
+    #     obj.InsertTrackSorted(trk)
     # trk = c4d.CTrack(obj,get_rel_pos_desc_id(0))
-    crv = trk.GetCurve()
+    # crv = trk.GetCurve()
     # added = crv.AddKey(frm2bt(0))
     # key = added["key"]
     # print(key)
@@ -622,8 +695,8 @@ def set_key(obj):
     # key.SetTime(crv,frm2bt(10))
     # key.SetValue(crv,200)
     # crv.InsertKey(key)
-    key = crv.FindKey(frm2bt(10))["key"]
-    key.SetValue(crv,200)
+    # key = crv.FindKey(frm2bt(10))["key"]
+    # key.SetValue(crv,200)
     # print(trk)
     # print(crv.GetKeyCount())
     # trks = obj.GetCTracks()
