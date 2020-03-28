@@ -40,15 +40,16 @@ def sort_abs(num_L,weights=[]):
     abs_num_L = list(map(abs,num_L))
     return sorted(abs_num_L,reverse=True)
 
-def cmp_list(list1,list2):
-    for i,j in zip(list1,list2):
+def cmp_angle_delta_L(L1,L2):
+    L1 = [L1[0],sum(L1[1:])]
+    L2 = [L2[0],sum(L2[1:])]
+    for i,j in zip(L1,L2):
         if i>j:
             return 1
         elif i==j:
             continue
         else:
             return -1
-
     return 0
 
 def frm2bt(frm):
@@ -431,145 +432,6 @@ def angle_delta(old_angle_L,new_angle_L):
     """ float list """
     return list(map(sub, new_angle_L, old_angle_L))
 
-# Only works on current 3-h-rot arm, need to be extended
-class Arm:
-    def __init__(self,joint_L=[],end=None):
-        # joint: rotation object (c4d.BaseObject)
-        self.joint_L = joint_L
-        # end: arm end (c4d.Vector)
-        self.end = end
-        self.init_constants()
-
-    def init_constants(self):
-        self.old_axis_L  = []
-        self.old_center_L = []
-        self.old_rot_L = []
-        for joint in self.joint_L:
-            self.old_axis_L.append(get_y_axis_vec(joint))
-            self.old_center_L.append(get_world_pos(joint))
-            self.old_rot_L.append(get_rel_rot(joint)[0])
-
-        self.old_anchor_L = center_axis_to_anchor(self.end,self.old_center_L,self.old_axis_L)
-
-        self.start = self.old_anchor_L[0]
-        # h_vec might be replaced with v_rot axis
-        self.h_vec = c4d.Vector(0,1,0)
-        self.old_vec_L = anchor_to_vec(self.h_vec,self.old_anchor_L)
-        self.len_L = vec_to_len(self.old_vec_L)
-
-        self.plane_normal = self.old_axis_L[0].GetNormalized()
-
-        self.old_angle_L = vec_to_angle(self.old_vec_L,self.plane_normal)
-
-        # for angle in self.old_angle_L:
-        #     print(angle)
-        # for vec in self.old_vec_L:
-        #     print(vec)
-        # print(rotate_vec(self.old_vec_L[0],self.plane_normal,540)+self.start)
-
-    def is_target_reachable(self,target):
-        # target: target position (c4d.Vector)
-        total_len = sum(self.len_L)
-        start_to_target_dist = p_to_p_dist(self.start,target)
-        if start_to_target_dist > total_len:
-            return False
-        if start_to_target_dist < self.len_L[0]-(total_len-self.len_L[0]):
-            return False
-        return True
-
-    # new_pos -> new_abs_rot -> delta_angle
-    # return new_rot_L
-
-    def get_best_joint_rot(self,target):
-        if not self.is_target_reachable(target):
-            print("Warning: Cannot reach target!")
-            return None
-        intsect_L = two_circle_intersection(self.start,self.len_L[0], target, self.len_L[-1]+self.len_L[-2],self.old_anchor_L[1],self.old_anchor_L[2])
-        # print(intsect_L)
-
-        if len(intsect_L) == 1:
-            pass
-            # todo
-
-        joint_1_start_pos = intsect_L[0]
-        joint_1_end_pos = intsect_L[1]
-
-        joint_1_total_spin_delta = v_angle(joint_1_start_pos-self.start,joint_1_end_pos-self.start,normal=self.old_axis_L[0])
-        # print(joint_1_total_spin_delta)
-
-        spin_deg_safe_margin = 0.5
-        if abs(joint_1_total_spin_delta) < spin_deg_safe_margin*2:
-            pass
-            # todo
-        else:
-            joint_1_total_spin_delta -= sign(joint_1_total_spin_delta)*spin_deg_safe_margin*2
-
-        joint_1_start_vec = rotate_vec(joint_1_start_pos-self.start, self.old_axis_L[0], spin_deg_safe_margin)
-
-        subdiv_num = 10
-        joint_1_spin_step = joint_1_total_spin_delta/subdiv_num
-        joint_1_pos_L = []
-        joint_pos_LL = []
-        for i in range(subdiv_num+1):
-            joint_1_tmp_pos = self.start+rotate_vec(joint_1_start_vec,self.old_axis_L[0],i*joint_1_spin_step)
-            # joint_1_tmp_pos_L.append(joint_1_tmp_pos)
-            joint_2_tmp_pos_L = two_circle_intersection(joint_1_tmp_pos,self.len_L[1],target,self.len_L[2],self.old_anchor_L[0],self.old_anchor_L[2])
-            for joint_2_tmp_pos in joint_2_tmp_pos_L:
-                joint_pos_LL.append([self.start,joint_1_tmp_pos,joint_2_tmp_pos,target])
-        # print(joint_pos_LL)
-        best_joint_pos_L = []
-        best_angle_delta = []
-        # sum_abs_angle_delta = 0
-        min_sort_abs_angle_delta = [float("Inf"),float("Inf"),float("Inf")]
-        # print(self.old_angle_L)
-        for joint_pos_L in joint_pos_LL:
-            # print(joint_pos_L)
-            tmp_new_angle_L = vec_to_angle(anchor_to_vec(self.h_vec,joint_pos_L),self.plane_normal)
-            # new_sum_abs_angle_delta = sum_abs(angle_delta(self.old_angle_L,tmp_new_angle_L))
-            tmp_angle_delta = angle_delta(self.old_angle_L,tmp_new_angle_L)
-            tmp_sort_abs_angle_delta = sort_abs(tmp_angle_delta)
-            # print(joint_pos_L,sum_abs_angle_delta)
-            # print(tmp_new_angle_L)
-            # if new_sum_abs_angle_delta < sum_abs_angle_delta:
-                # sum_abs_angle_delta = new_sum_abs_angle_delta
-            if cmp_list(tmp_sort_abs_angle_delta,min_sort_abs_angle_delta) == -1:
-                best_joint_pos_L = joint_pos_L
-                min_sort_abs_angle_delta = tmp_sort_abs_angle_delta
-                best_angle_delta = tmp_angle_delta
-            # print(tmp_angle_delta)
-            # print(joint_pos_L[1],joint_pos_L[2])
-            # print(joint_pos_L[1],joint_pos_L[2])
-        # print(best_joint_pos_L)
-        # print(best_angle_delta)
-        best_joint_rot_L = list(map(add,self.old_rot_L,best_angle_delta))
-        print(best_joint_rot_L)
-        return best_joint_rot_L
-        # return 
-        # print(min_max_abs_angle_delta)
-        # return best_angle_delta
-
-
-        # for tmp_pos in joint_1_tmp_pos_L:
-        #     print(tmp_pos)
-
-        # joint_2_tmp_pos_L = []
-        # for joint_1_tmp_pos in joint_1_tmp_pos_L:
-        #     tmp_intsect_L = two_circle_intersection(joint_1_tmp_pos,self.len_L[1],target,self.len_L[2],self.old_axis_L[0])
-        #     if len(tmp_intsect_L)>1:
-        #         tmp_angle_L = []
-        #         for tmp_intsect in tmp_intsect_L:
-        #             tmp_anchor_L = 
-
-    def set_joint_rot(self,new_rot_L):
-        for i, (joint,new_rot) in enumerate(zip(self.joint_L,new_rot_L)):
-            old_rot_vec = get_rel_rot(joint)
-            old_rot_vec[0] = new_rot
-            set_rel_rot(joint,old_rot_vec)
-            self.old_rot_L[i] = new_rot
-
-    def set_best_joint_rot(self,target,frm=0):
-        best_rot_L = self.get_best_joint_rot(target)
-        self.set_joint_rot(best_rot_L)
 
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/misc/descriptions.html
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/Description/index.html#c4d-description
@@ -654,12 +516,14 @@ def set_key_with_id(obj,desc_id,val,frm):
         crv.InsertKey(key)
     else:
         crv = key.GetCurve()
+    key=crv.FindKey(frm2bt(frm))["key"]
+    idx=crv.FindKey(frm2bt(frm))["idx"]
     key.SetValue(crv,val)
     # http://www.plugincafe.com/forum/forum_posts.asp?TID=14107&PID=56307#56307
     # https://plugincafe.maxon.net/topic/11698/beginner-how-can-i-set-a-key-frame-and-value-to-a-cube-by-python/3
     key.SetInterpolation(crv,c4d.CINTERPOLATION_SPLINE)
-    kidx = crv.FindKey(frm2bt(frm))["idx"]
-    crv.SetKeyDefault(doc,kidx)
+    # kidx = crv.FindKey(frm2bt(frm))["idx"]
+    crv.SetKeyDefault(doc,idx)
     # key.SetAutomaticTangentMode(crv,c4d.CAUTOMODE_CLASSIC)
     # key.SetTimeLeft(crv,frm2bt(0))
 
@@ -670,15 +534,176 @@ def set_arf_psr_key(arf,psr,obj,val,frm=None,dim=-1):
     if dim == -1:
         desc_id_L = [get_desc_id(arf,psr,i) for i in range(3)]
         for i,desc_id in enumerate(desc_id_L):
+            if psr == "rot":
+                val[i] = deg2rad(val[i])
             set_key_with_id(obj,desc_id,val[i],frm)
     else:
         desc_id = get_desc_id(arf,psr,dim)
+        if psr == "rot":
+            val = deg2rad(val)
         set_key_with_id(obj,desc_id,val,frm)
 
-def set_key_test(obj):
-    set_arf_psr_key("rel","pos",obj,val=[300,400,500],frm=15)
-    set_arf_psr_key("rel","pos",obj,val=[200,100,300],frm=30)
-    set_arf_psr_key("rel","pos",obj,val=[600,800,-100],frm=45)
+def set_abs_pos_key(obj,val,frm=None,dim=-1):       set_arf_psr_key("abs","pos",obj,val,frm,dim)
+def set_abs_rot_key(obj,val,frm=None,dim=-1):       set_arf_psr_key("abs","rot",obj,val,frm,dim)
+def set_abs_scale_key(obj,val,frm=None,dim=-1):     set_arf_psr_key("abs","scale",obj,val,frm,dim)
+def set_rel_pos_key(obj,val,frm=None,dim=-1):       set_arf_psr_key("rel","pos",obj,val,frm,dim)
+def set_rel_rot_key(obj,val,frm=None,dim=-1):       set_arf_psr_key("rel","rot",obj,val,frm,dim)
+def set_rel_scale_key(obj,val,frm=None,dim=-1):     set_arf_psr_key("rel","scale",obj,val,frm,dim)
+def set_frozen_pos_key(obj,val,frm=None,dim=-1):    set_arf_psr_key("frozen","pos",obj,val,frm,dim)
+def set_frozen_rot_key(obj,val,frm=None,dim=-1):    set_arf_psr_key("frozen","rot",obj,val,frm,dim)
+def set_frozen_scale_key(obj,val,frm=None,dim=-1):  set_arf_psr_key("frozen","scale",obj,val,frm,dim)
+
+# Only works on current 3-h-rot arm, need to be extended
+class Arm:
+    def __init__(self,joint_L=[],end=None):
+        # joint: rotation object (c4d.BaseObject)
+        self.joint_L = joint_L
+        # end: arm end (c4d.Vector)
+        self.end = end
+        self.init_constants()
+
+    def init_constants(self):
+        self.old_axis_L  = []
+        self.old_center_L = []
+        self.old_rot_L = []
+        for joint in self.joint_L:
+            self.old_rot_L.append(get_rel_rot(joint)[0])
+            self.old_axis_L.append(get_y_axis_vec(joint))
+            self.old_center_L.append(get_world_pos(joint))
+
+        self.old_anchor_L = center_axis_to_anchor(self.end,self.old_center_L,self.old_axis_L)
+
+        self.start = self.old_anchor_L[0]
+        # h_vec might be replaced with v_rot axis
+        self.h_vec = c4d.Vector(0,1,0)
+        self.old_vec_L = anchor_to_vec(self.h_vec,self.old_anchor_L)
+        self.len_L = vec_to_len(self.old_vec_L)
+
+        self.plane_normal = self.old_axis_L[0].GetNormalized()
+
+        self.old_angle_L = vec_to_angle(self.old_vec_L,self.plane_normal)
+
+        # for angle in self.old_angle_L:
+        #     print(angle)
+        # for vec in self.old_vec_L:
+        #     print(vec)
+        # print(rotate_vec(self.old_vec_L[0],self.plane_normal,540)+self.start)
+
+    # def get_rot_L(self,frm=None):
+    #     self.old_rot_L = []
+    #     # set current time
+    #     if frm == None:
+    #         for joint in self.joint_L:
+    #             self.old_rot_L.append(get_rel_rot(joint)[0])
+    #     else:
+
+
+    def is_target_reachable(self,target):
+        # target: target position (c4d.Vector)
+        total_len = sum(self.len_L)
+        start_to_target_dist = p_to_p_dist(self.start,target)
+        if start_to_target_dist > total_len:
+            return False
+        if start_to_target_dist < self.len_L[0]-(total_len-self.len_L[0]):
+            return False
+        return True
+
+    # new_pos -> new_abs_rot -> delta_angle
+    # return new_rot_L
+
+    def get_best_joint_rot(self,target):
+        if not self.is_target_reachable(target):
+            print("Warning: Cannot reach target!")
+            return None
+        intsect_L = two_circle_intersection(self.start,self.len_L[0], target, self.len_L[-1]+self.len_L[-2],self.old_anchor_L[1],self.old_anchor_L[2])
+        # print(intsect_L)
+
+        if len(intsect_L) == 1:
+            pass
+            # todo
+
+        joint_1_start_pos = intsect_L[0]
+        joint_1_end_pos = intsect_L[1]
+
+        joint_1_total_spin_delta = v_angle(joint_1_start_pos-self.start,joint_1_end_pos-self.start,normal=self.old_axis_L[0])
+        # print(joint_1_total_spin_delta)
+
+        spin_deg_safe_margin = 0.5
+        if abs(joint_1_total_spin_delta) < spin_deg_safe_margin*2:
+            pass
+            # todo
+        else:
+            joint_1_total_spin_delta -= sign(joint_1_total_spin_delta)*spin_deg_safe_margin*2
+
+        joint_1_start_vec = rotate_vec(joint_1_start_pos-self.start, self.old_axis_L[0], spin_deg_safe_margin)
+
+        subdiv_num = 10
+        joint_1_spin_step = joint_1_total_spin_delta/subdiv_num
+        joint_1_pos_L = []
+        joint_pos_LL = []
+        for i in range(subdiv_num+1):
+            joint_1_tmp_pos = self.start+rotate_vec(joint_1_start_vec,self.old_axis_L[0],i*joint_1_spin_step)
+            # joint_1_tmp_pos_L.append(joint_1_tmp_pos)
+            joint_2_tmp_pos_L = two_circle_intersection(joint_1_tmp_pos,self.len_L[1],target,self.len_L[2],self.old_anchor_L[0],self.old_anchor_L[2])
+            for joint_2_tmp_pos in joint_2_tmp_pos_L:
+                joint_pos_LL.append([self.start,joint_1_tmp_pos,joint_2_tmp_pos,target])
+        # print(joint_pos_LL)
+        best_joint_pos_L = []
+        best_angle_delta = []
+        # sum_abs_angle_delta = 0
+        min_sort_abs_angle_delta = [float("Inf"),float("Inf"),float("Inf")]
+        # print(self.old_angle_L)
+        for joint_pos_L in joint_pos_LL:
+            # print(joint_pos_L)
+            tmp_new_angle_L = vec_to_angle(anchor_to_vec(self.h_vec,joint_pos_L),self.plane_normal)
+            # new_sum_abs_angle_delta = sum_abs(angle_delta(self.old_angle_L,tmp_new_angle_L))
+            tmp_angle_delta = angle_delta(self.old_angle_L,tmp_new_angle_L)
+            tmp_sort_abs_angle_delta = sort_abs(tmp_angle_delta)
+            # print(joint_pos_L,sum_abs_angle_delta)
+            # print(tmp_new_angle_L)
+            # if new_sum_abs_angle_delta < sum_abs_angle_delta:
+                # sum_abs_angle_delta = new_sum_abs_angle_delta
+            if cmp_angle_delta_L(tmp_sort_abs_angle_delta,min_sort_abs_angle_delta) == -1:
+                best_joint_pos_L = joint_pos_L
+                min_sort_abs_angle_delta = tmp_sort_abs_angle_delta
+                best_angle_delta = tmp_angle_delta
+            # print(tmp_angle_delta)
+            # print(joint_pos_L[1],joint_pos_L[2])
+            # print(joint_pos_L[1],joint_pos_L[2])
+        # print(best_joint_pos_L)
+        # print(best_angle_delta)
+        best_joint_rot_L = list(map(add,self.old_rot_L,best_angle_delta))
+        print(best_joint_rot_L)
+        return best_joint_rot_L
+        # return 
+        # print(min_max_abs_angle_delta)
+        # return best_angle_delta
+
+    def set_joint_rot(self,new_rot_L,frm=None):
+        for i, (joint,new_rot) in enumerate(zip(self.joint_L,new_rot_L)):
+            old_rot_vec = get_rel_rot(joint)
+            old_rot_vec[0] = new_rot
+            if frm == None:
+                set_rel_rot(joint,old_rot_vec)
+                self.old_rot_L[i] = new_rot
+            else:
+                # set_rel_rot_key(joint,0,frm=0,dim=0)
+                set_rel_rot_key(joint,new_rot,frm=frm,dim=0)
+
+    def set_current_state_to_key(self):
+        
+
+    # def set_best_joint_rot(self,target,frm=None):
+    #     best_rot_L = self.get_best_joint_rot(target)
+    #     self.set_joint_rot(best_rot_L)
+
+
+# def set_key_test(obj):
+    # set_arf_psr_key("rel","pos",obj,val=[300,400,500],frm=15)
+    # set_arf_psr_key("rel","pos",obj,val=[200,100,300],frm=30)
+    # set_arf_psr_key("rel","pos",obj,val=[600,800,-100],frm=45)
+    # set_arf_psr_key("rel","pos",obj,val=0,frm=60,dim=1)
+    # set_rel_pos_key(obj,val=100,frm=50,dim=0)
     # tr=c4d.CTrack(obj, get_rel_pos_desc_id(0))
     # print(obj[get_rel_pos_desc_id(dim=-1)])
     # print(get_rel_pos_desc_id(),get_rel_pos_desc_id(0))
@@ -705,6 +730,7 @@ def set_key_test(obj):
     # key = crv.FindKey(c4d.BaseTime(30,30),c4d.FINDANIM_LEFT)
     # key["key"].SetTime(crv,c4d.BaseTime(10,30))
     # print(key)
+
 
 
 # def set_arf_psr_key(arf,psr,obj,xyz,dim=-1,frm=-1):
