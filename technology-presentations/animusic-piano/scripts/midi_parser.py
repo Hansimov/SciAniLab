@@ -15,14 +15,17 @@
 
 from __future__ import print_function, division
 
-with open("abc.mid","rb") as rf:
-# with open("secret1.mid","rb") as rf:
+# with open("abc.mid","rb") as rf:
+with open("secret1.mid","rb") as rf:
     bytes_L = ["{:02x}".format(b) for b in rf.read()]
 
 hexchr = "0123456789abcdef"
 
 TPQN = -1   # ticks per quarter-note
 USPQN = -1  # us per quarter-note
+inst_L = []
+NUME, DENO = -1, -1
+
 
 def get_bytes(start,end=None):
     if end == None:
@@ -43,12 +46,11 @@ def hex2bin(hex_str):
     bit_num = len(hex_str)*4 
     return "{val:0{width}b}".format(val=hex2dec(hex_str),width=bit_num)
 
+
 def parse_delta_time(ptr):
     """ return (int, int) : (pointer offset, num of tick) """
     # * Variable Length Values 
     # ** http://www.ccarh.org/courses/253/handout/vlv/
-    # hex_str = 
-    # bin_str = "{:08b}".format(hex2dec(hex_str))
     byte = get_bytes(ptr)
     bin_str = hex2bin(byte)
     if bin_str[0]=="0":
@@ -63,51 +65,13 @@ def parse_delta_time(ptr):
         bin_str+=tmp_str[1:]
     dt = bin2dec(bin_str)
     ptr+=1
-    print(f"dt: {dt} (ticks)")
+    # print(f"dt: {dt} (ticks)")
     return ptr, dt
 
-def parse_header():
-    global TRK_NUM, TPQN
-    ptr = 0
-    if get_bytes(ptr,ptr+4) == "4d546864":
-        print("=== MThd ===")
-    else:
-        print("x Cannot parse MThd!")
-        return ptr, False
-
-    ptr+=4
-    mthd_chunk_len = hex2dec(get_bytes(ptr,ptr+4))
-    print(f"MThd chunk length: {mthd_chunk_len} (bytes)")
-
-    ptr+=4
-    TRK_FMT = hex2dec(get_bytes(ptr,ptr+2))
-    print(f"Track Format: {TRK_FMT}")
-
-    ptr+=2
-    TRK_NUM = hex2dec(get_bytes(ptr,ptr+2))
-    print(f"Track Number: {TRK_NUM}")
-
-    ptr+=2
-    TPQN = hex2dec(get_bytes(ptr,ptr+2))
-    print(f"Ticks Per Quarter-Note: {TPQN}")
-
-    ptr+=2
-    # if get_bytes(ptr,ptr+4) == "4d54726b":
-    #     print("\n=== MTrk ===")
-    # else:
-    #     print("x Cannot parse MTrk")
-    #     return ptr, False
-
-    # ptr+=4
-    # mtrk_chk_len = hex2dec(get_bytes(ptr,ptr+4))
-    # print(f"MTrk Chunk Length: {mtrk_chk_len}")
-
-    # ptr+=4
-    return ptr, True
 
 def parse_event(ptr):
-    """ return ptr, (event variable) """
-
+    """ return ptr, (event vars) """
+    global USPQN, NUME, DENO
     byte = get_bytes(ptr)
 
     if byte == "ff":
@@ -135,16 +99,15 @@ def parse_event(ptr):
 
         elif byte=="51":
         # Set Tempo: FF 51 03 tttttt
-        # (ms per MIDI quarter-note)
+        # (us per MIDI quarter-note)
             if get_bytes(ptr+1) != "03":
                 print("x Invalid set tempo byte length!")
                 return ptr, False
             ptr+=2
-            tttttt = hex2dec(get_bytes(ptr,ptr+3))
-            USPQN = tttttt
-            print(f"tttttt: {tttttt} (\u03BCs per MIDI quarter-note)")
+            USPQN = hex2dec(get_bytes(ptr,ptr+3))
+            print(f"USPQN: {USPQN} (\u03BCs per quarter-note)")
             ptr+=3
-            return ptr, tttttt
+            return ptr, USPQN
 
         elif byte=="58":
         # Time Signature: FF 58 04 nn dd cc bb
@@ -161,8 +124,8 @@ def parse_event(ptr):
             cc = hex2dec(get_bytes(ptr+2))
             bb = hex2dec(get_bytes(ptr+3))
             print(f"nn:{nn}, dd:{dd}, cc:{cc}, bb:{bb}")
-            NUME, DENO = nn, dd
             ptr+=4
+            NUME,DENO = nn, dd
             return ptr,(nn,dd,cc,bb)
 
         elif byte=="59":
@@ -191,17 +154,13 @@ def parse_event(ptr):
     elif byte=="4d":
         if get_bytes(ptr+1)=="54":
             ptr+=2
-            # if get_bytes(ptr,ptr+2)=="6864":
-            #     print("=== MThd ===")
-                # to add chunk length
-                # return ptr+2
             if get_bytes(ptr,ptr+2)=="726b":
                 print("\n=== MTrk ===")
                 ptr+=2
-                mtrk_chunk_len = hex2dec(get_bytes(ptr,ptr+4))
-                print(f"MTrk chunk length: {mtrk_chunk_len}")
+                mtrk_chk_len = hex2dec(get_bytes(ptr,ptr+4))
+                print(f"MTrk chunk length: {mtrk_chk_len} (bytes)")
                 ptr+=4
-                return ptr, mtrk_chunk_len
+                return ptr, mtrk_chk_len
             else:
                 print(f"x Unknown bytes {get_bytes(ptr)} after 4d54 at ptr {ptr}!")
                 return ptr, False
@@ -220,7 +179,7 @@ def parse_event(ptr):
             pit_hex = get_bytes(ptr+1)
             pit_dec = hex2dec(pit_hex)
             velocity = hex2dec(get_bytes(ptr+2))
-            print(f"Chan {chan_num} note {pit_dec} {switch:>4}, velocity: {velocity:>3}")
+            # print(f"Chan {chan_num} note {pit_dec} {switch:>3}, velocity: {velocity:>2}")
             ptr+=3
             return ptr, (switch,chan_num,pit_dec,velocity)
         else:
@@ -233,13 +192,8 @@ def parse_event(ptr):
         if byte[1] in hexchr:
             chan_num = hexchr.index(byte[1])
             byte = get_bytes(ptr+1)
-            # if hex2dec(byte) >= hex2dec("62") and hex2dec(byte) <= hex2dec("79"):
-            #     ctrl_str = "undefined"
-            #     ptr+=2
-            # else:
-            #     ctrl_str = "<UNDEFINED>"
             mode_num = hex2dec(byte)
-            print(f"Chan {chan_num} control mode change to 0x{get_bytes(ptr+1,ptr+3)}")
+            # print(f"Chan {chan_num} control mode change to 0x{get_bytes(ptr+1,ptr+3)}")
             # ignore control commands (3 bytes)
             ptr+=3
             return ptr, (chan_num, mode_num)
@@ -280,10 +234,36 @@ def insert_note(abs_t,res):
                 played_note_L.append(active_note_L.pop(idx))
                 break
 
-def process_midi():
-    ptr, res = parse_header()
-    ptr,res = parse_event(ptr)
+def parse_mthd():
+    global TPQN
+    ptr = 0
+    if get_bytes(ptr,ptr+4) == "4d546864":
+        print("=== MThd ===")
+    else:
+        print("x Cannot parse MThd!")
+        return ptr, False
 
+    ptr+=4
+    mthd_chk_len = hex2dec(get_bytes(ptr,ptr+4))
+    print(f"MThd chunk length: {mthd_chk_len} (bytes)")
+
+    ptr+=4
+    trk_fmt = hex2dec(get_bytes(ptr,ptr+2))
+    print(f"Track Format: {trk_fmt}")
+
+    ptr+=2
+    trk_num = hex2dec(get_bytes(ptr,ptr+2))
+    print(f"Track Number: {trk_num}")
+
+    ptr+=2
+    TPQN = hex2dec(get_bytes(ptr,ptr+2))
+    print(f"TPQN: {TPQN} (ticks per quarter-note)")
+
+    ptr+=2
+    return ptr, True
+
+def parse_mtrk(ptr):
+    ptr, res = parse_event(ptr)
     abs_t = 0
     while res != False:
         ptr, dt = parse_delta_time(ptr)
@@ -293,18 +273,24 @@ def process_midi():
         if res == "EOT":
             if get_bytes(ptr) == "":
                 print("\n>>> End of file <<<\n")
-                break
+                return ptr, "EOF"
             else:
-                abs_t = 0
-                ptr,res = parse_event(ptr)
+                return ptr, "EOT"
         elif type(res)==tuple:
             if res[0] in ["ON","OFF"]:
                 insert_note(abs_t,res)
         else:
             pass
 
+def process_midi():
+    ptr, res = parse_mthd()
+    while res != "EOF":
+        ptr,res = parse_mtrk(ptr)
 
 if __name__ == '__main__':
     process_midi()
-    for note in played_note_L:
-        print(note)
+
+    played_note_L = sorted(played_note_L,key=lambda l:l[0])
+    # for played_note in played_note_L:
+    #     print(played_note)
+    print(TPQN, USPQN, NUME, DENO)
