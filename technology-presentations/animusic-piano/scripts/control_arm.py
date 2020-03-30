@@ -1,3 +1,4 @@
+# encoding: utf-8
 import sys
 path_to_add = "H:/codes/SciAniLab/technology-presentations/animusic-piano/scripts/"
 if not path_to_add in sys.path:

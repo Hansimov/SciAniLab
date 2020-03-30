@@ -1,3 +1,6 @@
+# encoding: utf-8
+from __future__ import print_function, division
+
 # * MIDI文件格式解析 | 码农家园 
 # ** https://www.codenong.com/js59d74800b43b/
 
@@ -13,17 +16,18 @@
 # * Note names, MIDI numbers and frequencies 
 # ** https://newt.phys.unsw.edu.au/jw/notes.html
 
-from __future__ import print_function, division
 
 # with open("abc.mid","rb") as rf:
-with open("secret1.mid","rb") as rf:
-    bytes_L = ["{:02x}".format(b) for b in rf.read()]
+# with open("secret1.mid","rb") as rf:
+#     bytes_L = ["{:02x}".format(b) for b in rf.read()]
+
+bytes_L = []
 
 hexchr = "0123456789abcdef"
 
 TPQN = -1   # ticks per quarter-note
 USPQN = -1  # us per quarter-note
-inst_L = []
+chan_inst_L = [] # channel num <-> instrument num
 NUME, DENO = -1, -1
 
 
@@ -65,7 +69,7 @@ def parse_delta_time(ptr):
         bin_str+=tmp_str[1:]
     dt = bin2dec(bin_str)
     ptr+=1
-    # print(f"dt: {dt} (ticks)")
+    # print("dt: {} (ticks)".format(dt))
     return ptr, dt
 
 
@@ -85,7 +89,7 @@ def parse_event(ptr):
             txt_len = hex2dec(get_bytes(ptr+1))
             ptr+=2
             trk_name = get_bytes(ptr,ptr+txt_len)
-            print(f"Track name: {trk_name}")
+            print("Track name: {}".format(trk_name))
             ptr+=txt_len
             return ptr, trk_name
 
@@ -105,7 +109,7 @@ def parse_event(ptr):
                 return ptr, False
             ptr+=2
             USPQN = hex2dec(get_bytes(ptr,ptr+3))
-            print(f"USPQN: {USPQN} (\u03BCs per quarter-note)")
+            print("USPQN: {} (\u03BCs per quarter-note)".format(USPQN))
             ptr+=3
             return ptr, USPQN
 
@@ -123,7 +127,7 @@ def parse_event(ptr):
             dd = 2**hex2dec(get_bytes(ptr+1))
             cc = hex2dec(get_bytes(ptr+2))
             bb = hex2dec(get_bytes(ptr+3))
-            print(f"nn:{nn}, dd:{dd}, cc:{cc}, bb:{bb}")
+            print("nn:{}, dd:{}, cc:{}, bb:{}".format(nn,dd,cc,bb))
             ptr+=4
             NUME,DENO = nn, dd
             return ptr,(nn,dd,cc,bb)
@@ -143,12 +147,12 @@ def parse_event(ptr):
             ptr+=2
             sf = hex2dec(get_bytes(ptr),signed=True)
             mi = hex2dec(get_bytes(ptr+1),signed=True)
-            print(f"sf:{sf}, mi:{mi}")
+            print("sf:{}, mi:{}".format(sf,mi))
             ptr+=2
             return ptr, (sf,mi)
 
         else:
-            print(f"x Unknown bytes of Meta-Event after {byte}!")
+            print("x Unknown bytes of Meta-Event after {}!".format(byte))
             return ptr, False
 
     elif byte=="4d":
@@ -158,11 +162,11 @@ def parse_event(ptr):
                 print("\n=== MTrk ===")
                 ptr+=2
                 mtrk_chk_len = hex2dec(get_bytes(ptr,ptr+4))
-                print(f"MTrk chunk length: {mtrk_chk_len} (bytes)")
+                print("MTrk chunk length: {} (bytes)".format(mtrk_chk_len))
                 ptr+=4
                 return ptr, mtrk_chk_len
             else:
-                print(f"x Unknown bytes {get_bytes(ptr)} after 4d54 at ptr {ptr}!")
+                print("x Unknown bytes {} after 4d54 at ptr {}!".format(get_bytes(ptr),ptr))
                 return ptr, False
 
     elif byte[0] in "89":
@@ -179,11 +183,11 @@ def parse_event(ptr):
             pit_hex = get_bytes(ptr+1)
             pit_dec = hex2dec(pit_hex)
             velocity = hex2dec(get_bytes(ptr+2))
-            # print(f"Chan {chan_num} note {pit_dec} {switch:>3}, velocity: {velocity:>2}")
+            # print("Chan {} note {} {:>3}, velocity: {:>2}".format(chan_num,pit_dec,switch,velocity))
             ptr+=3
             return ptr, (switch,chan_num,pit_dec,velocity)
         else:
-            print(f"x Invalid chan num {byte[1]} of note {switch}!")
+            print("x Invalid chan num {} of note {}!".format(byte[1],switch))
             return ptr, False
 
     elif byte[0]=="b":
@@ -193,26 +197,27 @@ def parse_event(ptr):
             chan_num = hexchr.index(byte[1])
             byte = get_bytes(ptr+1)
             mode_num = hex2dec(byte)
-            # print(f"Chan {chan_num} control mode change to 0x{get_bytes(ptr+1,ptr+3)}")
+            # print("Chan {} control mode change to 0x{}".format(chan_num,get_bytes(ptr+1,ptr+3)))
             # ignore control commands (3 bytes)
             ptr+=3
             return ptr, (chan_num, mode_num)
         else:
-            print(f"x Invalid chan num {byte[1]} of control!")
+            print("x Invalid chan num {} of control!".format(byte[1]))
             return ptr, False
 
     elif byte[0]=="c":
         if byte[1] in hexchr:
             chan_num = hexchr.index(byte[1])
             inst_num = hex2dec(get_bytes(ptr+1))
-            print(f"Chan {chan_num} program change to instrument {inst_num}")
+            print("Chan {} program change to instrument {}".format(chan_num,inst_num))
             ptr+=2
+            chan_inst_L.append([chan_num,inst_num])
             return ptr,(chan_num,inst_num)
         else:
             print("x Invalid chan num to change instrument!")
             return ptr, False
     else:
-        print(f"x Unknown bytes {byte} at ptr {ptr}!")
+        print("x Unknown bytes {} at ptr {}!".format(byte,ptr))
         return ptr, False
 
 active_note_L = []
@@ -224,7 +229,7 @@ def insert_note(abs_t,res):
     chan_num, pit_dec, velocity = res[1:4]
     if res[0] == "ON":
     # on_note: start (tick), chan_num, pit_dec, velocity
-        active_note_L.append([abs_t,*res[1:4]])
+        active_note_L.append([abs_t,chan_num, pit_dec, velocity])
     elif res[0] == "OFF":
     # off_note: end (tick), chan_num, pit_dec, velocity
         for idx,note in enumerate(active_note_L):
@@ -245,19 +250,19 @@ def parse_mthd():
 
     ptr+=4
     mthd_chk_len = hex2dec(get_bytes(ptr,ptr+4))
-    print(f"MThd chunk length: {mthd_chk_len} (bytes)")
+    print("MThd chunk length: {} (bytes)".format(mthd_chk_len))
 
     ptr+=4
     trk_fmt = hex2dec(get_bytes(ptr,ptr+2))
-    print(f"Track Format: {trk_fmt}")
+    print("Track Format: {}".format(trk_fmt))
 
     ptr+=2
     trk_num = hex2dec(get_bytes(ptr,ptr+2))
-    print(f"Track Number: {trk_num}")
+    print("Track Number: {}".format(trk_num))
 
     ptr+=2
     TPQN = hex2dec(get_bytes(ptr,ptr+2))
-    print(f"TPQN: {TPQN} (ticks per quarter-note)")
+    print("TPQN: {} (ticks per quarter-note)".format(TPQN))
 
     ptr+=2
     return ptr, True
@@ -282,15 +287,22 @@ def parse_mtrk(ptr):
         else:
             pass
 
-def process_midi():
+def process_midi(filename):
+    global bytes_L, played_note_L
+    # with open("abc.mid","rb") as rf:
+    with open(filename,"rb") as rf:
+        # Note: py2:ord(b) || py3:b
+        bytes_L = ["{:02x}".format(ord(b)) for b in rf.read()]
+
     ptr, res = parse_mthd()
     while res != "EOF":
         ptr,res = parse_mtrk(ptr)
-
-if __name__ == '__main__':
-    process_midi()
-
     played_note_L = sorted(played_note_L,key=lambda l:l[0])
     # for played_note in played_note_L:
     #     print(played_note)
-    print(TPQN, USPQN, NUME, DENO)
+    print(TPQN, USPQN, NUME, DENO, chan_inst_L)
+
+if __name__ == '__main__':
+    # process_midi("abc.mid")
+    process_midi("secret1.mid")
+

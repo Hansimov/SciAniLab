@@ -1,3 +1,4 @@
+# encoding: utf-8
 from __future__ import division, print_function
 import c4d
 import re
@@ -690,7 +691,7 @@ class Arm:
                 # set_rel_rot_key(joint,0,frm=0,dim=0)
                 set_rel_rot_key(joint,new_rot,frm=frm,dim=0)
 
-    def set_current_state_to_key(self):
+    # def set_current_state_to_key(self):
         
 
     # def set_best_joint_rot(self,target,frm=None):
@@ -730,8 +731,6 @@ class Arm:
     # key = crv.FindKey(c4d.BaseTime(30,30),c4d.FINDANIM_LEFT)
     # key["key"].SetTime(crv,c4d.BaseTime(10,30))
     # print(key)
-
-
 
 # def set_arf_psr_key(arf,psr,obj,xyz,dim=-1,frm=-1):
 
