@@ -150,6 +150,25 @@ def rot_vec_in_deg(h,p,b):
     # h,p,b are in degrees
     return c4d.Vector(deg2rad(h),deg2rad(p),deg2rad(b))
 
+
+def rot_to_vec(rot):
+    rot = deg2rad(rot)
+    vec = c4d.Vector(cos(rot),0,sin(rot))
+    return vec
+
+def is_rot_reachable(rot1_old,rot2,rot1_new):
+    vec1_old,vec2,vec1_new = list(map(rot_to_vec,[rot1_old,rot2,rot1_new]))
+    return is_vec_reachable(vec1_old,vec2,vec1_new)
+
+def is_vec_reachable(vec1_old,vec2,vec1_new):
+    if (vec1_new.Cross(-vec1_old)).Dot(vec1_new.Cross(vec2)) <=0 \
+        and vec1_new.Dot(vec2-vec1_old) >= 0:
+        return False
+    else:
+        # Note: if vec1_new == -vec1_old,
+        #       rotation direction should be chosen carefully!
+        return True
+
 def get_arf_psr(arf,psr,obj,dim=-1):
     # return c4d.Vector(x,y,z) or float
 
@@ -438,7 +457,7 @@ def angle_delta(old_angle_L,new_angle_L):
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/Description/index.html#c4d-description
 # https://developers.maxon.net/docs/Cinema4DCPPSDK/html/page_manual_descid.html#page_manual_descid_desclevel
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/DescLevel/index.html#c4d-desclevel
-def get_desc_id(arf,psr,dim=-1):
+def get_arf_psr_desc_id(arf,psr,dim=-1):
     # Drag and drop element directly to python console to get DescID expression
     arf_L = ["abs","rel","frozen"]
     arf_str_L = ["ABS","REL","FROZEN"]
@@ -461,15 +480,15 @@ def get_desc_id(arf,psr,dim=-1):
 
     return desc_id
 
-def get_abs_pos_desc_id(dim=-1):        return get_desc_id("abs","pos",dim)
-def get_abs_rot_desc_id(dim=-1):        return get_desc_id("abs","rot",dim)
-def get_abs_scale_desc_id(dim=-1):      return get_desc_id("abs","scale",dim)
-def get_rel_pos_desc_id(dim=-1):        return get_desc_id("rel","pos",dim)
-def get_rel_rot_desc_id(dim=-1):        return get_desc_id("rel","rot",dim)
-def get_rel_scale_desc_id(dim=-1):      return get_desc_id("rel","scale",dim)
-def get_frozen_pos_desc_id(dim=-1):     return get_desc_id("frozen","pos",dim)
-def get_frozen_rot_desc_id(dim=-1):     return get_desc_id("frozen","rot",dim)
-def get_frozen_scale_desc_id(dim=-1):   return get_desc_id("frozen","scale",dim)
+def get_abs_pos_desc_id(dim=-1):        return get_arf_psr_desc_id("abs","pos",dim)
+def get_abs_rot_desc_id(dim=-1):        return get_arf_psr_desc_id("abs","rot",dim)
+def get_abs_scale_desc_id(dim=-1):      return get_arf_psr_desc_id("abs","scale",dim)
+def get_rel_pos_desc_id(dim=-1):        return get_arf_psr_desc_id("rel","pos",dim)
+def get_rel_rot_desc_id(dim=-1):        return get_arf_psr_desc_id("rel","rot",dim)
+def get_rel_scale_desc_id(dim=-1):      return get_arf_psr_desc_id("rel","scale",dim)
+def get_frozen_pos_desc_id(dim=-1):     return get_arf_psr_desc_id("frozen","pos",dim)
+def get_frozen_rot_desc_id(dim=-1):     return get_arf_psr_desc_id("frozen","rot",dim)
+def get_frozen_scale_desc_id(dim=-1):   return get_arf_psr_desc_id("frozen","scale",dim)
 
 # https://www.cineversity.com/wiki/Python%3A_DescIDs_and_Animation/
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/C4DAtom/GeListNode/BaseList2D/CTrack/index.html?highlight=ctrack#c4d-ctrack
@@ -477,12 +496,15 @@ def get_frozen_scale_desc_id(dim=-1):   return get_desc_id("frozen","scale",dim)
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/C4DAtom/CKey/index.html?highlight=ctrack#c4d-ckey
 # https://developers.maxon.net/docs/Cinema4DPythonSDK/html/modules/c4d/BaseTime/index.html#c4d-basetime
 
-def get_key_with_id(obj,desc_id,frm):
+def get_key_with_id(obj,desc_id,frm=None):
     trk = obj.FindCTrack(desc_id)
+
     if trk == None:
         return -2
     else:
         crv = trk.GetCurve()
+        if frm==None:
+            frm = get_current_frm()
         key = crv.FindKey(frm2bt(frm))
         if key != None:
             return key["key"]
@@ -494,16 +516,30 @@ def get_arf_psr_key(arf,psr,obj,frm=None,dim=-1):
         frm = get_current_frm()
 
     if dim == -1:
-        desc_id_L = [get_desc_id(arf,psr,i) for i in range(3)]
+        desc_id_L = [get_arf_psr_desc_id(arf,psr,i) for i in range(3)]
         key_L = []
         for desc_id in desc_id_L:
             key_L.append(get_key_with_id(obj,desc_id,frm))
         return key_L
     else: # dim != 1
-        desc_id = get_desc_id(arf,psr,dim)
+        desc_id = get_arf_psr_desc_id(arf,psr,dim)
         return get_key_with_id(obj,desc_id,frm)
 
-def set_key_with_id(obj,desc_id,val,frm):
+def set_key_with_id(obj,desc_id,val=None,frm=None):
+    if frm == None:
+        frm = get_current_frm()
+    if val == None:
+        val = obj[desc_id]
+        # if type(val) != float:
+        #     raise ValueError("val must be float!")
+    if type(val)==c4d.Vector or type(obj[desc_id])==c4d.Vector:
+        # c4d.VECTOR_X (1000) ~ c4d.VECTOR_Z (1002)
+        for dim in range(3):
+            desc_id_dim = (desc_id,1000+dim)
+            set_key_with_id(obj,desc_id_dim,val[dim],frm)
+        return
+    else:
+        pass
     key = get_key_with_id(obj,desc_id,frm)
     if type(key) == int:
         if key == -2:
@@ -533,13 +569,13 @@ def set_arf_psr_key(arf,psr,obj,val,frm=None,dim=-1):
         frm = get_current_frm()
 
     if dim == -1:
-        desc_id_L = [get_desc_id(arf,psr,i) for i in range(3)]
+        desc_id_L = [get_arf_psr_desc_id(arf,psr,i) for i in range(3)]
         for i,desc_id in enumerate(desc_id_L):
             if psr == "rot":
                 val[i] = deg2rad(val[i])
             set_key_with_id(obj,desc_id,val[i],frm)
     else:
-        desc_id = get_desc_id(arf,psr,dim)
+        desc_id = get_arf_psr_desc_id(arf,psr,dim)
         if psr == "rot":
             val = deg2rad(val)
         set_key_with_id(obj,desc_id,val,frm)

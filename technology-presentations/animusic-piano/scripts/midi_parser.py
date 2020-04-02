@@ -1,6 +1,13 @@
 # encoding: utf-8
 from __future__ import print_function, division
+import sys
 import collections
+
+py_version = sys.version_info[0]
+
+if py_version < 3:
+    import c4d
+    doc = c4d.documents.GetActiveDocument()
 
 # * Standard MIDI file format, updated 
 # ** http://www.music.mcgill.ca/~ich/classes/mumt306/StandardMIDIfileformat.html
@@ -20,6 +27,7 @@ import collections
 # * Frequency and Pitch of Sound: From Physclips 
 # ** https://www.animations.physics.unsw.edu.au/jw/frequency-pitch-sound.htm
 
+
 bytes_L = []
 
 hexchr = "0123456789abcdef"
@@ -29,6 +37,9 @@ USPQN = -1  # us per quarter-note
 chan_inst_L = [] # list of [channel num, instrument num]
 NUME, DENO = -1, -1
 
+if py_version < 3:
+    def tick2frm(tick):
+        return int(tick/TPQN * USPQN/10**6 * doc.GetFps())
 
 def get_bytes(start,end=None):
     if end == None:
@@ -49,7 +60,6 @@ def hex2bin(hex_str):
     bit_num = len(hex_str)*4 
     return "{val:0{width}b}".format(val=hex2dec(hex_str),width=bit_num)
 
-
 def read_delta_time(ptr,info_level=0):
     """ return (int, int) : (pointer offset, num of tick) """
     # * Variable Length Values 
@@ -65,6 +75,7 @@ def read_delta_time(ptr,info_level=0):
         while tmp_str[0]!="0":
             bin_str+=tmp_str[1:]
             ptr+=1
+            tmp_str = hex2bin(get_bytes(ptr))
         bin_str+=tmp_str[1:]
     dt = bin2dec(bin_str)
     ptr+=1
@@ -85,14 +96,17 @@ def read_event(ptr,info_level=1):
         ptr += 1
         byte = get_bytes(ptr)
 
-        if byte=="03":
+        if byte in ["03","04"]:
             txt_len = hex2dec(get_bytes(ptr+1))
             ptr+=2
-            trk_name = get_bytes(ptr,ptr+txt_len)
+            txt_name = get_bytes(ptr,ptr+txt_len)
             if info_level>=2:
-                print("Track name: {}".format(trk_name))
+                if byte=="03":
+                    print("Track name: {}".format(txt_name))
+                else:
+                    print("Instrument name: {}".format(txt_name))
             ptr+=txt_len
-            return ptr, trk_name
+            return ptr, txt_name
 
         elif byte=="2f":
             if get_bytes(ptr+1) != "00":
@@ -157,7 +171,7 @@ def read_event(ptr,info_level=1):
             return ptr, (sf,mi)
 
         else:
-            print("x Unknown bytes of Meta-Event after {}!".format(byte))
+            print("x Unknown Meta-Event bytes: 0x{}".format(byte))
             return ptr, False
 
     elif byte=="4d":
@@ -310,7 +324,10 @@ def process_midi(filename,info_level=1):
     # with open("abc.mid","rb") as rf:
     with open(filename,"rb") as rf:
         # Note: py2:ord(b) || py3:b
-        bytes_L = ["{:02x}".format(ord(b)) for b in rf.read()]
+        if py_version<3:
+            bytes_L = ["{:02x}".format(ord(b)) for b in rf.read()]
+        else:
+            bytes_L = ["{:02x}".format(b) for b in rf.read()]
 
     ptr, res = read_mthd(info_level)
     while res != "EOF":
@@ -348,5 +365,7 @@ def process_midi(filename,info_level=1):
 
 if __name__ == '__main__':
     # process_midi("abc.mid")
-    process_midi("secret1.mid",info_level=1)
+    process_midi("secret.mid",info_level=2)
+    for note in played_note_L:
+        print(note)
 
