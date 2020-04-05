@@ -2,10 +2,11 @@
 from __future__ import print_function, division
 import sys
 import collections
+import binascii
 
-py_version = sys.version_info[0]
+py_ver = sys.version_info[0]
 
-if py_version < 3:
+if py_ver < 3:
     import c4d
     doc = c4d.documents.GetActiveDocument()
 
@@ -33,13 +34,13 @@ bytes_L = []
 hexchr = "0123456789abcdef"
 
 TPQN = -1   # ticks per quarter-note
-USPQN = -1  # us per quarter-note
+uspqn_L = []  # us per quarter-note
 chan_inst_L = [] # list of [channel num, instrument num]
-NUME, DENO = -1, -1
+# NUME, DENO = [],[]
 
-if py_version < 3:
-    def tick2frm(tick):
-        return int(tick/TPQN * USPQN/10**6 * doc.GetFps())
+# if py_ver < 3:
+#     def tick2frm(tick):
+#         return int(tick/TPQN * USPQN/10**6 * doc.GetFps())
 
 def get_bytes(start,end=None):
     if end == None:
@@ -80,13 +81,13 @@ def read_delta_time(ptr,info_level=0):
     dt = bin2dec(bin_str)
     ptr+=1
     if info_level>=3:
-        print("dt: {} (ticks)".format(dt))
+        print("dt: {}".format(dt))
     return ptr, dt
 
 
-def read_event(ptr,info_level=1):
+def read_event(ptr,abs_t,info_level=1):
     """ return ptr, (event vars) """
-    global USPQN, NUME, DENO
+    global uspqn_L # , NUME, DENO
     byte = get_bytes(ptr)
 
     if byte == "ff":
@@ -102,9 +103,15 @@ def read_event(ptr,info_level=1):
             txt_name = get_bytes(ptr,ptr+txt_len)
             if info_level>=2:
                 if byte=="03":
-                    print("Track name: {}".format(txt_name))
+                    prefix = "  Track name: "
                 else:
-                    print("Instrument name: {}".format(txt_name))
+                    prefix = "  Instrument name: "
+                if py_ver<3:
+                    print(prefix, txt_name.decode("hex"))
+                else:
+                    print(prefix, bytes.fromhex(txt_name).decode("windows-1252"))
+                # else:
+                #     print("Instrument name: {}".format(bytearray.fromhex(txt_name).decode()))
             ptr+=txt_len
             return ptr, txt_name
 
@@ -124,11 +131,11 @@ def read_event(ptr,info_level=1):
                 print("x Invalid set tempo byte length!")
                 return ptr, False
             ptr+=2
-            USPQN = hex2dec(get_bytes(ptr,ptr+3))
+            uspqn_L.append([abs_t, hex2dec(get_bytes(ptr,ptr+3))])
             if info_level>=2:
-                print("USPQN: {} (us per quarter-note)".format(USPQN))
+                print("  USPQN: {} (us per quarter-note)".format(uspqn_L[-1][-1]))
             ptr+=3
-            return ptr, USPQN
+            return ptr, uspqn_L
 
         elif byte=="58":
         # Time Signature: FF 58 04 nn dd cc bb
@@ -145,9 +152,9 @@ def read_event(ptr,info_level=1):
             cc = hex2dec(get_bytes(ptr+2))
             bb = hex2dec(get_bytes(ptr+3))
             if info_level>=2:
-                print("nn:{}, dd:{}, cc:{}, bb:{}".format(nn,dd,cc,bb))
+                print("  nn:{}, dd:{}, cc:{}, bb:{}".format(nn,dd,cc,bb))
             ptr+=4
-            NUME,DENO = nn, dd
+            # NUME,DENO = nn, dd
             return ptr,(nn,dd,cc,bb)
 
         elif byte=="59":
@@ -205,7 +212,7 @@ def read_event(ptr,info_level=1):
             pit_dec = hex2dec(pit_hex)
             velocity = hex2dec(get_bytes(ptr+2))
             if info_level>=3:
-                print("Chan {} note {} {:>3}, velocity: {:>2}".format(chan_num,pit_dec,switch,velocity))
+                print("  Chan {} note {:<3} {:<3}  vel: {:<3}".format(chan_num,pit_dec,switch,velocity))
             ptr+=3
             return ptr, (switch,chan_num,pit_dec,velocity)
         else:
@@ -219,7 +226,27 @@ def read_event(ptr,info_level=1):
             chan_num = hexchr.index(byte[1])
             byte = get_bytes(ptr+1)
             mode_num = hex2dec(byte)
-            # print("Chan {} control mode change to 0x{}".format(chan_num,get_bytes(ptr+1,ptr+3)))
+            # print("* Chan {} control mode change to 0x{}".format(chan_num,get_bytes(ptr+1,ptr+3)))
+            byte = get_bytes(ptr+1)
+            if byte == "07":
+                if info_level>=3:
+                    print("* Main Volume: {}".format(hex2dec(get_bytes(ptr+2))))
+            elif byte == "40":
+                byte = get_bytes(ptr+2)
+                if hex2dec(byte)==0:
+                    if info_level>=3:
+                        print("* Damper pedal OFF!")
+                elif hex2dec(byte)==127:
+                    if info_level>=3:
+                        print("* Damper pedal ON!")
+                else:
+                    print("x Unknown damper pedal control mode!")
+            elif 8<=hex2dec(byte)<=31:
+                if info_level>=3:
+                    print("* Continuous controller #{}: {}".format(hex2dec(byte),get_bytes(ptr+2)))
+            else:
+                if info_level>=3:
+                    print("* Chan {} control mode change to 0x{}".format(chan_num,get_bytes(ptr+1,ptr+3)))
             # ignore control commands (3 bytes)
             ptr+=3
             return ptr, (chan_num, mode_num)
@@ -262,6 +289,43 @@ def insert_note(abs_t,res):
                 played_note_L.append(active_note_L.pop(idx))
                 break
 
+def convert_note_time(uspqn_L,note_L):
+    """  return list of [start_sec, dura_sec, chan_num, pit_dec, vel]"""
+
+    uspqn_ptr = 0
+    dt,uspqn = uspqn_L[uspqn_ptr][0:2]
+    new_note_L = [""] * len(note_L)
+
+    uspqn_mark = []
+    uspqn_mark.append([0,0])
+    uspqn_mark.append([dt,uspqn])
+
+    for note_idx,note in enumerate(note_L):
+        start_tick, dura_tick = note[0], note[1]
+
+        if uspqn_ptr+1>= len(uspqn_L):
+            pass
+        else:
+            if start_tick<uspqn_L[uspqn_ptr+1][0]:
+                pass
+            else:
+                uspqn_mark.append([start_tick,uspqn])
+                uspqn_ptr += 1
+                dt,uspqn = uspqn_L[uspqn_ptr][0:2]
+                # print("uspqn_mark: ",uspqn_mark)
+
+        start_sec = 0
+        for i in range(len(uspqn_mark)-1):
+            start_sec += (uspqn_mark[i+1][0] - uspqn_mark[i][0]) * uspqn_mark[i+1][1] / TPQN / 1e6
+        start_sec += (start_tick - uspqn_mark[-1][0]) * uspqn_mark[-1][1] / TPQN / 1e6
+        start_sec = round(start_sec,3)
+        dura_sec = dura_tick * uspqn_mark[-1][1] / TPQN / 1e6
+        dura_sec = round(dura_sec,3)
+        new_note_L[note_idx] = [start_sec,dura_sec,note[2],note[3],note[4]]
+
+    return new_note_L
+
+
 def read_mthd(info_level=2):
     global TPQN
     ptr = 0
@@ -301,14 +365,14 @@ def read_mtrk(ptr,info_level):
     while res != False:
         ptr, dt = read_delta_time(ptr,info_level)
         abs_t += dt
-        ptr, res = read_event(ptr,info_level)
+        ptr, res = read_event(ptr,abs_t,info_level)
 
         if res == "EOT":
             if get_bytes(ptr) == "":
                 if info_level>=2:
                     print("\n>>> End of file <<<\n")
-                if info_level>=1:
-                    print("MIDI file processed successfully!")
+                if info_level>=0:
+                    print("+++ MIDI file processed successfully +++\n")
                 return ptr, "EOF"
             else:
                 return ptr, "EOT"
@@ -324,7 +388,7 @@ def process_midi(filename,info_level=1):
     # with open("abc.mid","rb") as rf:
     with open(filename,"rb") as rf:
         # Note: py2:ord(b) || py3:b
-        if py_version<3:
+        if py_ver<3:
             bytes_L = ["{:02x}".format(ord(b)) for b in rf.read()]
         else:
             bytes_L = ["{:02x}".format(b) for b in rf.read()]
@@ -365,7 +429,10 @@ def process_midi(filename,info_level=1):
 
 if __name__ == '__main__':
     # process_midi("abc.mid")
-    process_midi("secret.mid",info_level=2)
-    for note in played_note_L:
-        print(note)
-
+    process_midi("H:/codes/SciAniLab/technology-presentations/animusic-piano/scripts/secret.mid",info_level=0)
+    # print(uspqn_L)
+    # played_note: start (tick), dura (tick), chan_num, pit_dec, vel
+    new_note_L = convert_note_time(uspqn_L,played_note_L)
+    # print(new_note_L)
+    for played_note, new_note in zip(played_note_L, new_note_L):
+        print(played_note,new_note)
