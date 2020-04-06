@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import sys
 import collections
 import binascii
+from math import floor, ceil
 
 py_ver = sys.version_info[0]
 
@@ -38,9 +39,19 @@ uspqn_L = []  # us per quarter-note
 chan_inst_L = [] # list of [channel num, instrument num]
 # NUME, DENO = [],[]
 
-# if py_ver < 3:
+def sec2frm(sec):
+    if py_ver < 3:
+        return ceil(sec*doc.GetFps())
+    else:
+        return ceil(sec*30)
+def tick2sec(tick):
+    if py_ver < 3:
+        return tick/TPQN * USPQN/10**6
+    else:
+        return tick/TPQN * USPQN/10**6
+
 #     def tick2frm(tick):
-#         return int(tick/TPQN * USPQN/10**6 * doc.GetFps())
+#         return 
 
 def get_bytes(start,end=None):
     if end == None:
@@ -133,7 +144,7 @@ def read_event(ptr,abs_t,info_level=1):
             ptr+=2
             uspqn_L.append([abs_t, hex2dec(get_bytes(ptr,ptr+3))])
             if info_level>=2:
-                print("  USPQN: {} (us per quarter-note)".format(uspqn_L[-1][-1]))
+                print("  USPQN: {} (us per quarter-note)".format(uspqn_L[-1]))
             ptr+=3
             return ptr, uspqn_L
 
@@ -309,14 +320,14 @@ def convert_note_time(uspqn_L,note_L):
             if start_tick<uspqn_L[uspqn_ptr+1][0]:
                 pass
             else:
-                uspqn_mark.append([start_tick,uspqn])
                 uspqn_ptr += 1
                 dt,uspqn = uspqn_L[uspqn_ptr][0:2]
+                uspqn_mark.append([start_tick,uspqn])
                 # print("uspqn_mark: ",uspqn_mark)
 
         start_sec = 0
         for i in range(len(uspqn_mark)-1):
-            start_sec += (uspqn_mark[i+1][0] - uspqn_mark[i][0]) * uspqn_mark[i+1][1] / TPQN / 1e6
+            start_sec += (uspqn_mark[i+1][0] - uspqn_mark[i][0]) * uspqn_mark[i][1] / TPQN / 1e6
         start_sec += (start_tick - uspqn_mark[-1][0]) * uspqn_mark[-1][1] / TPQN / 1e6
         start_sec = round(start_sec,3)
         dura_sec = dura_tick * uspqn_mark[-1][1] / TPQN / 1e6
@@ -400,7 +411,18 @@ def process_midi(filename,info_level=1):
     # for played_note in played_note_L:
     #     print(played_note)
     # print(TPQN, USPQN, NUME, DENO, chan_inst_L)
-    return played_note_L
+
+    cvt_sec_note_L = convert_note_time(uspqn_L,played_note_L)
+
+    print(TPQN, uspqn_L,"\n")
+
+    for note,cvt_sec_note in zip(played_note_L,cvt_sec_note_L):
+        print(note[0],note[1],note[-2])
+        print("- ",cvt_sec_note[0],cvt_sec_note[1],cvt_sec_note[-2])
+        print("- ",sec2frm(cvt_sec_note[0]),sec2frm(cvt_sec_note[1]),cvt_sec_note[-2])
+
+
+    return cvt_sec_note_L
 
 
 # Table of MIDI Note Numbers
@@ -429,10 +451,12 @@ def process_midi(filename,info_level=1):
 
 if __name__ == '__main__':
     # process_midi("abc.mid")
-    process_midi("H:/codes/SciAniLab/technology-presentations/animusic-piano/scripts/secret.mid",info_level=0)
+    played_note_L = process_midi("H:/codes/SciAniLab/technology-presentations/animusic-piano/scripts/secret.mid",info_level=1)
+    # for note in played_note_L:
+    #     print(note)
     # print(uspqn_L)
     # played_note: start (tick), dura (tick), chan_num, pit_dec, vel
-    new_note_L = convert_note_time(uspqn_L,played_note_L)
+    # new_note_L = convert_note_time(uspqn_L,played_note_L)
     # print(new_note_L)
-    for played_note, new_note in zip(played_note_L, new_note_L):
-        print(played_note,new_note)
+    # for played_note, new_note in zip(played_note_L, new_note_L):
+    #     print(played_note,new_note)

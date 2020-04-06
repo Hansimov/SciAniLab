@@ -60,7 +60,7 @@ moving_arm_L = []
 # def schedule_arms():
 #     arm_idx_L = 
 
-played_note_L = process_midi(path_to_add+"secret.mid",info_level=1)
+played_note_L = process_midi(path_to_add+"secret.mid",info_level=0)
 # for note in played_note_L:
 #     print(note)
 # print(len(played_note_L))
@@ -120,12 +120,13 @@ played_note_L = process_midi(path_to_add+"secret.mid",info_level=1)
 for note in played_note_L:
     # start,dura,chan_num,pit,vel
     start,dura,chan_num,pit_num,vel = note
-    # chord_idx = pit_num - 21
-    # set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,None,frm=tick2frm(start))
-    # set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=tick2frm(start+dura//3))
-    # set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=tick2frm(start+dura))
-    # set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,1,1),frm=tick2frm(start+dura+5))
-    print(pit_num,tick2frm(start),tick2frm(start+dura))
+    chord_idx = pit_num - 21
+    set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,1,1),frm=sec2frm(start)-1)
+    set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=sec2frm(start))
+    # set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=sec2frm(start+dura//3))
+    set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=sec2frm(start+dura))
+    set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,1,1),frm=sec2frm(start+dura)+1)
+    # print(sec2frm(start),sec2frm(start+dura),sec2frm(dura),pit_num)
 
 # print(get_key_with_id(chord_L[0],c4d.ID_BASEOBJECT_COLOR,frm=0).GetValue())
 # set_key_with_id(chord_L[0],c4d.ID_BASEOBJECT_COLOR,val=c4d.Vector(0,1,0),frm=30)
