@@ -53,7 +53,7 @@ end_undo()
 hiting_arm_L = []
 moving_arm_L = []
 
-# note: start, dura, chan_num, pit_dec, vel
+# note: start, dura, chan_num, pit, vel
 # played_note_L = process_midi(path_to_add+"abc.mid",info_level=1)
 # pit_L = [note[3] for note in played_note_L]
 
@@ -86,8 +86,8 @@ played_note_L = process_midi(path_to_add+"secret.mid",info_level=0)
 # chords = find_obj("chords","")[0]
 # for i,chord in enumerate(chords.GetChildren()):
 #     print(chord.GetName())
-#     chord.SetName("chord_{:03}".format(i+21))
-    # print(chord.GetName())
+#     chord.SetName("chord_{:03}".format(108-i))
+#     print(chord.GetName())
 
 # for key in keys:
 #     print(key.GetName())
@@ -118,14 +118,15 @@ played_note_L = process_midi(path_to_add+"secret.mid",info_level=0)
 #     chord[c4d.ID_BASEOBJECT_COLOR]  = c4d.Vector(1,1,1)
 
 for note in played_note_L:
-    # start,dura,chan_num,pit,vel
-    start,dura,chan_num,pit_num,vel = note
-    chord_idx = pit_num - 21
-    set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,1,1),frm=sec2frm(start)-1)
-    set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=sec2frm(start))
+    # start,dura,pit,trk_num,chan_num,vel
+    start,dura,pit,trk_num,chan_num,vel = note
+    active_chord = find_obj("chord_{:0>3}".format(pit),"chords")[0]
+    # print(active_chord.GetName())
+    set_key_with_id(active_chord,c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,1,1),frm=sec2frm(start)-1)
+    set_key_with_id(active_chord,c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=sec2frm(start))
     # set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=sec2frm(start+dura//3))
-    set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=sec2frm(start+dura))
-    set_key_with_id(chord_L[chord_idx],c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,1,1),frm=sec2frm(start+dura)+1)
+    set_key_with_id(active_chord,c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,0,0),frm=sec2frm(start+dura))
+    set_key_with_id(active_chord,c4d.ID_BASEOBJECT_COLOR,c4d.Vector(1,1,1),frm=sec2frm(start+dura)+1)
     # print(sec2frm(start),sec2frm(start+dura),sec2frm(dura),pit_num)
 
 # print(get_key_with_id(chord_L[0],c4d.ID_BASEOBJECT_COLOR,frm=0).GetValue())

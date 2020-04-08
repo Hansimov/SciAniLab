@@ -620,20 +620,6 @@ class Arm:
 
         self.old_angle_L = vec_to_angle(self.old_vec_L,self.plane_normal)
 
-        # for angle in self.old_angle_L:
-        #     print(angle)
-        # for vec in self.old_vec_L:
-        #     print(vec)
-        # print(rotate_vec(self.old_vec_L[0],self.plane_normal,540)+self.start)
-
-    # def get_rot_L(self,frm=None):
-    #     self.old_rot_L = []
-    #     # set current time
-    #     if frm == None:
-    #         for joint in self.joint_L:
-    #             self.old_rot_L.append(get_rel_rot(joint)[0])
-    #     else:
-
 
     def is_target_reachable(self,target):
         # target: target position (c4d.Vector)
@@ -727,48 +713,6 @@ class Arm:
                 # set_rel_rot_key(joint,0,frm=0,dim=0)
                 set_rel_rot_key(joint,new_rot,frm=frm,dim=0)
 
-    # def set_current_state_to_key(self):
-        
-
-    # def set_best_joint_rot(self,target,frm=None):
-    #     best_rot_L = self.get_best_joint_rot(target)
-    #     self.set_joint_rot(best_rot_L)
-
-
-# def set_key_test(obj):
-    # set_arf_psr_key("rel","pos",obj,val=[300,400,500],frm=15)
-    # set_arf_psr_key("rel","pos",obj,val=[200,100,300],frm=30)
-    # set_arf_psr_key("rel","pos",obj,val=[600,800,-100],frm=45)
-    # set_arf_psr_key("rel","pos",obj,val=0,frm=60,dim=1)
-    # set_rel_pos_key(obj,val=100,frm=50,dim=0)
-    # tr=c4d.CTrack(obj, get_rel_pos_desc_id(0))
-    # print(obj[get_rel_pos_desc_id(dim=-1)])
-    # print(get_rel_pos_desc_id(),get_rel_pos_desc_id(0))
-    # trk = obj.FindCTrack(get_rel_pos_desc_id(0))
-    # if trk == None:
-    #     trk = c4d.CTrack(obj,get_rel_pos_desc_id(0))
-    #     obj.InsertTrackSorted(trk)
-    # trk = c4d.CTrack(obj,get_rel_pos_desc_id(0))
-    # crv = trk.GetCurve()
-    # added = crv.AddKey(frm2bt(0))
-    # key = added["key"]
-    # print(key)
-    # key = c4d.CKey()
-    # key.SetTime(crv,frm2bt(10))
-    # key.SetValue(crv,200)
-    # crv.InsertKey(key)
-    # key = crv.FindKey(frm2bt(10))["key"]
-    # key.SetValue(crv,200)
-    # print(trk)
-    # print(crv.GetKeyCount())
-    # trks = obj.GetCTracks()
-    # print(trks)
-    # crv = trks[0].GetCurve()
-    # key = crv.FindKey(c4d.BaseTime(30,30),c4d.FINDANIM_LEFT)
-    # key["key"].SetTime(crv,c4d.BaseTime(10,30))
-    # print(key)
-
-# def set_arf_psr_key(arf,psr,obj,xyz,dim=-1,frm=-1):
 
 if __name__ == '__main__':
     clear_console()

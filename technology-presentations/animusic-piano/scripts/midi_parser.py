@@ -38,6 +38,7 @@ TPQN = -1   # ticks per quarter-note
 uspqn_L = []  # us per quarter-note
 chan_inst_L = [] # list of [channel num, instrument num]
 # NUME, DENO = [],[]
+trk_num = -1
 
 def sec2frm(sec):
     if py_ver < 3:
@@ -98,7 +99,7 @@ def read_delta_time(ptr,info_level=0):
 
 def read_event(ptr,abs_t,info_level=1):
     """ return ptr, (event vars) """
-    global uspqn_L # , NUME, DENO
+    global uspqn_L, trk_num # , NUME, DENO
     byte = get_bytes(ptr)
 
     if byte == "ff":
@@ -114,9 +115,9 @@ def read_event(ptr,abs_t,info_level=1):
             txt_name = get_bytes(ptr,ptr+txt_len)
             if info_level>=2:
                 if byte=="03":
-                    prefix = "  Track name: "
+                    prefix = "Track name:"
                 else:
-                    prefix = "  Instrument name: "
+                    prefix = "Instrument name:"
                 if py_ver<3:
                     print(prefix, txt_name.decode("hex"))
                 else:
@@ -133,6 +134,7 @@ def read_event(ptr,abs_t,info_level=1):
             if info_level>=2:
                 print("=== End of track ===")
             ptr+=2
+            trk_num += 1
             return ptr, "EOT"
 
         elif byte=="51":
@@ -144,7 +146,7 @@ def read_event(ptr,abs_t,info_level=1):
             ptr+=2
             uspqn_L.append([abs_t, hex2dec(get_bytes(ptr,ptr+3))])
             if info_level>=2:
-                print("  USPQN: {} (us per quarter-note)".format(uspqn_L[-1]))
+                print("USPQN: {} (us per quarter-note)".format(uspqn_L[-1]))
             ptr+=3
             return ptr, uspqn_L
 
@@ -184,7 +186,7 @@ def read_event(ptr,abs_t,info_level=1):
             sf = hex2dec(get_bytes(ptr),signed=True)
             mi = hex2dec(get_bytes(ptr+1),signed=True)
             if info_level>=2:
-                print("sf:{}, mi:{}".format(sf,mi))
+                print("  sf:{}, mi:{}".format(sf,mi))
             ptr+=2
             return ptr, (sf,mi)
 
@@ -220,12 +222,12 @@ def read_event(ptr,abs_t,info_level=1):
         if byte[1] in hexchr:
             chan_num = hexchr.index(byte[1])
             pit_hex = get_bytes(ptr+1)
-            pit_dec = hex2dec(pit_hex)
+            pit = hex2dec(pit_hex)
             velocity = hex2dec(get_bytes(ptr+2))
             if info_level>=3:
-                print("  Chan {} note {:<3} {:<3}  vel: {:<3}".format(chan_num,pit_dec,switch,velocity))
+                print("  Track {} Chan {} note {:<3} {:<3}  vel: {:<3}".format(trk_num,chan_num,pit,switch,velocity))
             ptr+=3
-            return ptr, (switch,chan_num,pit_dec,velocity)
+            return ptr, (switch,pit,trk_num,chan_num,velocity)
         else:
             print("x Invalid chan num {} of note {}!".format(byte[1],switch))
             return ptr, False
@@ -251,7 +253,8 @@ def read_event(ptr,abs_t,info_level=1):
                     if info_level>=3:
                         print("* Damper pedal ON!")
                 else:
-                    print("x Unknown damper pedal control mode!")
+                    if info_level>=3:
+                        print("* Damper pedal control mode {}!".format(byte))
             elif 8<=hex2dec(byte)<=31:
                 if info_level>=3:
                     print("* Continuous controller #{}: {}".format(hex2dec(byte),get_bytes(ptr+2)))
@@ -285,23 +288,24 @@ active_note_L = []
 played_note_L = []
 
 def insert_note(abs_t,res):
-    # played_note: start (tick), dura (tick), chan_num, pit_dec, velocity
+    # played_note: start (tick), dura (tick), pit, trk_num, chan_num, vel
+    # (switch,pit,trk_num,chan_num,velocity)
     global active_note_L, played_note_L
-    chan_num, pit_dec, velocity = res[1:4]
+    pit, trk_num, chan_num, vel = res[1:5]
     if res[0] == "ON":
-    # on_note: start (tick), chan_num, pit_dec, velocity
-        active_note_L.append([abs_t,chan_num, pit_dec, velocity])
+    # on_note: start (tick), pit, trk_num, chan_num, vel
+        active_note_L.append([abs_t, pit, trk_num, chan_num,vel])
     elif res[0] == "OFF":
-    # off_note: end (tick), chan_num, pit_dec, velocity
+    # off_note: end (tick), pit, trk_num, chan_num, vel
         for idx,note in enumerate(active_note_L):
-            if pit_dec == note[2]:
+            if pit == note[1]:
                 dura = abs_t - note[0]
                 active_note_L[idx].insert(1,dura)
                 played_note_L.append(active_note_L.pop(idx))
                 break
 
 def convert_note_time(uspqn_L,note_L):
-    """  return list of [start_sec, dura_sec, chan_num, pit_dec, vel]"""
+    """  return list of [start_sec, dura_sec, pit, trk_num, chan_num, vel]"""
 
     uspqn_ptr = 0
     dt,uspqn = uspqn_L[uspqn_ptr][0:2]
@@ -332,7 +336,7 @@ def convert_note_time(uspqn_L,note_L):
         start_sec = round(start_sec,3)
         dura_sec = dura_tick * uspqn_mark[-1][1] / TPQN / 1e6
         dura_sec = round(dura_sec,3)
-        new_note_L[note_idx] = [start_sec,dura_sec,note[2],note[3],note[4]]
+        new_note_L[note_idx] = [start_sec,dura_sec,note[2],note[3],note[4],note[5]]
 
     return new_note_L
 
@@ -371,7 +375,7 @@ def read_mthd(info_level=2):
     return ptr, True
 
 def read_mtrk(ptr,info_level):
-    ptr, res = read_event(ptr,info_level)
+    ptr, res = read_event(ptr,0,info_level)
     abs_t = 0
     while res != False:
         ptr, dt = read_delta_time(ptr,info_level)
@@ -383,7 +387,7 @@ def read_mtrk(ptr,info_level):
                 if info_level>=2:
                     print("\n>>> End of file <<<\n")
                 if info_level>=0:
-                    print("+++ MIDI file processed successfully +++\n")
+                    print("+++ MIDI processing finished +++\n")
                 return ptr, "EOF"
             else:
                 return ptr, "EOT"
@@ -414,12 +418,12 @@ def process_midi(filename,info_level=1):
 
     cvt_sec_note_L = convert_note_time(uspqn_L,played_note_L)
 
-    print(TPQN, uspqn_L,"\n")
+    # print(TPQN, uspqn_L,"\n")
 
-    for note,cvt_sec_note in zip(played_note_L,cvt_sec_note_L):
-        print(note[0],note[1],note[-2])
-        print("- ",cvt_sec_note[0],cvt_sec_note[1],cvt_sec_note[-2])
-        print("- ",sec2frm(cvt_sec_note[0]),sec2frm(cvt_sec_note[1]),cvt_sec_note[-2])
+    # for note,cvt_sec_note in zip(played_note_L,cvt_sec_note_L):
+    #     print(note[0],note[1],note[-2])
+    #     print("- ",cvt_sec_note[0],cvt_sec_note[1],cvt_sec_note[-2])
+    #     print("- ",sec2frm(cvt_sec_note[0]),sec2frm(cvt_sec_note[1]),cvt_sec_note[-2])
 
 
     return cvt_sec_note_L
@@ -445,18 +449,76 @@ def process_midi(filename,info_level=1):
 #  9 | 120 121 122 123 124 125 126 127                
 # ---|-------------------------------------------------
 
-# Middle C = C4 (60,0x3c)
+# Middle C = C4 (60, 0x3c)
 # C4 is 40th key on 88-key piano keyboards
 # 88-key range: A0-C8 | 21-108 | 0x15-0x80
 
+
+
+def schedule_arms(played_note_L):
+    # before: start_sec, dura_sec, chan_num, pit, vel
+    # after:  start_sec, dura_sec, pit, order
+    note_L = [""] * len(played_note_L)
+    for i,note in enumerate(played_note_L):
+        note_L[i] = [sec2frm(note[0]),sec2frm(note[1]),note[3],i]
+
+    # sorted_note_L = sorted(note_L,key=lambda l:l[2])
+    # mid_pit = sorted_note_L[len(sorted_note_L)//2][2]
+    # print(mid_pit)
+
+    # arm name from left to right:
+    # L5 L4 L3 - L2 L1 L0 - R0 R1 R2 - R3 R4 R5
+    #  0  1  2    3  4  5    6  7  8    9 10 11
+
+    # for note,sorted_note in zip(new_note_L,sorted_new_note_L):
+    #     print(note,sorted_note)
+
+    # start_frm, dura_frm, pit, arm_idx
+    schedule_L = []
+    #  initialize arms according to beginning several notes
+    head_notes = sorted(note_L[:6],key=lambda l:l[2])
+
+    
+    tmp_arm_idx = 3
+    for i,note in enumerate(head_notes):
+        # if note[3]==0:
+        schedule_L.append(note[:])
+        if i>=1:
+            if note[2] == head_notes[i-1]:
+                tmp_arm_idx += 0
+            else:
+                tmp_arm_idx += 1
+        schedule_L[-1].append(tmp_arm_idx)
+        # note.append(tmp_arm_idx)
+        # note_arm_L.append(note)
+        # note_arm_L[-1][-1] = 3+i
+        #     head_notes.pop(i)
+        #     break
+    for schedule in schedule_L:
+        print(schedule)
+
+    tmp_note_L = note_L[6:12]
+    for tmp_note in tmp_note_L:
+        print(tmp_note)
+
+    # head_notes = note_L[1:8]
+    # for note in head_notes:
+    #     print(note)
+
+
 if __name__ == '__main__':
     # process_midi("abc.mid")
-    played_note_L = process_midi("H:/codes/SciAniLab/technology-presentations/animusic-piano/scripts/secret.mid",info_level=1)
+    filename = "secret.mid"
+    # filename = "conan-main.mid"
+    # filename = "bad-apple.mid"
+    played_note_L = process_midi("H:/codes/SciAniLab/technology-presentations/animusic-piano/scripts/"+filename,info_level=2)
     # for note in played_note_L:
     #     print(note)
     # print(uspqn_L)
-    # played_note: start (tick), dura (tick), chan_num, pit_dec, vel
+    # played_note: start (tick), dura (tick), chan_num, pit, vel
     # new_note_L = convert_note_time(uspqn_L,played_note_L)
     # print(new_note_L)
     # for played_note, new_note in zip(played_note_L, new_note_L):
     #     print(played_note,new_note)
+    # schedule_arms(played_note_L)
+
