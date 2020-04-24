@@ -3,6 +3,8 @@ import subprocess
 import requests
 import socket
 import json
+import random
+import re
 
 # ip, port, kind = "117.88.176.162", "3000", "https"
 ip, port, kind = "124.156.98.172", "80", "http"
@@ -16,24 +18,41 @@ http_D = {
 }
 
 headers = {
-    "user-agent": "my-app/0.0.1"
+    "user-agent": "skynet - {}".format(random.random())
 }
 
-def test_ip_port(ip,port):
+def test_ip_port(ip,port,retry=3,timeout=5):
     skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    skt.settimeout(3)
-    try:
-        ex_code = skt.connect_ex((ip, int(port)))
-        # a = s.connect((ip, int(port)))
-        # s.shutdown(socket.SHUT_RDWR)
-        print(ex_code)
-    except Exception as e:
-        print(e)
-    finally:
-        skt.close()
+    skt.settimeout(timeout)
+    ex_code = skt.connect_ex((ip, int(port)))
+    # a = s.connect((ip, int(port)))
+    # s.shutdown(socket.SHUT_RDWR)
+    # print(ex_code)
+    if ex_code == 0:
+        print("+ {}:{} open!".format(ip,port))
+    else:
+        print("x {}:{} close!".format(ip,port))
+
+    skt.close()
 
 def pull_proxy_site():
-    pass
+    req = requests.get("https://www.xicidaili.com/nn/",headers=headers)
+    # print(req)
+    # print(req.text[:100])
+    with open("example.html",mode="r",encoding="utf-8") as rf:
+        text = rf.read()
+    text = re.findall(r"<table[\s\S]*?table>", text)[0]
+    res_L = re.findall(r"<tr class[\s\S]*?tr>", text)
+
+    for res in res_L:
+        item = re.findall(r"<td>([\s\S]*?)</td>",res)
+        tmp = []
+        for it in item:
+            if "href" in it or "\n" in it:
+                continue
+            tmp.append(it)
+        print(tmp)
+
 
 def request_with_proxy(url_body,ip,port,kind):
     cur_url = url_body.format(kind)
@@ -49,7 +68,7 @@ def request_with_proxy(url_body,ip,port,kind):
         print(e)
 
 # request_with_proxy(url,ip,port,kind)
-# o = subprocess.call("D:/tcping/tcping.exe -n 1 111.222.141.127 8118".split(), stdout=open(os.devnull,"w"), stderr=subprocess.STDOUT)
-# o = subprocess.call("D:/tcping/tcping.exe -n 1 123.163.24.113 3128".split())
-# print(o)
 
+# test_ip_port(ip,port)
+
+pull_proxy_site()
