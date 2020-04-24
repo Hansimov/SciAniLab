@@ -1,12 +1,18 @@
 备选曲目：
     七里香、Secret、斗琴（周杰伦）
-    柯南主题曲（ZARD）
     Far Horizon（3A大作）
     Bad Apple、超电磁炮、千本樱（镇站之宝）
     （谷村新司）
-    光能使者变身+OP
+    日漫OP：
+        光能使者+变身、龙珠、柯南+主题曲（ZARD）、
+        EVA残酷天使的行动纲领+Fly to the Moon、数码宝贝Butterfly
+        红辣椒游行
+        攻壳机动队：傀儡谣12、音乐盒
     西部世界
     钢铁洪流进行曲
+    古典音乐：
+        马刀舞曲、钟、巴赫
+    天龙八音
 
 周杰伦：晴天+四手联弹+斗琴（两架琴）+Secret（破碎特效）
 
@@ -15,3 +21,6 @@
     + Add more margins to head
     Add portraits of musicians?
     Make v-rot cross with h-rot-1
+
+全息
+    虚拟歌姬、动画or电影片段

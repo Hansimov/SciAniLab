@@ -591,7 +591,7 @@ def set_frozen_rot_key(obj,val,frm=None,dim=-1):    set_arf_psr_key("frozen","ro
 def set_frozen_scale_key(obj,val,frm=None,dim=-1):  set_arf_psr_key("frozen","scale",obj,val,frm,dim)
 
 # Only works on current 3-h-rot arm, need to be extended
-class Arm:
+class RobotArm:
     def __init__(self,joint_L=[],end=None):
         # joint: rotation object (c4d.BaseObject)
         self.joint_L = joint_L
