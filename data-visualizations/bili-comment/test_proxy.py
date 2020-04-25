@@ -85,34 +85,27 @@ valid_ip_L = []
 def test_ip_port(ip,port,kind="http",retry_max=3,timeout=4):
     global valid_ip_cnt, valid_ip_L
     sema.acquire()
-    
-    hit_cnt = 0
-    retry_cnt = 0
-    while (retry_cnt<retry_max):
-        skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        skt.settimeout(timeout)
-        ex_code = skt.connect_ex((ip, int(port)))
-        skt.close()
-        if ex_code == 0:
-            hit_cnt += 1
-        retry_cnt += 1
 
-    # if hit_cnt > 0:
-    #     # print("+++ Valid {:>3}.{:>3}.{:>3}.{:>3} : {:<5} +++++++".format(*ip.split("."),port))
-    #     print("{:<3} {:<15} {:<5} {:<5} {:>3}".format(hit_cnt*"+",ip,port,kind,hit_cnt*"+"))
-    # else:
-    #     # print("--------- {:>3}.{:>3}.{:>3}.{:>3} : {:<5} -------".format(*ip.split("."),port))
-    #     print("{:<3} {:<15} {:<5} {:<5} {:>3}".format(3*"-",ip,port,kind,3*"-"))
+    # hit_cnt = 0
+    # retry_cnt = 0
+    # while (retry_cnt<retry_max):
+    #     skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #     skt.settimeout(timeout)
+    #     ex_code = skt.connect_ex((ip, int(port)))
+    #     skt.close()
+    #     if ex_code == 0:
+    #         hit_cnt += 1
+    #     retry_cnt += 1
 
-    req_cnt = 10
-    ret = 0
-    if hit_cnt > retry_max/2:
-        ret = 1
-        req_cnt = request_with_proxy(url_body,ip,port,kind)
-        # print(req_cnt)
-
-    # req_cnt = request_with_proxy(url_body,ip,port,kind)
+    # req_cnt = 10
     # ret = 0
+    # if hit_cnt > retry_max/2:
+    #     ret = 1
+    #     req_cnt = request_with_proxy(url_body,ip,port,kind)
+
+    ret = 0
+    req_cnt = request_with_proxy(url_body,ip,port,kind)
+
     lock.acquire()
     # sys.stdout.flush()
     if req_cnt <= 1:
