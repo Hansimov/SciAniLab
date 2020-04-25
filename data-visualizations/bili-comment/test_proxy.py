@@ -13,7 +13,6 @@ import datetime
 # ip, port, kind = "117.88.176.162", "3000", "https"
 # ip, port, kind = "124.156.98.172", "80", "http"
 
-url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=2"
 
 kind_D = {
     "http":  "http://{}:{}",
@@ -30,6 +29,9 @@ def dt2str(dt_time):
 
 def str2dt(dt_str):
     return datetime.datetime.strptime(dt_str,'%Y-%m-%d-%H-%M-%S')
+
+def now():
+    return datetime.datetime().now()
 
 def is_any_thread_alive(threads):
     return True in [t.is_alive() for t in threads]
@@ -110,34 +112,17 @@ def fetch_free_proxy():
     # ip, port, http(s)
     return ip_L
 
-valid_ip_L = []
-def test_ip_port(ip, port, kind="http",retry_max=3,timeout=4):
-    global valid_ip_cnt, valid_ip_L
-    sema.acquire()
 
-    ret = 0
-    req_cnt = request_with_proxy(url_body,ip,port,kind)
-
-    lock.acquire()
-    # sys.stdout.flush()
-    if req_cnt <= 1:
-        ret = 1
-        valid_ip_L.append([ip,port,kind])
-        valid_ip_cnt += ret
-        print("{:<3} {:<15} {:<5} {:<5}".format((3-req_cnt)*"+",ip,port,kind.upper()))
-    else:
-        print("{:<3} {:<15} {:<5} {:<5}".format(3*"-",ip,port,kind.upper()))
-
-    lock.release()
-    sema.release()
-
-def request_with_proxy(url_body,ip,port,kind,retry_max=3,timeout=6):
+req_retry_max = 3
+url_body = "{}://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=2"
+test_url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=2"
+def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=6):
     kind = kind.lower()
     cur_url = url_body.format(kind)
     cur_proxy = {kind: kind_D[kind].format(ip,port)}
 
     retry_cnt = 0
-    while (retry_cnt<retry_max):
+    while (retry_cnt<req_retry_max):
         try:
             r = requests.get(cur_url, headers=headers, proxies=cur_proxy,timeout=timeout)
             status_code = r.status_code
@@ -149,13 +134,35 @@ def request_with_proxy(url_body,ip,port,kind,retry_max=3,timeout=6):
             retry_cnt += 1
     return retry_cnt
 
-valid_ip_cnt = 0
+valid_ip_L = []
+def test_ip_port(ip, port, kind="http",retry_max=3,timeout=4):
+    global valid_ip_cnt, valid_ip_L
+    sema.acquire()
 
+    ret = 0
+    req_cnt = request_with_proxy(test_url_body,ip,port,kind)
+
+    lock.acquire()
+    # sys.stdout.flush()
+    if req_cnt <= 1:
+        ret = 1
+        # ip, port, kind, last_used_time, req_cnt, hit_cnt
+        valid_ip_L.append([ip,port,kind,datetime.datetime.now(),0,0])
+        valid_ip_cnt += ret
+        print("{:<3} {:<15} {:<5} {:<5}".format((3-req_cnt)*"+",ip,port,kind.upper()))
+    else:
+        print("{:<3} {:<15} {:<5} {:<5}".format(3*"-",ip,port,kind.upper()))
+
+    lock.release()
+    sema.release()
+
+
+valid_ip_cnt = 0
 max_concurrent_num = 50
 sema = threading.BoundedSemaphore(max_concurrent_num)
 lock = threading.Lock()
 
-def get_valid_ip_list():
+def sieve_valid_ip_list():
     # ip_L = fetch_xici()
     ip_L = fetch_free_proxy()
 
@@ -173,13 +180,40 @@ def get_valid_ip_list():
         time.sleep(0)
 
     print("\nValid IP: {}/{}".format(valid_ip_cnt, total_ip_cnt))
-    # for valid_ip in valid_ip_L:
-    #     print("   {:<15} {:<5} {:<5}".format(*valid_ip[:3]))
+    for valid_ip in valid_ip_L:
+        print("   {:<15} {:<5} {:<5}".format(*valid_ip[:3]))
+
+def put_back_used_ip(ip,req_cnt):
+    global valid_ip_L
+    # ip, port, kind, last_used_time, req_cnt, hit_cnt
+    if req_cnt < req_retry_max:
+        ip[3] = datetime.datetime.now()
+        ip[-1] += 1
+        ip[-2] += req_cnt
+        valid_ip_L.append(ip)
+
+wait_second = 0.1
+def take_out_valid_ip():
+    global valid_ip_L
+    for i,ip in enumerate(valid_ip_L):
+        if (now()-ip[3]).total_seconds() > wait_second:
+            valid_ip_L.pop(i)
+            return ip
+    return []
+
+def get_ip_address():
+    # "https://icanhazip.com/"
+    pass
+
+def get_replies(oid="34354599"):
+    pass
+    # url = url_body.format(kind,pn,oid)
+
 
 if __name__ == '__main__':
 
     t1 = time.time()
-    get_valid_ip_list()
+    sieve_valid_ip_list()
     t2 = time.time()
     print("Elapsed time: {} sec".format(round(t2-t1,2)))
 
