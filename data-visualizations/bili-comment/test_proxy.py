@@ -8,6 +8,7 @@ import json
 import random
 import re
 import threading
+import datetime
 
 # ip, port, kind = "117.88.176.162", "3000", "https"
 # ip, port, kind = "124.156.98.172", "80", "http"
@@ -24,10 +25,14 @@ headers = {
     "user-agent": "skynet - {}".format(random.random())
 }
 
+def dt2str(dt_time):
+    return "{:>4}-{:0>2}-{:0>2}-{:0>2}-{:0>2}-{:0>2}".format(dt_time.year, dt_time.month, dt_time.day, dt_time.hour, dt_time.minute, dt_time.second)
+
+def str2dt(dt_str):
+    return datetime.datetime.strptime(dt_str,'%Y-%m-%d-%H-%M-%S')
 
 def is_any_thread_alive(threads):
     return True in [t.is_alive() for t in threads]
-
 
 def fetch_xici():
     # tmp_proxy = {"https":"https://117.45.139.84:9006"}
@@ -59,13 +64,38 @@ def fetch_xici():
     return ip_L
 
 def fetch_free_proxy():
-    # url = "https://free-proxy-list.net/"
-    # req = requests.get(url,headers=headers)
-    # print("=== Fetching free-proxy-list {} ===\n".format(req.status_code))
-    # # print(req.text)
-    # with open("free-proxy-list.html","wb") as wf:
-    #     wf.write(req.content)
-    with open("free-proxy-list.html",mode="r",encoding="utf-8") as rf:
+    old_filename = ""
+    for filename in os.listdir():
+        if re.match("free-proxy-list-[\s\S]*",filename):
+            old_filename = filename
+            break
+
+    new_dt_time = datetime.datetime.now()
+
+    is_fetch_new_proxy = False
+
+    if old_filename == "":
+        is_fetch_new_proxy = True
+    else:
+        old_dt_str = old_filename.replace("free-proxy-list-","").replace(".html","")
+        old_dt_time = str2dt(old_dt_str)
+        if (new_dt_time-old_dt_time).total_seconds() > 300:
+            os.remove(old_filename)
+            is_fetch_new_proxy = True
+
+    if is_fetch_new_proxy:
+        url = "https://free-proxy-list.net/"
+        req = requests.get(url,headers=headers)
+        print("=== Fetching free-proxy-list {} ===\n".format(req.status_code))
+        new_filename = "free-proxy-list-{}.html".format(dt2str(new_dt_time))
+        with open(new_filename,"wb") as wf:
+            wf.write(req.content)
+        read_filename = new_filename
+    else:
+        print("=== Reusing {}\n".format(old_filename))
+        read_filename = old_filename
+
+    with open(read_filename,mode="r",encoding="utf-8") as rf:
         text = rf.read()
 
     text = re.findall(r"<tbody[\s\S]*?tbody>", text)[0]
@@ -77,7 +107,6 @@ def fetch_free_proxy():
         kind = "http" if td_L[-2]== "no" else "https"
         ip = [td_L[0],td_L[1],kind]
         ip_L.append(ip)
-        # print(ip)
     # ip, port, http(s)
     return ip_L
 
@@ -153,22 +182,22 @@ def get_valid_ip_list():
     # request_with_proxy(url,ip,port,kind)
     # test_ip_port(ip,port)
 
-    total_ip_cnt = len(ip_L)
+    # total_ip_cnt = len(ip_L)
 
-    pool = []
-    for i in range(total_ip_cnt):
-        ip,port,kind = ip_L[i][0:3]
-        tmp_thread = threading.Thread(target=test_ip_port, args=(ip,port,kind,), daemon=True)
-        pool.append(tmp_thread)
-    for tmp_thread in pool:
-        tmp_thread.start()
+    # pool = []
+    # for i in range(total_ip_cnt):
+    #     ip,port,kind = ip_L[i][0:3]
+    #     tmp_thread = threading.Thread(target=test_ip_port, args=(ip,port,kind,), daemon=True)
+    #     pool.append(tmp_thread)
+    # for tmp_thread in pool:
+    #     tmp_thread.start()
 
-    while is_any_thread_alive(pool):
-        time.sleep(0)
+    # while is_any_thread_alive(pool):
+    #     time.sleep(0)
 
-    print("\nValid IP: {}/{}".format(valid_ip_cnt, total_ip_cnt))
-    for valid_ip in valid_ip_L:
-        print("   {:<15} {:<5} {:<5}".format(*valid_ip[:3]))
+    # print("\nValid IP: {}/{}".format(valid_ip_cnt, total_ip_cnt))
+    # # for valid_ip in valid_ip_L:
+    # #     print("   {:<15} {:<5} {:<5}".format(*valid_ip[:3]))
 
 if __name__ == '__main__':
 
