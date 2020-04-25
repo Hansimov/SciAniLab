@@ -1,12 +1,12 @@
 import os
+import sys
 import subprocess
 import requests
 import socket
 import json
 import random
 import re
-import sys
-import multiprocessing
+import threading
 
 # ip, port, kind = "117.88.176.162", "3000", "https"
 ip, port, kind = "124.156.98.172", "80", "http"
@@ -24,6 +24,7 @@ headers = {
 }
 
 def test_ip_port(ip,port,retry=3,timeout=3):
+    semalock = 
     skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     skt.settimeout(timeout)
     ex_code = skt.connect_ex((ip, int(port)))
@@ -40,7 +41,10 @@ def test_ip_port(ip,port,retry=3,timeout=3):
     else:
         # print("--- {}:{} fail ---".format(ip,port))
         print("------------".format(ip,port))
+    lock.acquire()
     sys.stdout.flush()
+    lock.release()
+
     return ret
 
 
@@ -90,6 +94,8 @@ def request_with_proxy(url_body,ip,port,kind):
 
 ip_L = fetch_proxy_site()
 
+if __name__ == '__main__':
+    main()
 # open_cnt = 0
 # total_cnt = len(ip_L)
 # # total_cnt = 4

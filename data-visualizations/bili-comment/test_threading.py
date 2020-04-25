@@ -8,7 +8,7 @@ def job1():
     # global cnt
     # lock.acquire()
     for i in range(10):
-        time.sleep(random.random())
+        # time.sleep(random.random())
         cnt += 1
         print("job1: ",cnt)
         sys.stdout.flush()
@@ -19,8 +19,8 @@ def job2():
     # global cnt
     # lock.acquire()
     for i in range(10):
-        time.sleep(random.random())
-        cnt += 1
+        # time.sleep(random.random())
+        cnt += 10
         print("job2: ",cnt)
         sys.stdout.flush()
     # lock.release()
@@ -33,9 +33,9 @@ if __name__ == "__main__":
     cnt = 0
     t1 = threading.Thread(target=job1,daemon=True)
     t2 = threading.Thread(target=job2,daemon=True)
-
     t1.start()
     t2.start()
 
     while is_any_thread_alive([t1,t2]):
-        time.sleep(1)
+        time.sleep(0)
+    
