@@ -111,26 +111,9 @@ def fetch_free_proxy():
     return ip_L
 
 valid_ip_L = []
-def test_ip_port(ip,port,kind="http",retry_max=3,timeout=4):
+def test_ip_port(ip, port, kind="http",retry_max=3,timeout=4):
     global valid_ip_cnt, valid_ip_L
     sema.acquire()
-
-    # hit_cnt = 0
-    # retry_cnt = 0
-    # while (retry_cnt<retry_max):
-    #     skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #     skt.settimeout(timeout)
-    #     ex_code = skt.connect_ex((ip, int(port)))
-    #     skt.close()
-    #     if ex_code == 0:
-    #         hit_cnt += 1
-    #     retry_cnt += 1
-
-    # req_cnt = 10
-    # ret = 0
-    # if hit_cnt > retry_max/2:
-    #     ret = 1
-    #     req_cnt = request_with_proxy(url_body,ip,port,kind)
 
     ret = 0
     req_cnt = request_with_proxy(url_body,ip,port,kind)
@@ -157,16 +140,12 @@ def request_with_proxy(url_body,ip,port,kind,retry_max=3,timeout=6):
     while (retry_cnt<retry_max):
         try:
             r = requests.get(cur_url, headers=headers, proxies=cur_proxy,timeout=timeout)
-            # print(r.status_code)
             status_code = r.status_code
-            # print(r.json())
             # return status_code
             # return retry_cnt
             break
         except Exception as e:
-            # print("- Connection failed!")
             # print(e)
-            # print("Retry cnt: {}".format(retry_cnt))
             retry_cnt += 1
     return retry_cnt
 
@@ -179,25 +158,23 @@ lock = threading.Lock()
 def get_valid_ip_list():
     # ip_L = fetch_xici()
     ip_L = fetch_free_proxy()
-    # request_with_proxy(url,ip,port,kind)
-    # test_ip_port(ip,port)
 
-    # total_ip_cnt = len(ip_L)
+    total_ip_cnt = len(ip_L)
 
-    # pool = []
-    # for i in range(total_ip_cnt):
-    #     ip,port,kind = ip_L[i][0:3]
-    #     tmp_thread = threading.Thread(target=test_ip_port, args=(ip,port,kind,), daemon=True)
-    #     pool.append(tmp_thread)
-    # for tmp_thread in pool:
-    #     tmp_thread.start()
+    pool = []
+    for i in range(total_ip_cnt):
+        ip,port,kind = ip_L[i][0:3]
+        tmp_thread = threading.Thread(target=test_ip_port, args=(ip,port,kind,), daemon=True)
+        pool.append(tmp_thread)
+    for tmp_thread in pool:
+        tmp_thread.start()
 
-    # while is_any_thread_alive(pool):
-    #     time.sleep(0)
+    while is_any_thread_alive(pool):
+        time.sleep(0)
 
-    # print("\nValid IP: {}/{}".format(valid_ip_cnt, total_ip_cnt))
-    # # for valid_ip in valid_ip_L:
-    # #     print("   {:<15} {:<5} {:<5}".format(*valid_ip[:3]))
+    print("\nValid IP: {}/{}".format(valid_ip_cnt, total_ip_cnt))
+    # for valid_ip in valid_ip_L:
+    #     print("   {:<15} {:<5} {:<5}".format(*valid_ip[:3]))
 
 if __name__ == '__main__':
 
@@ -207,6 +184,5 @@ if __name__ == '__main__':
     print("Elapsed time: {} sec".format(round(t2-t1,2)))
 
     # fetch_free_proxy()
-    # get_valid_ip_list()
 
 
