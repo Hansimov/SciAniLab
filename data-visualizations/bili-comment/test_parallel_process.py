@@ -1,18 +1,21 @@
-import multiprocessing
+from multiprocessing import Process, Manager
 import random
 import time
 import threading
 
-
 def is_any_thread_alive(threads):
     return True in [t.is_alive() for t in threads]
 
-ip_L = [1,2,3,4]
-ip_cnt = len(ip_L)
+# manager = []
+# ip_L = [1,2,3,4]
+ip_L = manager.list([1,2,3,4])
+# ip_cnt = len(ip_L)
+ip_cnt = manager.Value("i",0)
+
 def add_ip():
     global ip_L, ip_cnt
     add_ip_sema.acquire()
-    time.sleep(0.6)
+    time.sleep(0.5)
 
     p_lock.acquire()
     if ip_cnt <= 20:
@@ -98,9 +101,10 @@ def run_add_ip_threads():
         time.sleep(0)
 
 if __name__ == '__main__':
-    with multiprocessing.Manager() as manager:
-        ip_L = manager.list()
-        p1 = multiprocessing.Process(target=run_add_ip_threads,)
-        p2 = multiprocessing.Process(target=run_use_ip_threads, args=ip_L)
-        p1.start()
-        p2.start()
+    manager = Manager()
+    p1 = multiprocessing.Process(target=run_add_ip_threads)
+    p1.start()
+    p2 = multiprocessing.Process(target=run_use_ip_threads)
+    p2.start()
+    # p1.join()
+    # p2.join()
