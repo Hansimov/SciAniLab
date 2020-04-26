@@ -1,14 +1,15 @@
 import os
 import sys
 import time
+import datetime
+import random
+import re
 import subprocess
 import requests
 import socket
 import json
-import random
-import re
 import threading
-import datetime
+import multiprocessing
 
 # ip, port, kind = "117.88.176.162", "3000", "https"
 # ip, port, kind = "124.156.98.172", "80", "http"
@@ -184,15 +185,18 @@ def sieve_valid_ip_list():
         print("   {:<15} {:<5} {:<5}".format(*valid_ip[:3]))
 
 def put_back_used_ip(ip,req_cnt):
-    global valid_ip_L
+    global valid_ip_L, valid_ip_cnt
     # ip, port, kind, last_used_time, req_cnt, hit_cnt
     if req_cnt < req_retry_max:
         ip[3] = datetime.datetime.now()
         ip[-1] += 1
         ip[-2] += req_cnt
         valid_ip_L.append(ip)
+    else:
+        valid_ip_cnt -= 1
 
 wait_second = 0.1
+valid_ip_cnt
 def take_out_valid_ip():
     global valid_ip_L
     for i,ip in enumerate(valid_ip_L):
@@ -202,7 +206,7 @@ def take_out_valid_ip():
     return []
 
 def get_ip_address():
-    # "https://icanhazip.com/"
+    url = "{}://icanhazip.com/"
     pass
 
 def get_replies(oid="34354599"):
@@ -212,10 +216,16 @@ def get_replies(oid="34354599"):
 
 if __name__ == '__main__':
 
-    t1 = time.time()
+    # t1 = time.time()
     sieve_valid_ip_list()
-    t2 = time.time()
-    print("Elapsed time: {} sec".format(round(t2-t1,2)))
+    # t2 = time.time()
+    # print("Elapsed time: {} sec".format(round(t2-t1,2)))
+
+    # p1 = Process(target=func1)
+    # p1.start()
+    # p2 = Process(target=func2)
+
+
 
     # fetch_free_proxy()
 
