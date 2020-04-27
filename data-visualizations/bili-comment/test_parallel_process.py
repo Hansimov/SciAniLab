@@ -9,7 +9,7 @@ def is_any_thread_alive(threads):
 
 def add_ip(ip_L, add_ip_sema, add_ip_lock):
     add_ip_sema.acquire()
-    time.sleep(0.5)
+    time.sleep(0.1)
 
     add_ip_lock.acquire()
     if ip_L[0] <= 50:
@@ -55,11 +55,11 @@ def use_ip(thread_num, ip_L, use_ip_sema, use_ip_lock):
     print("- Thread {}".format(thread_num))
     ip = get_ip(ip_L, use_ip_lock)
     while ip == -1:
-        time.sleep(0.2)
+        time.sleep(0.1)
         ip = get_ip(ip_L, use_ip_lock)
 
     print("Using ip {}".format(ip))
-    time.sleep(2)
+    time.sleep(0.2)
 
     put_back_ip(ip, ip_L, use_ip_lock)
     use_ip_sema.release()
@@ -68,10 +68,10 @@ def use_ip(thread_num, ip_L, use_ip_sema, use_ip_lock):
 
 def run_use_ip_threads(ip_L):
     use_ip_lock = threading.Lock()
-    use_ip_sema_num_max = 15
+    use_ip_sema_num_max = 30
     use_ip_sema = threading.BoundedSemaphore(use_ip_sema_num_max)
     pool = []
-    for i in range(100):
+    for i in range(200):
         tmp_thread = threading.Thread(target=use_ip, args=(i+1,ip_L,use_ip_sema,use_ip_lock), daemon=True)
         pool.append(tmp_thread)
 

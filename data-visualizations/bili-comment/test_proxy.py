@@ -114,12 +114,13 @@ def fetch_free_proxy():
 req_retry_max = 3
 url_body = "{}://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=2"
 test_url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=2"
-def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=6):
+def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=3):
     kind = kind.lower()
     cur_url = url_body.format(kind)
     cur_proxy = {kind: kind_D[kind].format(ip,port)}
 
     retry_cnt = 0
+    t1 = time.time()
     while (retry_cnt<req_retry_max):
         try:
             r = requests.get(cur_url, headers=headers, proxies=cur_proxy,timeout=timeout)
@@ -130,31 +131,40 @@ def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=6):
         except Exception as e:
             # print(e)
             retry_cnt += 1
+            t2 = time.time()
+            delta_t = t2-t1
+            # if delta_t > timeout * (retry_cnt+1):
+            if delta_t > timeout * 1.2:
+                return req_retry_max
     return retry_cnt
 
 # valid_proxy_L = []
-def test_proxy(proxy, test_proxy_sema, valid_proxy_L_lock, valid_proxy_L, retry_max=3, timeout=4):
+def check_proxy_connection(proxy, check_proxy_connection_sema, valid_proxy_L_lock, valid_proxy_L):
     # global valid_ip_cnt, valid_proxy_L
 
-    test_proxy_sema.acquire()
+    check_proxy_connection_sema.acquire()
 
     ip, port, kind = proxy[:3]
     ret = 0
+
+    t1 = time.time()
     req_cnt = request_with_proxy(test_url_body,ip,port,kind)
+    t2 = time.time()
+
+    delta_t = round(t2-t1,1)
 
     # sys.stdout.flush()
     if req_cnt <= 1:
         ret = 1
-        # ip, port, kind, last_used_time, req_cnt, hit_cnt
+        # ip, port, kind, last_used_time, last_delay, req_cnt, hit_cnt
         valid_proxy_L_lock.acquire()
-        valid_proxy_L.append([ip,port,kind,datetime.datetime.now(),0,0])
+        valid_proxy_L.append([ip, port, kind, datetime.datetime.now(), delta_t, req_cnt+1, 1])
         valid_proxy_L_lock.release()
         # valid_ip_cnt += ret
-        print("{:<3} {:<15} {:<5} {:<5}".format((3-req_cnt)*"+",ip,port,kind.upper()))
-    else:
-        print("{:<3} {:<15} {:<5} {:<5}".format(3*"-",ip,port,kind.upper()))
+    
+    print("{:<3} {:<15} {:<5} {:<5} {:>4}s".format((3-req_cnt)*"+", ip, port, kind.upper(),delta_t))
 
-    test_proxy_sema.release()
+    check_proxy_connection_sema.release()
 
 
 # valid_ip_cnt = 0
@@ -163,17 +173,16 @@ def run_threads_sieve_valid_proxy(valid_proxy_L):
     # proxy_L = fetch_xici()
     proxy_L = fetch_free_proxy()
 
-    test_proxy_sema_num = len(proxy_L)
-    test_proxy_sema = threading.BoundedSemaphore(test_proxy_sema_num)
+    check_proxy_connection_sema_num = 300
+    check_proxy_connection_sema = threading.BoundedSemaphore(check_proxy_connection_sema_num)
 
     valid_proxy_L_lock = threading.Lock()
 
-    total_proxy_cnt = len(proxy_L)
     pool = []
-    for i in range(total_proxy_cnt):
+    for i in range(len(proxy_L)):
         # ip,port,kind = proxy_L[i][0:3]
         proxy = proxy_L[i][:3]
-        tmp_thread = threading.Thread(target=test_proxy, args=(proxy,test_proxy_sema,valid_proxy_L_lock, valid_proxy_L), daemon=True)
+        tmp_thread = threading.Thread(target=check_proxy_connection, args=(proxy,check_proxy_connection_sema,valid_proxy_L_lock, valid_proxy_L), daemon=True)
         pool.append(tmp_thread)
 
     for tmp_thread in pool:
@@ -205,6 +214,7 @@ def take_out_valid_ip():
             valid_proxy_L.pop(i)
             return proxy
     return []
+
 
 def disp_ip(ip,port,kind,):
     url = "{}://icanhazip.com/"
@@ -249,6 +259,7 @@ if __name__ == '__main__':
     # sieve_valid_proxy_List()
     t2 = time.time()
     print("Elapsed time: {} sec".format(round(t2-t1,2)))
+    print("valid_proxy_L count: {}".format(len(valid_proxy_L)))
 
     # p1 = Process(target=func1)
     # p1.start()
