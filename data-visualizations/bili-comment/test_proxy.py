@@ -14,15 +14,15 @@ import multiprocessing
 import eventlet
 eventlet.monkey_patch(thread=False)
 
+
 kind_D = {
     "http":  "http://{}:{}",
     "https": "https://{}:{}",
     "ftp":   "ftp://{}:{}"
 }
 
-headers = {
-    "user-agent": "skynet - {}".format(random.random())
-}
+def headers():
+    return { "user-agent": "botnet - {}".format(random.random()) }
 
 def dt2str(dt_time):
     return "{:>4}-{:0>2}-{:0>2}-{:0>2}-{:0>2}-{:0>2}".format(dt_time.year, dt_time.month, dt_time.day, dt_time.hour, dt_time.minute, dt_time.second)
@@ -40,7 +40,7 @@ def fetch_xici():
     # tmp_proxy = {"https":"https://117.45.139.84:9006"}
     # tmp_proxy = {"http":"http://52.69.132.45:8080"}
     # req = requests.get("http://www.xicidaili.com/nn/1",headers=headers,proxies=tmp_proxy)
-    req = requests.get("http://www.xicidaili.com/nn/1",headers=headers)
+    req = requests.get("http://www.xicidaili.com/nn/1",headers=headers())
     print("=== Fetching xici {} ===\n".format(req.status_code))
     sys.stdout.flush()
 
@@ -87,7 +87,7 @@ def fetch_free_proxy():
 
     if is_fetch_new_proxy:
         url = "https://free-proxy-list.net/"
-        req = requests.get(url,headers=headers)
+        req = requests.get(url,headers=headers())
         print("=== Fetching free-proxy-list {} ===\n".format(req.status_code))
         new_filename = "free-proxy-list-{}.html".format(dt2str(new_dt_time))
         with open(new_filename,"wb") as wf:
@@ -126,23 +126,16 @@ def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=3):
     while (retry_cnt<req_retry_max):
         try:
             with eventlet.Timeout(timeout):
-                r = requests.get(cur_url, headers=headers, proxies=cur_proxy)
+                r = requests.get(cur_url, headers=headers(), proxies=cur_proxy)
                 status_code = r.status_code
-                # return status_code
-                # return retry_cnt
             break
         except:
             # print(e)
             retry_cnt += 1
-            # t2 = time.time()
-            # delta_t = t2-t1
-            # # if delta_t > timeout * (retry_cnt+1):
-            # if delta_t > timeout * 1.2:
-            #     return req_retry_max
     return retry_cnt
 
 # valid_proxy_L = []
-def check_proxy_connection(proxy, check_proxy_connection_sema, valid_proxy_L_lock, valid_proxy_L):
+def check_proxy_connection(proxy, valid_proxy_L, check_proxy_connection_sema, valid_proxy_L_lock):
     # global valid_ip_cnt, valid_proxy_L
 
     check_proxy_connection_sema.acquire()
@@ -162,6 +155,7 @@ def check_proxy_connection(proxy, check_proxy_connection_sema, valid_proxy_L_loc
         # ip, port, kind, last_used_time, last_delay, req_cnt, hit_cnt
         valid_proxy_L_lock.acquire()
         valid_proxy_L.append([ip, port, kind, datetime.datetime.now(), delta_t, req_cnt+1, 1])
+        valid_proxy_L[0] += 1
         valid_proxy_L_lock.release()
         # valid_ip_cnt += ret
     
@@ -181,11 +175,12 @@ def run_threads_sieve_valid_proxy(valid_proxy_L):
 
     valid_proxy_L_lock = threading.Lock()
 
+    valid_proxy_L.append(0)
     pool = []
     for i in range(len(proxy_L)):
         # ip,port,kind = proxy_L[i][0:3]
         proxy = proxy_L[i][:3]
-        tmp_thread = threading.Thread(target=check_proxy_connection, args=(proxy,check_proxy_connection_sema,valid_proxy_L_lock, valid_proxy_L), daemon=True)
+        tmp_thread = threading.Thread(target=check_proxy_connection, args=(proxy, valid_proxy_L, check_proxy_connection_sema, valid_proxy_L_lock), daemon=True)
         pool.append(tmp_thread)
 
     for tmp_thread in pool:
@@ -206,6 +201,7 @@ def put_back_used_ip(ip,req_cnt):
         ip[-1] += 1
         ip[-2] += req_cnt
         valid_proxy_L.append(ip)
+        valid_proxy_L[0] += 1
     else:
         valid_ip_cnt -= 1
 
@@ -219,22 +215,32 @@ def take_out_valid_ip():
     return []
 
 
-def disp_ip(ip,port,kind,):
-    url = "{}://icanhazip.com/"
-    ip,port,kind = proxy[:3]
-    proxies = {kind: kind_D[kind].format(ip,port)}
-    req = requests.get(url,proxies=proxies,headers=headers)
-    print(req)
+def disp_proxy(valid_proxy_L, disp_proxy_sema, valid_proxy_L_lock):
+    # url = "{}://icanhazip.com/"
+    # ip,port,kind = proxy[:3]
+    # proxies = {kind: kind_D[kind].format(ip,port)}
+    # req = requests.get(url,proxies=proxies,headers=headers)
+    # print(req)
+    disp_proxy_sema.acquire()
+    time.sleep(0.5)
+    valid_proxy_L_lock.acquire()
+    if valid_proxy_L[0] == 0:
+        print("================= Empty!")
+    else:
+        print("{:>37} {:>2} {} ".format("",valid_proxy_L[0], valid_proxy_L[-1][0]))
 
+    valid_proxy_L_lock.release()
+    disp_proxy_sema.release()
 
-def run_threads_disp_ip():
-    disp_ip_sema_num = 5
-    disp_ip_sema = threading.BoundedSemaphore(disp_ip_sema_num)
-    disp_proxy_Lock = threading.Lock()
+def run_threads_disp_proxy(valid_proxy_L):
+    disp_proxy_sema_num = 5
+    disp_proxy_sema = threading.BoundedSemaphore(disp_proxy_sema_num)
+    valid_proxy_L_lock = threading.Lock()
 
+    # time.sleep(5)
     pool = []
-    for i in range(total_ip_cnt):
-        tmp_thread = threading.Thread(target=disp_ip, args=(), daemon=True)
+    for i in range(100):
+        tmp_thread = threading.Thread(target=disp_proxy, args=(valid_proxy_L, disp_proxy_sema, valid_proxy_L_lock), daemon=True)
         pool.append(tmp_thread)
     for tmp_thread in pool:
         tmp_thread.start()
@@ -242,33 +248,22 @@ def run_threads_disp_ip():
     while is_any_thread_alive(pool):
         time.sleep(0)
 
-
 def get_replies(oid="34354599"):
     pass
     # url = url_body.format(kind,pn,oid)
-
 
 if __name__ == '__main__':
     t1 = time.time()
     manager = multiprocessing.Manager()
     valid_proxy_L = manager.list([])
-    # valid_proxy_L = 
     p1 = multiprocessing.Process(target=run_threads_sieve_valid_proxy,args=(valid_proxy_L,))
-    # p2 = multiprocessing.Process(target=run_threads_disp_ip,args=(valid_proxy_L,))
+    p2 = multiprocessing.Process(target=run_threads_disp_proxy,args=(valid_proxy_L,))
     p1.start()
-    # p2.start()
+    p2.start()
     p1.join()
-    # p2.join()
+    p2.join()
 
-    # sieve_valid_proxy_List()
     t2 = time.time()
-    print("Elapsed time: {} sec".format(round(t2-t1,2)))
-    print("valid_proxy_L count: {}".format(len(valid_proxy_L)))
-
-    # p1 = Process(target=func1)
-    # p1.start()
-    # p2 = Process(target=func2)
-
-    # fetch_free_proxy()
-
+    print("valid_proxy_L count: {}".format(valid_proxy_L[0]))
+    print("Total time: {} sec".format(round(t2-t1,2)))
 

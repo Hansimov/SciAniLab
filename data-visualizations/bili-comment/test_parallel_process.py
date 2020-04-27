@@ -2,14 +2,15 @@ from multiprocessing import Process, Manager
 import random
 import time
 import threading
+import eventlet
+eventlet.monkey_patch(thread=False)
 
 def is_any_thread_alive(threads):
     return True in [t.is_alive() for t in threads]
 
-
 def add_ip(ip_L, add_ip_sema, add_ip_lock):
     add_ip_sema.acquire()
-    time.sleep(0.1)
+    time.sleep(2)
 
     add_ip_lock.acquire()
     if ip_L[0] <= 50:
@@ -38,9 +39,9 @@ def get_ip(ip_L,use_ip_lock):
         return -1
 
     ip = ip_L[1]
-    ip_L.pop(1)
+    print("Reamining ip_L", ip_L)
     print("Get ip {}".format(ip))
-    # print("Reamining ip_L", ip_L)
+    ip_L.pop(1)
     use_ip_lock.release()
     return ip
 
