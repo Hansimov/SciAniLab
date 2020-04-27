@@ -10,7 +10,9 @@ import socket
 import json
 import threading
 import multiprocessing
-
+# import gevent
+import eventlet
+eventlet.monkey_patch(thread=False)
 
 kind_D = {
     "http":  "http://{}:{}",
@@ -120,22 +122,23 @@ def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=3):
     cur_proxy = {kind: kind_D[kind].format(ip,port)}
 
     retry_cnt = 0
-    t1 = time.time()
+    # t1 = time.time()
     while (retry_cnt<req_retry_max):
         try:
-            r = requests.get(cur_url, headers=headers, proxies=cur_proxy,timeout=timeout)
-            status_code = r.status_code
-            # return status_code
-            # return retry_cnt
+            with eventlet.Timeout(timeout):
+                r = requests.get(cur_url, headers=headers, proxies=cur_proxy)
+                status_code = r.status_code
+                # return status_code
+                # return retry_cnt
             break
-        except Exception as e:
+        except:
             # print(e)
             retry_cnt += 1
-            t2 = time.time()
-            delta_t = t2-t1
-            # if delta_t > timeout * (retry_cnt+1):
-            if delta_t > timeout * 1.2:
-                return req_retry_max
+            # t2 = time.time()
+            # delta_t = t2-t1
+            # # if delta_t > timeout * (retry_cnt+1):
+            # if delta_t > timeout * 1.2:
+            #     return req_retry_max
     return retry_cnt
 
 # valid_proxy_L = []
@@ -249,6 +252,7 @@ if __name__ == '__main__':
     t1 = time.time()
     manager = multiprocessing.Manager()
     valid_proxy_L = manager.list([])
+    # valid_proxy_L = 
     p1 = multiprocessing.Process(target=run_threads_sieve_valid_proxy,args=(valid_proxy_L,))
     # p2 = multiprocessing.Process(target=run_threads_disp_ip,args=(valid_proxy_L,))
     p1.start()
