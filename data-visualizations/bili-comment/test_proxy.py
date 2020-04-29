@@ -154,7 +154,7 @@ def check_proxy_connection(proxy, valid_proxy_L, check_proxy_connection_sema, va
         ret = 1
         # ip, port, kind, last_used_time, last_delay, req_cnt, hit_cnt
         valid_proxy_L_lock.acquire()
-        valid_proxy_L.append([ip, port, kind, datetime.datetime.now(), delta_t, req_cnt+1, 1])
+        valid_proxy_L.append([ip, port, kind, time.time(), delta_t, req_cnt+1, 1])
         valid_proxy_L[0] += 1
         valid_proxy_L_lock.release()
         # valid_ip_cnt += ret
@@ -162,7 +162,6 @@ def check_proxy_connection(proxy, valid_proxy_L, check_proxy_connection_sema, va
     print("{:<3} {:<15} {:<5} {:<5} {:>4}s".format((3-req_cnt)*"+", ip, port, kind.upper(),delta_t))
 
     check_proxy_connection_sema.release()
-
 
 # valid_ip_cnt = 0
 
@@ -185,13 +184,29 @@ def run_threads_sieve_valid_proxy(valid_proxy_L):
 
     for tmp_thread in pool:
         tmp_thread.start()
+    for tmp_thread in pool:
+        tmp_thread.join()
 
-    while is_any_thread_alive(pool):
-        time.sleep(0)
+    # while is_any_thread_alive(pool):
+    #     time.sleep(0)
+
+    print("---------------------------------------- p1 end ...")
 
     # print("\nValid IP: {}/{}".format(valid_ip_cnt, total_ip_cnt))
     # for valid_ip in valid_proxy_L:
     #     print("   {:<15} {:<5} {:<5}".format(*valid_ip[:3]))
+
+def take_out_valid_proxy(valid_proxy_L, valid_proxy_L_lock):
+    valid_proxy_L_lock.acquire()
+    for i in range(1,len(valid_proxy_L)):
+        proxy = valid_proxy_L[i]
+        if time.time()-proxy[3] > 0.2:
+            valid_proxy_L.pop(i)
+            valid_proxy_L_lock.release()
+            return proxy
+    valid_proxy_L_lock.release()
+    return []
+
 
 def put_back_used_ip(ip,req_cnt):
     # global valid_proxy_L, valid_ip_cnt
@@ -205,31 +220,34 @@ def put_back_used_ip(ip,req_cnt):
     else:
         valid_ip_cnt -= 1
 
-wait_second = 0.1
-def take_out_valid_ip():
-    # global valid_proxy_L
-    for i,proxy in enumerate(valid_proxy_L):
-        if (datetime.datetime.now()-proxy[3]).total_seconds() > wait_second:
-            valid_proxy_L.pop(i)
-            return proxy
-    return []
-
 
 def disp_proxy(valid_proxy_L, disp_proxy_sema, valid_proxy_L_lock):
+    disp_proxy_sema.acquire()
     # url = "{}://icanhazip.com/"
-    # ip,port,kind = proxy[:3]
+    time.sleep(0.5 + random.random())
+
+    # valid_proxy_L_lock.acquire()
+    proxy = take_out_valid_proxy(valid_proxy_L, valid_proxy_L_lock)
+    while proxy == []:
+        time.sleep(0.5)
+        print("waiting for new proxy ...")
+        proxy = take_out_valid_proxy(valid_proxy_L, valid_proxy_L_lock)
+
+        # valid_proxy_L_lock.release()
+
     # proxies = {kind: kind_D[kind].format(ip,port)}
     # req = requests.get(url,proxies=proxies,headers=headers)
     # print(req)
-    disp_proxy_sema.acquire()
-    time.sleep(0.5)
+    # time.sleep(0.5)
+    # if valid_proxy_L[0] == 0:
+    #     print("================= Empty!")
+    # else:
+    # print("{:>37} {:>2} {} ".format("",valid_proxy_L[0], valid_proxy_L[-1][0]))
     valid_proxy_L_lock.acquire()
-    if valid_proxy_L[0] == 0:
-        print("================= Empty!")
-    else:
-        print("{:>37} {:>2} {} ".format("",valid_proxy_L[0], valid_proxy_L[-1][0]))
-
+    print("{:>37} {:>2} {} ".format("",valid_proxy_L[0], proxy))
     valid_proxy_L_lock.release()
+
+    # valid_proxy_L_lock.release()
     disp_proxy_sema.release()
 
 def run_threads_disp_proxy(valid_proxy_L):
@@ -242,11 +260,16 @@ def run_threads_disp_proxy(valid_proxy_L):
     for i in range(100):
         tmp_thread = threading.Thread(target=disp_proxy, args=(valid_proxy_L, disp_proxy_sema, valid_proxy_L_lock), daemon=True)
         pool.append(tmp_thread)
+
+
     for tmp_thread in pool:
         tmp_thread.start()
+    for tmp_thread in pool:
+        tmp_thread.join()
+    # while is_any_thread_alive(pool):
+    #     time.sleep(0)
 
-    while is_any_thread_alive(pool):
-        time.sleep(0)
+    print("---------------------------------------- p2 end ...")
 
 def get_replies(oid="34354599"):
     pass
