@@ -106,7 +106,7 @@ def fetch_free_proxy():
 
 
 req_retry_max = 3
-req_timeout = 3.0
+req_timeout = 5.0
 # reply_url_body = "{}://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=2"
 def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=req_timeout):
     kind = kind.lower()
@@ -146,8 +146,6 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
         # ip, port, kind, last_used_time, delay
         is_proxy_valid = True
 
-
-
     if is_proxy_valid:
         delta_t = round(t2-t1,1)
         tmp_proxy = [ip, port, kind, time.time(), delta_t]
@@ -169,18 +167,21 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
 
     check_proxy_validity_sema.release()
 
-update_valid_proxy_interval = 30
+update_valid_proxy_interval = 90
 def update_valid_proxy():
     """ update valid_proxy_L and invalid_proxy_L: 
         2d list of [ip, port, kind, last_used_time, delay]
     """
+    global valid_proxy_L
     if time.time() - last_fetch_proxy_time < update_valid_proxy_interval:
         return
     # fetched_proxy_L = fetch_xici()
     fetched_proxy_L = fetch_free_proxy()
     check_proxy_validity_sema = threading.BoundedSemaphore(len(fetched_proxy_L))
 
+    valid_proxy_L = []
     valid_proxy_L_lock = threading.Lock()
+
 
     pool = []
     for i in range(len(fetched_proxy_L)):

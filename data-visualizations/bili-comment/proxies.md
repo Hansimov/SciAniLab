@@ -6,12 +6,15 @@
   * 国内HTTPS：http://www.xicidaili.com/wn/
   * 国内HTTP：http://www.xicidaili.com/wt/
 
+* 中国 代理服务器：很多，~3000，网页加载略慢
+** http://free-proxy.cz/zh/proxylist/country/CN/all/ping/all
+
 * 66ip：极多，~7000
   * http://www.66ip.cn/mo.php?sxb=&tqsl=10000&port=&export=&ktip=&sxa=&submit=%CC%E1++%C8%A1&textarea=
 
 * 流年免费 HTTP 代理（89ip）：很多，~3000
   * http://www.89ip.cn/
-  * http://www.89ip.cn/tiqv.php?sxb=&tqsl=10000&ports=&ktip=&xl=on&submit=%CC%E1++%C8%A1
+  * http://www.89ip.cn/tqdl.html?num=1000&address=&kill_address=&port=&kill_port=&isp=
 
 * seofangfa：中等，~400
   * https://ip.seofangfa.com/
@@ -19,12 +22,14 @@
 ---
 ## 免费代理列表
 
-* 百变IP，少：~100
+* 中国 代理服务器：多，~3000
+** http://free-proxy.cz/zh/proxylist/country/CN/all/ping/all
+
+* 百变IP：少，~100
   * https://www.baibianip.com/home/free.html
 
 * 流年免费 HTTP 代理（89ip）：很多，~3000
   * http://www.89ip.cn/
-  * http://www.89ip.cn/tiqv.php?sxb=&tqsl=10000&ports=&ktip=&xl=on&submit=%CC%E1++%C8%A1
 
 * 中国 ip 地址：少，~100
   * http://cn-proxy.com/archives/218
