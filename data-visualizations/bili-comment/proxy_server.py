@@ -1,32 +1,19 @@
-import os
 import sys
-import time
-import datetime
-import random
-import re
-import requests
 import socket
 import threading
 import pickle
 import eventlet
 eventlet.monkey_patch(thread=False)
 
+from fetch_and_parse_proxy_site import *
+
 # fetch proxies in advance
 # if a proxy in client is invalid, then the client requests for a new proxy
 # server returns a valid proxy when receiving a client request
 
-last_fetch_proxy_time = 0.0
-
 valid_proxy_L, invalid_proxy_L = [], []
+# invalid_proxy_L
 
-def headers():
-    return { "user-agent": "botnet - {}".format(random.random()) }
-
-def dt2str(dt_time):
-    return "{:>4}-{:0>2}-{:0>2}-{:0>2}-{:0>2}-{:0>2}".format(dt_time.year, dt_time.month, dt_time.day, dt_time.hour, dt_time.minute, dt_time.second)
-
-def str2dt(dt_str):
-    return datetime.datetime.strptime(dt_str,'%Y-%m-%d-%H-%M-%S')
 
 def is_any_thread_alive(threads):
     return True in [t.is_alive() for t in threads]
@@ -52,61 +39,9 @@ def ip_port_to_proxy(ip,port,kind):
     }
     return {kind: kind_D[kind].format(ip,port)}
 
-def fetch_free_proxy():
-    """ return fetched_proxy_L 
-        2d list of [ip, port, kind, last_used_time]
-    """
-    global last_fetch_proxy_time
-    old_filename = ""
-    for filename in os.listdir():
-        if re.match("free-proxy-list-[\s\S]*",filename):
-            old_filename = filename
-            break
-
-    new_dt_time = datetime.datetime.now()
-    last_fetch_proxy_time = time.time()
-
-    is_fetch_new_proxy = False
-
-    if old_filename == "":
-        is_fetch_new_proxy = True
-    else:
-        old_dt_str = old_filename.replace("free-proxy-list-","").replace(".html","")
-        old_dt_time = str2dt(old_dt_str)
-        if (new_dt_time-old_dt_time).total_seconds() > 300:
-            os.remove(old_filename)
-            is_fetch_new_proxy = True
-
-    if is_fetch_new_proxy:
-        url = "https://free-proxy-list.net/"
-        req = requests.get(url,headers=headers())
-        print("=== Fetching free-proxy-list {} ===\n".format(req.status_code))
-        new_filename = "free-proxy-list-{}.html".format(dt2str(new_dt_time))
-        with open(new_filename,"wb") as wf:
-            wf.write(req.content)
-        read_filename = new_filename
-    else:
-        print("=== Reusing {}\n".format(old_filename))
-        read_filename = old_filename
-
-    with open(read_filename,mode="r",encoding="utf-8") as rf:
-        text = rf.read()
-
-    text = re.findall(r"<tbody[\s\S]*?tbody>", text)[0]
-    tr_L = re.findall(r"<tr[\s\S]*?tr>", text)
-
-    fetched_proxy_L = []
-    for tr in tr_L:
-        td_L = re.findall(r"<td[\s\S]*?>([\s\S]*?)</td>",tr)
-        kind = "http" if td_L[-2]== "no" else "https"
-        proxy = [td_L[0], td_L[1], kind]
-        fetched_proxy_L.append(proxy)
-    # ip, port, http(s)
-    return fetched_proxy_L
-
 
 req_retry_max = 3
-req_timeout = 5.0
+req_timeout = 3.0
 # reply_url_body = "{}://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=2"
 def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=req_timeout):
     kind = kind.lower()
@@ -168,15 +103,16 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
     check_proxy_validity_sema.release()
 
 update_valid_proxy_interval = 90
-def update_valid_proxy():
+def update_valid_proxy(site_name):
     """ update valid_proxy_L and invalid_proxy_L: 
         2d list of [ip, port, kind, last_used_time, delay]
     """
     global valid_proxy_L
-    if time.time() - last_fetch_proxy_time < update_valid_proxy_interval:
-        return
+    if site_name in last_fetch_proxy_time:
+        if time.time() - last_fetch_proxy_time[site_name] < update_valid_proxy_interval:
+            return
     # fetched_proxy_L = fetch_xici()
-    fetched_proxy_L = fetch_free_proxy()
+    fetched_proxy_L = fetch_free_proxy_list_net()
     check_proxy_validity_sema = threading.BoundedSemaphore(len(fetched_proxy_L))
 
     valid_proxy_L = []
@@ -252,7 +188,7 @@ def run_server(timeout=socket_timeout):
                     select_valid_proxy(conn,data)
             except socket.timeout:
                 # print("Waiting for command ...")
-                update_valid_proxy()
+                update_valid_proxy("free-proxy-list")
             except KeyboardInterrupt:
                 break
     except KeyboardInterrupt:

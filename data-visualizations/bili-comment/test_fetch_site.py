@@ -2,7 +2,7 @@ import requests
 import datetime
 # site_name = "free-proxy-list"
 
-def fetch_new_proxy(site_name):
+def get_is_fetch_new_proxy(site_name):
     old_filename = ""
     for filename in os.listdir():
         if re.match(site_name+"-[\s\S]*",filename):
@@ -24,7 +24,7 @@ def fetch_new_proxy(site_name):
     return is_fetch_new_proxy, old_filename, new_dt_time
 
 def fetch_free_proxy_list_net():
-    is_fetch_new_proxy, old_filename, new_dt_time = fetch_new_proxy("free-proxy-list")
+    is_fetch_new_proxy, old_filename, new_dt_time = get_is_fetch_new_proxy("free-proxy-list")
     # fetch specific site
     if is_fetch_new_proxy:
         url = "https://free-proxy-list.net/"
