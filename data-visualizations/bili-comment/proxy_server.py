@@ -24,7 +24,7 @@ def dt2str(dt_time):
 def str2dt(dt_str):
     return datetime.datetime.strptime(dt_str,'%Y-%m-%d-%H-%M-%S')
 
-
+# ========================= Fetch proxy from sites ========================= #
 def get_is_fetch_new_proxy(site_name):
     global last_fetch_proxy_time
     old_filename = ""
@@ -116,9 +116,8 @@ def fetch_xici_daili():
     # ip, port, http(s)
     return fetched_proxy_L
 
-# fetch proxies in advance
-# if a proxy in client is invalid, then the client requests for a new proxy
-# server returns a valid proxy when receiving a client request
+# xxxxxxxxxxxxxxxxxxxxxx End of Fetch proxy from sites xxxxxxxxxxxxxxxxxxxxxx #
+
 
 valid_proxy_L, invalid_proxy_L = [], []
 
@@ -208,17 +207,8 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
 
     check_proxy_validity_sema.release()
 
-update_valid_proxy_interval = 90
-# def is_update_proxy():
-#     site_name = ["free-proxy-list"]
 
-#     # site_name = "xici-daili"
-#     # xici_suffix_L = ["nn","nt","wn","wt"]
-#     if site_name in last_fetch_proxy_time:
-#         if time.time() - last_fetch_proxy_time[site_name] < update_valid_proxy_interval:
-#             return True
-#     return False
-
+update_valid_proxy_interval = 120
 def update_valid_proxy():
     """ update valid_proxy_L and invalid_proxy_L: 
         2d list of [ip, port, kind, last_used_time, delay]
@@ -230,7 +220,7 @@ def update_valid_proxy():
         return
 
     fetched_proxy_L = fetch_xici_daili()
-    # fetched_proxy_L = fetch_free_proxy_list_net()
+    fetched_proxy_L.extend(fetch_free_proxy_list_net())
     check_proxy_validity_sema = threading.BoundedSemaphore(len(fetched_proxy_L))
 
     valid_proxy_L = []
@@ -252,7 +242,7 @@ def update_valid_proxy():
     while is_any_thread_alive(pool):
         time.sleep(0)
 
-    print("valid proxy count: {}/{}".format(len(valid_proxy_L), len(valid_proxy_L)+len(invalid_proxy_L)))
+    print("valid proxy count: {}/{}".format(len(valid_proxy_L), len(fetched_proxy_L)))
 
 reuse_interval = 1.0
 def select_valid_proxy(conn, data):
@@ -279,8 +269,11 @@ def select_valid_proxy(conn, data):
         pass
 
 
+# fetch proxies in advance
+# if a proxy in client is invalid, then the client requests for a new proxy
+# server returns a valid proxy when receiving a client request
 socket_timeout = 1
-def run_server(timeout=socket_timeout):
+def run_proxy_server(timeout=socket_timeout):
     host = "127.0.0.1"
     port = 23333
 
@@ -309,5 +302,4 @@ def run_server(timeout=socket_timeout):
         print("Server closed with KeyboardInterrupt!")
 
 if __name__ == '__main__':
-    run_server()
-
+    run_proxy_server()
