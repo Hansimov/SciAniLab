@@ -12,8 +12,6 @@ from fetch_and_parse_proxy_site import *
 # server returns a valid proxy when receiving a client request
 
 valid_proxy_L, invalid_proxy_L = [], []
-# invalid_proxy_L
-
 
 def is_any_thread_alive(threads):
     return True in [t.is_alive() for t in threads]
@@ -96,28 +94,29 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
             invalid_proxy_L.append(tmp_proxy)
             valid_proxy_L_lock.release()
 
-
     if is_proxy_valid:
         print("{:<3} {:<15} {:<5} {:<5} {:>4}s".format((3-req_cnt)*"+", ip, port, kind, delta_t))
 
     check_proxy_validity_sema.release()
 
 update_valid_proxy_interval = 90
-def update_valid_proxy(site_name):
+def update_valid_proxy():
     """ update valid_proxy_L and invalid_proxy_L: 
         2d list of [ip, port, kind, last_used_time, delay]
     """
     global valid_proxy_L
+    # site_name = "free-proxy-list"
+    site_name = "xici-daili-nn"
     if site_name in last_fetch_proxy_time:
+        sys.stdout.flush()
         if time.time() - last_fetch_proxy_time[site_name] < update_valid_proxy_interval:
             return
-    # fetched_proxy_L = fetch_xici()
-    fetched_proxy_L = fetch_free_proxy_list_net()
+    fetched_proxy_L = fetch_xici_daili()
+    # fetched_proxy_L = fetch_free_proxy_list_net()
     check_proxy_validity_sema = threading.BoundedSemaphore(len(fetched_proxy_L))
 
     valid_proxy_L = []
     valid_proxy_L_lock = threading.Lock()
-
 
     pool = []
     for i in range(len(fetched_proxy_L)):
@@ -182,13 +181,10 @@ def run_server(timeout=socket_timeout):
                     print("x Client disconnected!")
                     break
                 else:
-                    # print("> Message from client: {}".format(data.decode()))
-                    # msg = "> Message from server".format(data.decode()).encode()
-                    # conn.sendall(msg)
                     select_valid_proxy(conn,data)
             except socket.timeout:
                 # print("Waiting for command ...")
-                update_valid_proxy("free-proxy-list")
+                update_valid_proxy()
             except KeyboardInterrupt:
                 break
     except KeyboardInterrupt:

@@ -73,3 +73,37 @@ def fetch_free_proxy_list_net():
         fetched_proxy_L.append(proxy)
     # ip, port, http(s)
     return fetched_proxy_L
+
+def fetch_xici_daili():
+    """ return fetched_proxy_L 
+        2d list of [ip, port, kind, last_used_time]
+    """
+    suffix = "nn"
+    is_fetch_new_proxy, old_filename, new_dt_time = get_is_fetch_new_proxy("xici-daili-{}".format(suffix))
+
+    if is_fetch_new_proxy:
+        url = "http://www.xicidaili.com/{}/1".format(suffix)
+        req = requests.get(url,headers=headers())
+        print("=== Fetching xici-daili-{} {} ===\n".format(suffix, req.status_code))
+        new_filename = "xici-daili-{}-{}.html".format(suffix,dt2str(new_dt_time))
+        with open(new_filename,"wb") as wf:
+            wf.write(req.content)
+        read_filename = new_filename
+    else:
+        print("=== Reusing {}\n".format(old_filename))
+        read_filename = old_filename
+
+    with open(read_filename,mode="r",encoding="utf-8") as rf:
+        text = rf.read()
+
+    text = re.findall(r"<table[\s\S]*?table>", text)[0]
+    tr_L = re.findall(r"<tr class[\s\S]*?tr>", text)
+
+    fetched_proxy_L = []
+    for tr in tr_L:
+        td_L = re.findall(r"<td>([\s\S]*?)</td>",tr)
+        proxy = [td_L[0], td_L[1], td_L[3]]
+        # print(*proxy)
+        fetched_proxy_L.append(proxy)
+    # ip, port, http(s)
+    return fetched_proxy_L
