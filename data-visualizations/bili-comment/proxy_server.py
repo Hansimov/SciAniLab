@@ -8,6 +8,8 @@ import requests
 import socket
 import threading
 import pickle
+import eventlet
+eventlet.monkey_patch(thread=False)
 
 # fetch proxies in advance
 # if a proxy in client is invalid, then the client requests for a new proxy
@@ -42,13 +44,13 @@ def is_proxy_in_proxy_L(proxy, proxy_L, valid_proxy_L_lock):
     return False
 
 def ip_port_to_proxy(ip,port,kind):
+    kind = kind.lower()
     kind_D = {
         "http":  "http://{}:{}",
         "https": "https://{}:{}",
         "ftp":   "ftp://{}:{}"
     }
     return {kind: kind_D[kind].format(ip,port)}
-
 
 def fetch_free_proxy():
     """ return fetched_proxy_L 
@@ -112,7 +114,6 @@ def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=req
     cur_proxy = ip_port_to_proxy(ip,port,kind)
 
     retry_cnt = 0
-    # t1 = time.time()
     while (retry_cnt<req_retry_max):
         try:
             with eventlet.Timeout(timeout):
@@ -124,12 +125,13 @@ def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=req
             retry_cnt += 1
     return retry_cnt
 
-def check_proxy_validity(proxy, check_proxy_connection_sema, valid_proxy_L_lock):
-    global valid_proxy_L
+def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
+    global valid_proxy_L, invalid_proxy_L
 
-    check_proxy_connection_sema.acquire()
+    check_proxy_validity_sema.acquire()
     ip, port, kind = proxy[:3]
 
+    req_cnt = req_retry_max
     is_proxy_valid = False
     if is_proxy_in_proxy_L(proxy, invalid_proxy_L, valid_proxy_L_lock):
         pass
@@ -139,32 +141,39 @@ def check_proxy_validity(proxy, check_proxy_connection_sema, valid_proxy_L_lock)
         req_cnt = request_with_proxy(test_url_body,ip,port,kind)
         t2 = time.time()
 
-        # sys.stdout.flush()
-        if req_cnt <= 1:
-            # ip, port, kind, last_used_time, delay
-            is_proxy_valid = True
+    # sys.stdout.flush()
+    if req_cnt <= 1:
+        # ip, port, kind, last_used_time, delay
+        is_proxy_valid = True
 
-    valid_proxy_L_lock.acquire()
+
+
     if is_proxy_valid:
         delta_t = round(t2-t1,1)
-        valid_proxy_L.append([ip, port, kind, time.time(), delta_t])
+        tmp_proxy = [ip, port, kind, time.time(), delta_t]
+        if not is_proxy_in_proxy_L(tmp_proxy, valid_proxy_L, valid_proxy_L_lock):
+            valid_proxy_L_lock.acquire()
+            valid_proxy_L.append(tmp_proxy)
+            valid_proxy_L_lock.release()
     else:
         delta_t = req_retry_max*req_timeout
-        req_cnt = 3
-        invalid_proxy_L.append([ip, port, kind, time.time(), delta_t])
-    valid_proxy_L_lock.release()
+        tmp_proxy = [ip, port, kind, time.time(), delta_t]
+        if not is_proxy_in_proxy_L(tmp_proxy, invalid_proxy_L, valid_proxy_L_lock):
+            valid_proxy_L_lock.acquire()
+            invalid_proxy_L.append(tmp_proxy)
+            valid_proxy_L_lock.release()
 
-    print("{:<3} {:<15} {:<5} {:<5} {:>4}s".format((3-req_cnt)*"+", ip, port, kind.upper(), delta_t))
 
-    check_proxy_connection_sema.release()
+    if is_proxy_valid:
+        print("{:<3} {:<15} {:<5} {:<5} {:>4}s".format((3-req_cnt)*"+", ip, port, kind, delta_t))
 
-update_valid_proxy_interval = 300
+    check_proxy_validity_sema.release()
+
+update_valid_proxy_interval = 30
 def update_valid_proxy():
     """ update valid_proxy_L and invalid_proxy_L: 
         2d list of [ip, port, kind, last_used_time, delay]
     """
-    global valid_proxy_L, invalid_proxy_L
-
     if time.time() - last_fetch_proxy_time < update_valid_proxy_interval:
         return
     # fetched_proxy_L = fetch_xici()
@@ -189,20 +198,31 @@ def update_valid_proxy():
     while is_any_thread_alive(pool):
         time.sleep(0)
 
+    print("valid proxy count: {}/{}".format(len(valid_proxy_L), len(valid_proxy_L)+len(invalid_proxy_L)))
+
 reuse_interval = 1.0
-def select_valid_proxy(conn):
-    global valid_proxy_L
-    if len(valid_proxy_L) > 0:
-        proxy = valid_proxy_L[0]
-        if time.time() - proxy[3] > reuse_interval:
-            proxy_pkl = pickle.dumps(proxy)
-            conn.sendall(proxy_pkl)
-            print("Sending {:<15} {:<5} {:<5}".format(*proxy[:3]))
-            proxy[3] = time.time()
-            valid_proxy_L.append(proxy)
-            valid_proxy_L.pop(0)
-            return True
-    return False
+def select_valid_proxy(conn, data):
+    global valid_proxy_L, invalid_proxy_L
+    if data[0] == "get":
+        if len(valid_proxy_L) > 0:
+            proxy = valid_proxy_L[0]
+            if time.time() - proxy[3] > reuse_interval:
+                proxy_pkl = pickle.dumps(proxy)
+                conn.sendall(proxy_pkl)
+                print("> Send {:<15} {:<5} {:<5}".format(*proxy[:3]))
+                proxy[3] = time.time()
+                valid_proxy_L.append(proxy)
+                valid_proxy_L.pop(0)
+        conn.sendall(pickle.dumps([]))
+    elif data[0] == "del":
+        for i in range(len(valid_proxy_L)):
+            proxy = valid_proxy_L[i]
+            if data[1][:3] == proxy[:3]:
+                invalid_proxy_L.append(valid_proxy_L.pop(i))
+                print("x Invalid {:<15} {:<5} {:<5}".format(*proxy[:3]))
+                break
+    else:
+        pass
 
 
 socket_timeout = 1
@@ -220,7 +240,7 @@ def run_server(timeout=socket_timeout):
         while True:
             try:
                 conn, addr = sock.accept()
-                data = conn.recv(1024)
+                data = pickle.loads(conn.recv(1024))
                 if not data:
                     print("x Client disconnected!")
                     break
@@ -228,12 +248,12 @@ def run_server(timeout=socket_timeout):
                     # print("> Message from client: {}".format(data.decode()))
                     # msg = "> Message from server".format(data.decode()).encode()
                     # conn.sendall(msg)
-                    select_valid_proxy(conn)
+                    select_valid_proxy(conn,data)
             except socket.timeout:
-                # print("Timeout")
+                # print("Waiting for command ...")
                 update_valid_proxy()
             except KeyboardInterrupt:
-                pass
+                break
     except KeyboardInterrupt:
         print("Server closed with KeyboardInterrupt!")
 
