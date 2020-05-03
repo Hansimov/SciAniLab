@@ -15,6 +15,9 @@
 * China Proxy Server List - Chinese Proxies 
   * https://www.proxynova.com/proxy-server-list/country-cn/
 
+* jiangxianli/ProxyIpLib：中等，200+，可用率较高，和 Free Proxy List 有较多重复
+  * https://github.com/jiangxianli/ProxyIpLib#获取代理ip列表
+
 * China proxy servers：很多，~2000
   * http://free-proxy.cz/en/proxylist/country/CN/all/ping/all
 
