@@ -13,7 +13,6 @@ import pickle
 import eventlet
 eventlet.monkey_patch(thread=False)
 
-
 last_fetch_proxy_time = 0
 
 def headers():
@@ -92,30 +91,31 @@ def fetch_xici_daili():
     suffix_L = ["nn","nt","wn","wt"]
     fetched_proxy_L = []
     for suffix in suffix_L:
-        is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy("{}-{}".format(site_name,suffix))
+        for page in range(1,2):
+            is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy("{}-{}-{}".format(site_name,suffix,page))
 
-        if is_fetch_new_proxy:
-            url = "http://www.xicidaili.com/{}/1".format(suffix)
-            req = requests.get(url, headers=headers())
-            print("=== Fetching {}-{} {} ===\n".format(site_name, suffix, req.status_code))
-            with open(new_filename,"wb") as wf:
-                wf.write(req.content)
-            read_filename = new_filename
-        else:
-            print("=== Reusing {}\n".format(old_filename))
-            read_filename = old_filename
+            if is_fetch_new_proxy:
+                url = "http://www.xicidaili.com/{}/{}".format(suffix,page)
+                req = requests.get(url, headers=headers())
+                print("=== Fetching {}-{} {} ===\n".format(site_name, suffix, req.status_code))
+                with open(new_filename,"wb") as wf:
+                    wf.write(req.content)
+                read_filename = new_filename
+            else:
+                print("=== Reusing {}\n".format(old_filename))
+                read_filename = old_filename
 
-        with open(read_filename,mode="r",encoding="utf-8") as rf:
-            text = rf.read()
+            with open(read_filename,mode="r",encoding="utf-8") as rf:
+                text = rf.read()
 
-        text = re.findall(r"<table[\s\S]*?table>", text)[0]
-        tr_L = re.findall(r"<tr class[\s\S]*?tr>", text)
+            text = re.findall(r"<table[\s\S]*?table>", text)[0]
+            tr_L = re.findall(r"<tr class[\s\S]*?tr>", text)
 
-        for tr in tr_L:
-            td_L = re.findall(r"<td>([\s\S]*?)</td>",tr)
-            proxy = [td_L[0], td_L[1], td_L[3]]
-            # print(*proxy)
-            fetched_proxy_L.append(proxy)
+            for tr in tr_L:
+                td_L = re.findall(r"<td>([\s\S]*?)</td>",tr)
+                proxy = [td_L[0], td_L[1], td_L[3]]
+                # print(*proxy)
+                fetched_proxy_L.append(proxy)
     # ip, port, http(s)
     return fetched_proxy_L
 
@@ -125,7 +125,7 @@ def fetch_66ip():
     """
     # Many duplicates of xici, low usable ratio
     site_name = "66ip"
-    is_fetch_new_proxy, old_filename, new_dt_time = get_is_fetch_new_proxy(site_name)
+    is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy(site_name)
     if is_fetch_new_proxy:
         url = "http://www.66ip.cn/mo.php?sxb=&tqsl=1000"
         req = requests.get(url,headers=headers())
@@ -228,22 +228,24 @@ def ip_port_to_proxy(ip,port,kind):
 req_retry_max = 3
 req_timeout = 3.0
 # reply_url_body = "{}://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=2"
-def request_with_proxy(url_body,ip,port,kind,retry_max=req_retry_max,timeout=req_timeout):
+def request_with_proxy(test_url_body,ip,port,kind,retry_max=req_retry_max,timeout=req_timeout):
     kind = kind.lower()
-    cur_url = url_body.format(kind)
+    cur_url = test_url_body.format(kind)
     cur_proxy = ip_port_to_proxy(ip,port,kind)
 
+    status_code = -1
     retry_cnt = 0
     while (retry_cnt<req_retry_max):
         try:
             with eventlet.Timeout(timeout):
                 r = requests.get(cur_url, headers=headers(), proxies=cur_proxy)
                 status_code = r.status_code
+                # sys.stdout.flush()
             break
         except:
             # print(e)
             retry_cnt += 1
-    return retry_cnt
+    return retry_cnt, status_code
 
 def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
     global valid_proxy_L, invalid_proxy_L
@@ -259,11 +261,11 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
     # else:
     test_url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=2"
     t1 = time.time()
-    req_cnt = request_with_proxy(test_url_body,ip,port,kind)
+    req_cnt, status_code = request_with_proxy(test_url_body,ip,port,kind)
     t2 = time.time()
 
     # sys.stdout.flush()
-    if req_cnt <= 1:
+    if status_code==200 and req_cnt <= 1:
         # ip, port, kind, last_used_time, delay
         is_proxy_valid = True
 
@@ -283,7 +285,7 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
     #         valid_proxy_L_lock.release()
 
     if is_proxy_valid:
-        print("{:<3} {:<15} {:<5} {:<5} {:>4}s".format((3-req_cnt)*"+", ip, port, kind, delta_t))
+        print("{:<3} {:<15} {:<5} {:<5} {:<3} {:>4}s".format((3-req_cnt)*"+", ip, port, kind, status_code, delta_t))
 
     check_proxy_validity_sema.release()
 
@@ -301,7 +303,7 @@ def update_valid_proxy():
 
     fetched_proxy_L = []
     fetched_proxy_L.extend(fetch_xici_daili())
-    fetched_proxy_L.extend(fetch_free_proxy_list_net())
+    # fetched_proxy_L.extend(fetch_free_proxy_list_net())
     # fetched_proxy_L.extend(fetch_66ip())
     # fetched_proxy_L.extend(fetch_free_proxy_cz())
     # return
