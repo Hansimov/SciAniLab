@@ -6,11 +6,20 @@
   * 国内HTTPS：http://www.xicidaili.com/wn/
   * 国内HTTP：http://www.xicidaili.com/wt/
 
-* 中国 代理服务器：很多，~3000，网页加载略慢
-** http://free-proxy.cz/zh/proxylist/country/CN/all/ping/all
+* Free Proxy List：中等，300，可用率较高
+  * https://free-proxy-list.net/
 
-* 66ip：极多，~7000
-  * http://www.66ip.cn/mo.php?sxb=&tqsl=10000&port=&export=&ktip=&sxa=&submit=%CC%E1++%C8%A1&textarea=
+* spys.one：？
+  * http://spys.one/free-proxy-list/
+
+* China Proxy Server List - Chinese Proxies 
+  * https://www.proxynova.com/proxy-server-list/country-cn/
+
+* China proxy servers：很多，~2000
+  * http://free-proxy.cz/en/proxylist/country/CN/all/ping/all
+
+* 66ip：极多，~7000，和西刺重复
+  * http://www.66ip.cn/mo.php?sxb=&tqsl=1000&port=&export=&ktip=&sxa=&submit=%CC%E1++%C8%A1&textarea=
 
 * 流年免费 HTTP 代理（89ip）：很多，~3000
   * http://www.89ip.cn/

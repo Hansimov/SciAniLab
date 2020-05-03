@@ -21,8 +21,18 @@ proxy = ["get",[]]
 # proxy = ["del", ["180.252.181.2","80","http"]]
 proxy_pkl = pickle.dumps(proxy)
 sock.sendall(proxy_pkl)
+
 if proxy[0]=="get":
-    data = pickle.loads(sock.recv(1024))
-    print(*data)
+    data = b""
+    # while True:
+    packet = sock.recv(1024*20)
+    # print(packet)
+    # if not packet:
+    #     break
+    data += packet
+    valid_proxy_L = pickle.loads(data)
+    # print(*data)
+    # print(valid_proxy_L)
+    print(len(valid_proxy_L))
 
 sock.close()

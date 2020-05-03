@@ -4,6 +4,7 @@ import datetime
 import time
 import random
 import requests
+# import base64
 
 import sys
 import socket
@@ -27,6 +28,7 @@ def str2dt(dt_str):
 # ========================= Fetch proxy from sites ========================= #
 def get_is_fetch_new_proxy(site_name):
     global last_fetch_proxy_time
+    site_name = "px-" + site_name
     old_filename = ""
     for filename in os.listdir():
         if re.match(site_name+"-[\s\S]*",filename):
@@ -34,6 +36,7 @@ def get_is_fetch_new_proxy(site_name):
             break
 
     new_dt_time = datetime.datetime.now()
+    new_filename = "{}-{}.html".format(site_name, dt2str(new_dt_time))
     last_fetch_proxy_time = time.time()
 
     is_fetch_new_proxy = False
@@ -46,19 +49,19 @@ def get_is_fetch_new_proxy(site_name):
             os.remove(old_filename)
             is_fetch_new_proxy = True
 
-    return is_fetch_new_proxy, old_filename, new_dt_time
+    return is_fetch_new_proxy, old_filename, new_filename
 
 def fetch_free_proxy_list_net():
     """ return fetched_proxy_L 
         2d list of [ip, port, kind, last_used_time]
     """
-    is_fetch_new_proxy, old_filename, new_dt_time = get_is_fetch_new_proxy("free-proxy-list")
+    site_name = "free-proxy-list"
+    is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy(site_name)
 
     if is_fetch_new_proxy:
         url = "https://free-proxy-list.net/"
         req = requests.get(url,headers=headers())
-        print("=== Fetching free-proxy-list {} ===\n".format(req.status_code))
-        new_filename = "free-proxy-list-{}.html".format(dt2str(new_dt_time))
+        print("=== Fetching {} {} ===\n".format(site_name, req.status_code))
         with open(new_filename,"wb") as wf:
             wf.write(req.content)
         read_filename = new_filename
@@ -85,16 +88,16 @@ def fetch_xici_daili():
     """ return fetched_proxy_L 
         2d list of [ip, port, kind, last_used_time]
     """
+    site_name = "xici-daili"
     suffix_L = ["nn","nt","wn","wt"]
     fetched_proxy_L = []
     for suffix in suffix_L:
-        is_fetch_new_proxy, old_filename, new_dt_time = get_is_fetch_new_proxy("xici-daili-{}".format(suffix))
+        is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy("{}-{}".format(site_name,suffix))
 
         if is_fetch_new_proxy:
             url = "http://www.xicidaili.com/{}/1".format(suffix)
             req = requests.get(url, headers=headers())
-            print("=== Fetching xici-daili-{} {} ===\n".format(suffix, req.status_code))
-            new_filename = "xici-daili-{}-{}.html".format(suffix,dt2str(new_dt_time))
+            print("=== Fetching {}-{} {} ===\n".format(site_name, suffix, req.status_code))
             with open(new_filename,"wb") as wf:
                 wf.write(req.content)
             read_filename = new_filename
@@ -115,6 +118,82 @@ def fetch_xici_daili():
             fetched_proxy_L.append(proxy)
     # ip, port, http(s)
     return fetched_proxy_L
+
+def fetch_66ip():
+    """ return fetched_proxy_L 
+        2d list of [ip, port, kind, last_used_time]
+    """
+    # Many duplicates of xici, low usable ratio
+    site_name = "66ip"
+    is_fetch_new_proxy, old_filename, new_dt_time = get_is_fetch_new_proxy(site_name)
+    if is_fetch_new_proxy:
+        url = "http://www.66ip.cn/mo.php?sxb=&tqsl=1000"
+        req = requests.get(url,headers=headers())
+        print("=== Fetching 66ip {} ===\n".format(req.status_code))
+        with open(new_filename,"wb") as wf:
+            wf.write(req.content)
+        read_filename = new_filename
+    else:
+        print("=== Reusing {}\n".format(old_filename))
+        read_filename = old_filename
+
+    with open(read_filename,mode="r",encoding="windows-1252") as rf:
+        text = rf.read()
+
+    text = re.findall(r"(.*)<br\s/>", text)
+    fetched_proxy_L = []
+    for line in text:
+        ip,port = line.strip().split(":")
+        kind = "http"
+        proxy = [ip,port,kind]
+        fetched_proxy_L.append(proxy)
+    # ip, port, http(s)
+    return fetched_proxy_L
+
+# # deprecated, todo
+# def fetch_free_proxy_cz():
+#     """ return fetched_proxy_L 
+#         2d list of [ip, port, kind, last_used_time]
+#     """
+#     # Banned by GFW sometimes
+#     site_name = "free-proxy-cz"
+#     is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy(site_name)
+#     if is_fetch_new_proxy:
+#         url = "http://free-proxy.cz/en/proxylist/country/CN/all/ping/all/2"
+#         try:
+#             with eventlet.Timeout(6):
+#                 req = requests.get(url, headers=headers())
+#         except:
+#             print("x Fetching free-proxy-cz failed!")
+#             return
+#         print("=== Fetching {} {} ===\n".format(site_name, req.status_code))
+#         with open(new_filename,"wb") as wf:
+#             wf.write(req.content)
+#         read_filename = new_filename
+#     else:
+#         print("=== Reusing {}\n".format(old_filename))
+#         read_filename = old_filename
+
+#     with open(read_filename,mode="r",encoding="utf-8") as rf:
+#         text = rf.read()
+#     # print(text)
+#     text = re.findall(r"<tbody[\s\S]*?tbody>", text)[0]
+#     tr_L = re.findall(r"<tr[\s\S]*?tr>", text)
+#     # print(len(tr_L))
+
+#     fetched_proxy_L = []
+#     for tr in tr_L:
+#         td_L = re.findall(r"<td[\s\S]*?td>", text)
+#         ip_b64 = re.findall(r"decode\(\"([\s\S]*?)\"\)", td_L[0])
+#         print(ip_b64)
+#         ip_b64 = ip_b64.replace("decode","").replace("(","").replace(")","").replace("\"","")
+#         ip = base64.b64decode(ip_b64)
+#         print(ip)
+#         # todo
+#         # fetched_proxy_L.append(proxy)
+
+#     # ip, port, http(s)
+#     return fetched_proxy_L
 
 # xxxxxxxxxxxxxxxxxxxxxx End of Fetch proxy from sites xxxxxxxxxxxxxxxxxxxxxx #
 
@@ -171,16 +250,17 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
 
     check_proxy_validity_sema.acquire()
     ip, port, kind = proxy[:3]
+    kind = kind.lower()
 
     req_cnt = req_retry_max
     is_proxy_valid = False
-    if is_proxy_in_proxy_L(proxy, invalid_proxy_L, valid_proxy_L_lock):
-        pass
-    else:
-        test_url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=2"
-        t1 = time.time()
-        req_cnt = request_with_proxy(test_url_body,ip,port,kind)
-        t2 = time.time()
+    # if is_proxy_in_proxy_L(proxy, invalid_proxy_L, valid_proxy_L_lock):
+    #     pass
+    # else:
+    test_url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=2"
+    t1 = time.time()
+    req_cnt = request_with_proxy(test_url_body,ip,port,kind)
+    t2 = time.time()
 
     # sys.stdout.flush()
     if req_cnt <= 1:
@@ -194,13 +274,13 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
             valid_proxy_L_lock.acquire()
             valid_proxy_L.append(tmp_proxy)
             valid_proxy_L_lock.release()
-    else:
-        delta_t = req_retry_max*req_timeout
-        tmp_proxy = [ip, port, kind, time.time(), delta_t]
-        if not is_proxy_in_proxy_L(tmp_proxy, invalid_proxy_L, valid_proxy_L_lock):
-            valid_proxy_L_lock.acquire()
-            invalid_proxy_L.append(tmp_proxy)
-            valid_proxy_L_lock.release()
+    # else:
+    #     delta_t = req_retry_max*req_timeout
+    #     tmp_proxy = [ip, port, kind, time.time(), delta_t]
+    #     if not is_proxy_in_proxy_L(tmp_proxy, invalid_proxy_L, valid_proxy_L_lock):
+    #         valid_proxy_L_lock.acquire()
+    #         invalid_proxy_L.append(tmp_proxy)
+    #         valid_proxy_L_lock.release()
 
     if is_proxy_valid:
         print("{:<3} {:<15} {:<5} {:<5} {:>4}s".format((3-req_cnt)*"+", ip, port, kind, delta_t))
@@ -208,7 +288,7 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
     check_proxy_validity_sema.release()
 
 
-update_valid_proxy_interval = 120
+update_valid_proxy_interval = 200
 def update_valid_proxy():
     """ update valid_proxy_L and invalid_proxy_L: 
         2d list of [ip, port, kind, last_used_time, delay]
@@ -219,9 +299,14 @@ def update_valid_proxy():
     if time.time() - last_fetch_proxy_time < update_valid_proxy_interval:
         return
 
-    fetched_proxy_L = fetch_xici_daili()
+    fetched_proxy_L = []
+    fetched_proxy_L.extend(fetch_xici_daili())
     fetched_proxy_L.extend(fetch_free_proxy_list_net())
+    # fetched_proxy_L.extend(fetch_66ip())
+    # fetched_proxy_L.extend(fetch_free_proxy_cz())
+    # return
     check_proxy_validity_sema = threading.BoundedSemaphore(len(fetched_proxy_L))
+    # check_proxy_validity_sema = threading.BoundedSemaphore(500)
 
     valid_proxy_L = []
     valid_proxy_L_lock = threading.Lock()
@@ -244,30 +329,38 @@ def update_valid_proxy():
 
     print("valid proxy count: {}/{}".format(len(valid_proxy_L), len(fetched_proxy_L)))
 
-reuse_interval = 1.0
-def select_valid_proxy(conn, data):
-    global valid_proxy_L, invalid_proxy_L
-    if data[0] == "get":
-        if len(valid_proxy_L) > 0:
-            proxy = valid_proxy_L[0]
-            if time.time() - proxy[3] > reuse_interval:
-                proxy_pkl = pickle.dumps(proxy)
-                conn.sendall(proxy_pkl)
-                print("> Send {:<15} {:<5} {:<5}".format(*proxy[:3]))
-                proxy[3] = time.time()
-                valid_proxy_L.append(proxy)
-                valid_proxy_L.pop(0)
-        conn.sendall(pickle.dumps([]))
-    elif data[0] == "del":
-        for i in range(len(valid_proxy_L)):
-            proxy = valid_proxy_L[i]
-            if data[1][:3] == proxy[:3]:
-                invalid_proxy_L.append(valid_proxy_L.pop(i))
-                print("x Invalid {:<15} {:<5} {:<5}".format(*proxy[:3]))
-                break
-    else:
-        pass
+# reuse_interval = 1.0
+# def select_valid_proxy(conn, data):
+#     global valid_proxy_L, invalid_proxy_L
+#     if data[0] == "get":
+#         if len(valid_proxy_L) > 0:
+#             proxy = valid_proxy_L[0]
+#             if time.time() - proxy[3] > reuse_interval:
+#                 proxy_pkl = pickle.dumps(proxy)
+#                 conn.sendall(proxy_pkl)
+#                 print("> Send {:<15} {:<5} {:<5}".format(*proxy[:3]))
+#                 proxy[3] = time.time()
+#                 valid_proxy_L.append(proxy)
+#                 valid_proxy_L.pop(0)
+#         conn.sendall(pickle.dumps([]))
+#     elif data[0] == "del":
+#         for i in range(len(valid_proxy_L)):
+#             proxy = valid_proxy_L[i]
+#             if data[1][:3] == proxy[:3]:
+#                 invalid_proxy_L.append(valid_proxy_L.pop(i))
+#                 print("x Invalid {:<15} {:<5} {:<5}".format(*proxy[:3]))
+#                 break
+#     else:
+#         pass
 
+def send_valid_proxy_L(conn,data):
+    if data[0] == "get":
+        print("> Send valid_proxy_L num: {}".format(len(valid_proxy_L)))
+        conn.sendall(pickle.dumps(valid_proxy_L))
+    else:
+        # print("> Send empty list")
+        # conn.sendall(pickle.dumps([]))
+        pass
 
 # fetch proxies in advance
 # if a proxy in client is invalid, then the client requests for a new proxy
@@ -292,7 +385,8 @@ def run_proxy_server(timeout=socket_timeout):
                     print("x Client disconnected!")
                     break
                 else:
-                    select_valid_proxy(conn,data)
+                    # select_valid_proxy(conn,data)
+                    send_valid_proxy_L(conn,data)
             except socket.timeout:
                 # print("Waiting for command ...")
                 update_valid_proxy()
