@@ -191,18 +191,28 @@ def fetch_jiangxianli():
     """ return 2d list of [ip, port, kind, last_used_time] """
     site_name = "jiangxianli"
     fetched_proxy_L = []
-    for page in range(1,21):
+    for page in range(1,16):
         is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy("{}-{}".format(site_name,page))
 
         if is_fetch_new_proxy:
-            url = "https://ip.jiangxianli.com/?page={}".format(page)
-            req = requests.get(url, headers=headers())
-            print("=== Fetching {}-{} {} ===\n".format(site_name, page, req.status_code))
+            # Fetching the site directly will fail when the site is refreshing
+            # url = "https://ip.jiangxianli.com/?page={}".format(page)
+            url = "https://ip.jiangxianli.com/api/proxy_ips?page={}".format(page)
+            
+            status_code = -1
+            while status_code != 200:
+                try:
+                    req = requests.get(url, headers=headers())
+                    status_code = req.status_code
+                except:
+                    continue
+
+            print("=== Fetching {}-{} {} ===\n".format(site_name, page, status_code))
             with open(new_filename,"wb") as wf:
                 wf.write(req.content)
             read_filename = new_filename
-            if page % 3 == 1:
-                time.sleep(0.5)
+            # if page % 3 == 1:
+            #     time.sleep(0.5)
         else:
             print("=== Reusing {}\n".format(old_filename))
             read_filename = old_filename
@@ -211,14 +221,22 @@ def fetch_jiangxianli():
         with open(read_filename,mode="r",encoding="utf-8") as rf:
             text = rf.read()
 
-        text = re.findall(r"<tbody[\s\S]*?tbody>", text)[0]
-        tr_L = re.findall(r"<tr[\s\S]*?tr>", text)
+        # return
 
-        for tr in tr_L:
-            td_L = re.findall(r"<td>([\s\S]*?)</td>",tr)
-            proxy = [td_L[0], td_L[1], td_L[3]]
-            # print(*proxy)
-            fetched_proxy_L.append(proxy)
+        # text = re.findall(r"<tbody[\s\S]*?tbody>", text)[0]
+        # tr_L = re.findall(r"<tr[\s\S]*?tr>", text)
+        # for tr in tr_L:
+        #     td_L = re.findall(r"<td>([\s\S]*?)</td>",tr)
+        #     proxy = [td_L[0], td_L[1], td_L[3]]
+        #     # print(*proxy)
+        #     fetched_proxy_L.append(proxy)
+
+        item_L = re.findall(r'"ip".*?port.*?,', text)
+        for item in item_L:
+            ip = re.findall(r'"ip":"(.*?)"', item)[0]
+            port = re.findall(r'"port":"(.*?)"', item)[0]
+            kind = "http"
+            fetched_proxy_L.append([ip,port,kind])
 
     # ip, port, http(s)
     return fetched_proxy_L
@@ -288,12 +306,12 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
 
     if is_proxy_in_proxy_L(proxy, valid_proxy_L, valid_proxy_L_lock):
         is_proxy_valid = True
-        print("{:<15} {:<5} {:<5} in valid_proxy_L!".format(*proxy[:3]))
+        # print("{:<15} {:<5} {:<5} in valid_proxy_L!".format(*proxy[:3]))
         check_proxy_validity_sema.release()
         return
 
     if is_proxy_in_proxy_L(proxy, invalid_proxy_L, valid_proxy_L_lock):
-        print("{:<15} {:<5} {:<5} in invalid_proxy_L!".format(*proxy[:3]))
+        # print("{:<15} {:<5} {:<5} in invalid_proxy_L!".format(*proxy[:3]))
         check_proxy_validity_sema.release()
         return
 
@@ -345,9 +363,9 @@ def update_valid_proxy():
     fetched_proxy_L = []
     # fetched_proxy_L.extend(fetch_xici_daili())
     fetched_proxy_L.extend(fetch_free_proxy_list_net())
+    fetched_proxy_L.extend(fetch_jiangxianli())
     # fetched_proxy_L.extend(fetch_66ip())
     # fetched_proxy_L.extend(fetch_free_proxy_cz())
-    fetched_proxy_L.extend(fetch_jiangxianli())
     # return
     check_proxy_validity_sema = threading.BoundedSemaphore(len(fetched_proxy_L))
     # check_proxy_validity_sema = threading.BoundedSemaphore(500)
