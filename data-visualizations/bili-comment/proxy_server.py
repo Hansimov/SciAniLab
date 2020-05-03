@@ -110,7 +110,8 @@ def fetch_xici_daili():
             for tr in tr_L:
                 td_L = re.findall(r"<td>([\s\S]*?)</td>",tr)
                 proxy = [td_L[0], td_L[1], td_L[3]]
-                # print(*proxy)
+                if "socks" in proxy[2].lower():
+                    continue
                 fetched_proxy_L.append(proxy)
     # ip, port, http(s)
     return fetched_proxy_L
@@ -241,6 +242,166 @@ def fetch_jiangxianli():
     # ip, port, http(s)
     return fetched_proxy_L
 
+def fetch_xila_daili():
+    """ return 2d list of [ip, port, kind, last_used_time] """
+    site_name = "xila-daili"
+    # suffix_L = ["putong", "gaoni"]
+    suffix_L = ["putong", "gaoni", "https","http"]
+    page_L = [1,1,1,1]
+    fetched_proxy_L = []
+    for i,suffix in enumerate(suffix_L):
+        for page in range(1, page_L[i]+1):
+            is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy("{}-{}-{}".format(site_name,suffix,page))
+            if is_fetch_new_proxy:
+                url = "http://www.xiladaili.com/{}/{}/".format(suffix,page)
+                status_code = -1
+                while status_code != 200:
+                    try:
+                        req = requests.get(url, headers=headers())
+                        status_code = req.status_code
+                    except:
+                        time.sleep(0.5)
+                        continue
+
+                print("=== Fetching {}-{}-{} {} ===\n".format(site_name, suffix, page, req.status_code))
+                with open(new_filename,"wb") as wf:
+                    wf.write(req.content)
+                read_filename = new_filename
+            else:
+                print("=== Reusing {}\n".format(old_filename))
+                read_filename = old_filename
+
+            with open(read_filename,mode="r",encoding="utf-8") as rf:
+                text = rf.read()
+
+            text = re.findall(r"<tbody[\s\S]*?tbody>", text)[0]
+            tr_L = re.findall(r"<tr[\s\S]*?tr>", text)
+
+            for tr in tr_L:
+                td_L = re.findall(r"<td>([\s\S]*?)</td>",tr)
+                ip,port = td_L[0].split(":")
+                kind = "http" if "http" in td_L[1].lower() else "https"
+                proxy = [ip,port,kind]
+
+                # print(*proxy)
+                fetched_proxy_L.append(proxy)
+    # ip, port, http(s)
+    return fetched_proxy_L
+
+def fetch_foxtools():
+    """ return 2d list of [ip, port, kind, last_used_time] """
+    site_name = "foxtools"
+    fetched_proxy_L = []
+    for page in range(1,3):
+        is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy("{}-{}".format(site_name,page))
+
+        if is_fetch_new_proxy:
+            url = "http://api.foxtools.ru/v2/Proxy.txt?page={}".format(page)
+            req = requests.get(url, headers=headers())
+            status_code = req.status_code
+
+            print("=== Fetching {}-{} {} ===\n".format(site_name, page, status_code))
+            with open(new_filename,"wb") as wf:
+                wf.write(req.content)
+            read_filename = new_filename
+        else:
+            print("=== Reusing {}\n".format(old_filename))
+            read_filename = old_filename
+
+        with open(read_filename,mode="r",encoding="utf-8") as rf:
+            text = rf.readlines()
+        
+        for line in text[1:]:
+            ip,port = line.strip().split(":")
+            kind = "http"
+            proxy = [ip,port,kind]
+            fetched_proxy_L.append(proxy)
+
+    # ip, port, http(s)
+    return fetched_proxy_L
+def fetch_proxy_list_download():
+    """ return 2d list of [ip, port, kind, last_used_time] """
+    site_name = "proxy-list-download"
+    fetched_proxy_L = []
+    # suffix_L = ["http", "https"]
+    suffix_L = ["http"]
+    for suffix in suffix_L:
+        is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy("{}-{}".format(site_name,suffix))
+
+        if is_fetch_new_proxy:
+            url = "https://www.proxy-list.download/api/v1/get?type={}".format(suffix)
+            req = requests.get(url, headers=headers())
+            status_code = req.status_code
+
+            print("=== Fetching {}-{} {} ===\n".format(site_name, suffix, status_code))
+            with open(new_filename,"wb") as wf:
+                wf.write(req.content)
+            read_filename = new_filename
+        else:
+            print("=== Reusing {}\n".format(old_filename))
+            read_filename = old_filename
+
+        with open(read_filename,mode="r",encoding="utf-8") as rf:
+            text = rf.readlines()
+        
+        for line in text:
+            ip,port = line.strip().split(":")
+            kind = suffix
+            proxy = [ip,port,kind]
+            fetched_proxy_L.append(proxy)
+
+    # ip, port, http(s)
+    return fetched_proxy_L
+
+def fetch_nima_daili():
+    """ return 2d list of [ip, port, kind, last_used_time] """
+    site_name = "nima-daili"
+    # suffix_L = ["putong", "gaoni"]
+    suffix_L = ["https","http"]
+    page_L = [2,2]
+    fetched_proxy_L = []
+    for i,suffix in enumerate(suffix_L):
+        for page in range(1, page_L[i]+1):
+            is_fetch_new_proxy, old_filename, new_filename = get_is_fetch_new_proxy("{}-{}-{}".format(site_name,suffix,page))
+            if is_fetch_new_proxy:
+                url = "http://www.nimadaili.com/{}/{}/".format(suffix,page)
+                # status_code = -1
+                # while status_code != 200:
+                #     try:
+                req = requests.get(url, headers=headers())
+                # status_code = req.status_code
+                    # except:
+                    #     time.sleep(0.5)
+                    #     continue
+
+                print("=== Fetching {}-{}-{} {} ===\n".format(site_name, suffix, page, req.status_code))
+                with open(new_filename,"wb") as wf:
+                    wf.write(req.content)
+                read_filename = new_filename
+            else:
+                print("=== Reusing {}\n".format(old_filename))
+                read_filename = old_filename
+
+            with open(read_filename,mode="r",encoding="utf-8") as rf:
+                text = rf.read()
+
+            text = re.findall(r"<tbody[\s\S]*?tbody>", text)[0]
+            tr_L = re.findall(r"<tr[\s\S]*?tr>", text)
+
+            for tr in tr_L:
+                td_L = re.findall(r"<td>([\s\S]*?)</td>",tr)
+                ip,port = td_L[0].split(":")
+                kind = "http" if "http" in td_L[1].lower() else "https"
+                proxy = [ip,port,kind]
+
+                fetched_proxy_L.append(proxy)
+    # ip, port, http(s)
+    return fetched_proxy_L
+
+# https://proxylist.me/?page=1
+
+# http://spys.one/free-proxy-list/
+
 # xxxxxxxxxxxxxxxxxxxxxx End of Fetch proxy from sites xxxxxxxxxxxxxxxxxxxxxx #
 
 
@@ -361,9 +522,13 @@ def update_valid_proxy():
         return
 
     fetched_proxy_L = []
-    # fetched_proxy_L.extend(fetch_xici_daili())
     fetched_proxy_L.extend(fetch_free_proxy_list_net())
     fetched_proxy_L.extend(fetch_jiangxianli())
+    fetched_proxy_L.extend(fetch_proxy_list_download())
+    # fetched_proxy_L.extend(fetch_xici_daili())
+    # fetched_proxy_L.extend(fetch_foxtools())
+    # fetched_proxy_L.extend(fetch_xila_daili())
+    # fetched_proxy_L.extend(fetch_nima_daili())
     # fetched_proxy_L.extend(fetch_66ip())
     # fetched_proxy_L.extend(fetch_free_proxy_cz())
     # return
