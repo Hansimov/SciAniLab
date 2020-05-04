@@ -20,4 +20,5 @@ def enc(x):
         r[s[i]]=table[x//58**i%58]
     return ''.join(r)
 
-print(dec("BV1Ya4y1t7fw"))
+# print(dec("BV1Ya4y1t7fw"))
+print(dec("BV1Qx411J7ER"))

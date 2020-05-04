@@ -36,9 +36,11 @@ def av2bv(av_int):
         r[V_OFFSET[i]]=V_TABLE[av_int//58**i%58]
     return "".join(r)
 
-
 # print(bv2av("BV1Ya4y1t7fw")) # 667592495
 # print(av2bv(667592495))      # BV1Ya4y1t7fw
 
-# url_body = "http://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=2"
+# https://m.bilibili.com/video/av667592495
+# http://api.bilibili.com/x/v2/reply?oid=667592495&pn=1&ps=49&type=1&nohot=1&sort=0
+# https://api.bilibili.com/x/v2/reply/main?oid=667592495&pn=1&ps=49&type=1&nohot=1&sort=0
+# url_body = "http://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=0"
 # def fetch_replies(pn,oid,kind):

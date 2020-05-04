@@ -6,13 +6,36 @@
 
 ## 思路
 
-* 评论 API：
-  * https://api.bilibili.com/x/v2/reply?pn=1&oid=22755224&type=1&sort=0&nohot=1
-  * type=1
+
+* 网页端评论 API：
+  * https://api.bilibili.com/x/v2/reply?pn=1&oid=22755224&type=1&sort=0&nohot=1&ps=49
+  * type=1，其他值无效
   * pn：页数
   * oid：视频av号
   * sort：0表示按照楼层排序（默认），1含义不明，2表示按照热度排序（取决于点赞和回复）
+     * 泄露源码 app/admin/main/reply/model/reply.go 的 44-47 行指出了 sort 的含义：0 表示按照楼层排序，1 表示按照评论数排序，2 表示按照点赞数排序
   * nohot：默认为0，收录热门评论，值为1时不收录热门评论
+  * ps：每页楼层数，默认为20，最小值为1，最大值为49，其他值都会自动转成20
+
+* 移动端评论 API：（持续研究中）
+  * https://api.bilibili.com/x/v2/reply/main?oid=667592495&type=1&mode=2&prev=100&ps=40
+  * 似乎对 ps（每页楼层数）没有限制
+  * 大小大约是网页端的 4.5 倍
+  * pn、nohot 和 sort 参数似乎没有影响（无论如何都是按照最热门的排序，且取第一页）
+  * mode：似乎表示返回的评论按照上面排列，1 表示按照热度排序，2 表示按照楼层排序
+      * mode：1 包含热评，2 不包含热评
+  * prev、next：和 ps 配合使用，比如：
+      * &prev=100&ps=40，返回从 100 楼（不包含 100 楼）开始的第一个有效楼层往后 40 个有效楼层的评论，比如 102 ~ 146 楼
+      * &next=100&ps=40，返回从 100 楼（不包含 100 楼）为止的第一个有效楼层往前 40 个有效楼层的评论，比如 54~98 楼
+      * 返回的 json 中包含 "prev" 和 "next" 字段，包含了该返回文件的最高楼（prev）和最低楼（next），可用于爬取后续页
+        * 仍以 &prev=100&ps=40 为例，返回的该字段为："prev":146, "next":102,
+        * 可继续传入 &prev=1460&ps=40 获取连续的下一页的评论
+        * 基于 prev 和 next 字段的机制，其实可以用 python 中 requests 的 range 头获取前 N 个字节（包含 prev 和 next 字段即可），无需将所有的内容都下到本地即可推出爬虫下一个爬取的评论页面坐标，有利于快速分配多线程爬虫的任务。
+
+* B站泄露源码：whjstc/openbilibili-go-common-1
+  * https://github.com/whjstc/openbilibili-go-common-1/
+  * https://github.com/whjstc/openbilibili-go-common-1/blob/master/app/admin/main/reply/model/reply.go
+
 
 * 首先通过接口获得每一页的内容，保存到本地
   * 格式为 Json
@@ -33,11 +56,13 @@
 
 ---
 
-## 源 Json 格式
+
+
+## 网页端 API 返回的源 json 格式
 
 链接：https://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=22755224&nohot=1
 
-获得的 Json 格式如下：
+获得的 Json 格式如下：（改版前）
 
 ```j
 {
@@ -102,7 +127,7 @@
 ```j
 "page":{
     "acount":1274,    // 总的评论数，应该是包括了一级评论和次级评论。
-    "count":684,      // 一级评论数。该值与最高楼数不符，猜测是因为有些楼层被删除了。
+    "count":684,      // （存活）一级评论数。该值与最高楼数不符，猜测是因为有些楼层被删除了。
     "num":1,          // 当前页号。从 1 到最大页数。
     "size":20         // 该页一级评论数目。应该是最大 20。
 }
@@ -121,7 +146,9 @@
 
 <ol>
 
-典型的 Object 格式为：
+`"replies"` 中典型的 Object 数据格式为：（改版前）
+
+* 如今（2020.05.04）已经不再显示楼层数。
 
 ```j
 {
@@ -176,6 +203,7 @@
 </ol>
 </ol>
 
+
 * `"upper"` 里保存了置顶评论的信息。
 
 <ol>
@@ -192,6 +220,41 @@
 只不过里面的 `"replies"` 最多只有3个，这是因为网页版默认只展示最多3条对置顶评论的回复。只有点击“点击查看”，才会加载所有的评论。
 
 </ol>
+
+---
+
+## 移动端 API 返回的源 json 格式
+
+链接：https://api.bilibili.com/x/v2/reply/main?oid=667592495&type=1&mode=2&prev=100&ps=30
+
+```j
+{
+  "code": 0,
+  "message": 0,
+  "ttl": 1,
+  "data": {...},
+}
+```
+
+* 有用的数据都在 `"data"` 里。
+
+* `"data"`中数据格式如下：（忽略部分暂时用不到的字段）
+
+```j
+"data": {
+  "hots": null,         # 是否包含热评
+  "replies": {...}      # 评论内容
+  "upper": {
+    "mid": 546195       # up主的用户id
+  },
+  "show_bvid": true,    # bv 号
+  ...
+}
+```
+
+`"replies"` 包含了大部分内容，数据格式同改版前的客户端基本一致，故不再赘述。
+
+
 
 ---
 ## 目标 Json 格式

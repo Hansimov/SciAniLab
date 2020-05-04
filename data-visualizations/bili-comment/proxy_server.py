@@ -206,6 +206,7 @@ def fetch_jiangxianli():
                     req = requests.get(url, headers=headers())
                     status_code = req.status_code
                 except:
+                    time.sleep(0.1)
                     continue
 
             print("=== Fetching {}-{} {} ===\n".format(site_name, page, status_code))
@@ -476,7 +477,8 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
         check_proxy_validity_sema.release()
         return
 
-    test_url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=2"
+    # test_url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=0"
+    test_url_body = "{}://api.bilibili.com/x/reply?pn=1&type=1&oid=34354599&nohot=1&sort=0"
     t1 = time.time()
     req_cnt, status_code = request_with_proxy(test_url_body,ip,port,kind)
     t2 = time.time()
@@ -517,6 +519,7 @@ def update_valid_proxy():
     """
     global valid_proxy_L
 
+    t1 = time.time()
     # print(time.time(), last_fetch_proxy_time)
     if time.time() - last_fetch_proxy_time < update_valid_proxy_interval:
         return
@@ -554,8 +557,10 @@ def update_valid_proxy():
     while is_any_thread_alive(pool):
         time.sleep(0)
 
-    print("valid proxy count: {}/{}".format(len(valid_proxy_L), len(fetched_proxy_L)))
+    print("Valid proxy count: {}/{}".format(len(valid_proxy_L), len(fetched_proxy_L)))
     # print("valid proxy count: {}/{}/{}".format(len(valid_proxy_L), len(valid_proxy_L)+len(invalid_proxy_L), len(fetched_proxy_L)))
+    t2 = time.time()
+    print("Elapsed time: {}s".format(round(t2-t1,1)))
 
 # reuse_interval = 1.0
 # def select_valid_proxy(conn, data):
@@ -613,7 +618,6 @@ def run_proxy_server(timeout=socket_timeout):
                     print("x Client disconnected!")
                     break
                 else:
-                    # select_valid_proxy(conn,data)
                     send_valid_proxy_L(conn,data)
             except socket.timeout:
                 # print("Waiting for command ...")
