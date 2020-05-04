@@ -478,7 +478,8 @@ def check_proxy_validity(proxy, check_proxy_validity_sema, valid_proxy_L_lock):
         return
 
     # test_url_body = "{}://api.bilibili.com/x/v2/reply?pn=1&type=1&oid=34354599&nohot=1&sort=0"
-    test_url_body = "{}://api.bilibili.com/x/reply?pn=1&type=1&oid=34354599&nohot=1&sort=0"
+    # test_url_body = "{}://api.bilibili.com/x/reply?pn=1&type=1&oid=34354599&nohot=1&sort=0"
+    test_url_body = "{}://api.bilibili.com/x/v2/reply/main?oid=667592495&type=1&mode=2&prev=0&ps=5
     t1 = time.time()
     req_cnt, status_code = request_with_proxy(test_url_body,ip,port,kind)
     t2 = time.time()
