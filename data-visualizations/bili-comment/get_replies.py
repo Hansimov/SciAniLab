@@ -41,113 +41,7 @@ def av2bv(av_int):
 def headers():
     return { "user-agent": "botnet - {}".format(random.random()) }
 
-# https://m.bilibili.com/video/av667592495
-# http://api.bilibili.com/x/v2/reply?oid=667592495&pn=1&ps=49&type=1&nohot=1&sort=0
-# url_body = "http://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=0"
-# BV1Qx411J7ER <-> 13592834 傅里叶
-# uid: 546195
 
-
-reply_url_next = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&next={}&ps={}"
-reply_url_prev = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&prev={}&ps={}"
-# def fetch_first_valid_floor(oid):
-
-reply_path_body = "./mid-546195/oid-{:0>12}/"
-floor_margin = 1000
-def fetch_floors(oid,prev_floor=0,ps=1):
-    print("> Fetching floors ... oid={:<10} prev={:<7} ps={:<4}".format(oid,prev_floor,ps))
-    reply_path = reply_path_body.format(oid)
-
-    t1 = time.time()
-    if prev_floor==0:
-        filename = "reply-{:0>6}-{:0>4}.json".format(prev_floor,floor_margin)
-    else:
-        filename = "reply-{:0>6}-{:0>4}.json".format(prev_floor,ps)
-
-    status_code = -1
-    while status_code != 200:
-        try:
-            with eventlet.Timeout(5.0):
-                if prev_floor == 0:
-                    req = requests.get(reply_url_next.format(oid,floor_margin,floor_margin), headers=headers())
-                else:
-                    req = requests.get(reply_url_prev.format(oid,prev_floor,ps), headers=headers())
-                status_code = req.status_code
-        except:
-            time.sleep(0.5)
-            continue
-
-    t2 = time.time()
-
-    flag_200 = "+++" if req.status_code==200 else "xxx"
-    print("{} {}  {}s".format(flag_200, req.status_code, round(t2-t1,1)))
-
-    with open(reply_path+filename, "wb") as wf:
-        wf.write(req.content)
-
-    data = json.loads(req.content.decode("utf-8"))
-    # print(*list(map(lambda i: data["data"]["cursor"][i], ["prev","next","is_begin","is_end"])))
-
-    # is_begin, is_end = False, False
-    # all_count, prev_floor, next_floor, is_begin, is_end
-    reply_info_L = list(map(lambda i: data["data"]["cursor"][i], ["all_count","prev","next","is_begin","is_end"]))
-
-    return reply_info_L
-
-# is_begin = true: end statement, stop fetching
-# is_end = true  : the floors before `next` value is deleted calculated new "next" pa
-# all_count: total count of all level floors
-def fetch_replies(oid,is_overwrite=True):
-    reply_path = reply_path_body.format(oid)
-    if not os.path.exists(reply_path):
-        os.makedirs(reply_path)
-
-    old_prev_floor = 0
-    page_floor_size = 1000
-
-    if os.listdir(reply_path) == []:
-        pass
-    else:
-        if is_overwrite or len(os.listdir(reply_path))<=2:
-            shutil.rmtree(reply_path)
-            os.makedirs(reply_path)
-        else:
-            # print(os.listdir(reply_path))
-            os.remove(reply_path+os.listdir(reply_path)[-1])
-            last_filename = os.listdir(reply_path)[-1]
-            with open(reply_path+last_filename,mode="r",encoding="utf-8") as rf:
-                data = json.load(rf)
-            old_prev_floor = data["data"]["cursor"]["prev"]
-
-    all_count, new_prev_floor, next_floor, is_begin, is_end = fetch_floors(oid, old_prev_floor,page_floor_size)
-
-    # print(all_count, new_prev_floor, next_floor, is_begin, is_end)
-    # max_floor = 3500
-    # while not (is_begin or new_prev_floor==old_prev_floor or new_prev_floor > max_floor):
-    while not (is_begin or new_prev_floor==old_prev_floor):
-        old_prev_floor = new_prev_floor
-        time.sleep(0.5)
-        all_count, new_prev_floor, next_floor, is_begin, is_end = fetch_floors(oid,new_prev_floor,page_floor_size)
-
-def parse_reply_json():
-    # filename = "./mid-546195/oid-000667592495/reply-0001000-1000.json"
-    # filename = "./mid-546195/oid-000667592495/reply-0000000-0001.json"
-    # filename = "./mid-546195/oid-000667592495/reply-0000000-1000.json"
-
-    with open(filename,mode="r",encoding="utf-8") as rf:
-        data = json.load(rf)
-
-    # print(data.keys())
-    # print(data["data"].keys())
-    # print(len(data["data"]["replies"]))
-    # print(data["data"]["replies"][0])
-    # print(data["data"]["cursor"].keys())
-    # print(data["data"]["cursor"]["prev"])
-    # print(data["data"]["cursor"]["next"])
-    # print(*list(map(lambda i: data["data"]["cursor"][i], ["prev","next","is_begin","is_end"])))
-    all_count, prev_floor, next_floor, is_begin, is_end = list(map(lambda i: data["data"]["cursor"][i], ["all_count","prev","next","is_begin","is_end"]))
-    # prev_floor = 
-    print(all_count, prev_floor, next_floor, is_begin, is_end)
 
 
 # https://api.bilibili.com/x/article/archives?ids=2,3,4 # Get pubdate
@@ -155,7 +49,6 @@ def parse_reply_json():
 av_url_body = 'https://space.bilibili.com/ajax/member/getSubmitVideos?mid={}&page={}&pagesize={}'
 # http://api.bilibili.com/x/space/arc/search?pn=2&ps=100&mid=546195
 # av_url_body = "http://api.bilibili.com/x/space/arc/search?ps={}&pn={}&mid={}"
-
 
 def fetch_av_page(mid,page,pagesize=100):
     print("> Fetching av page {}".format(page))
@@ -183,11 +76,9 @@ def fetch_upper_av_list(mid):
     with open(av_path+av_list_json_filename, mode="w", encoding="utf-8") as wf:
         json.dump(data_L, wf)
 
-
 def parse_av_list_json():
     with open(av_path+av_list_json_filename, mode="r", encoding="utf-8") as rf:
         data_L = json.load(rf)
-
     video_L = []
     cover_L = []
     for data in data_L:
@@ -199,19 +90,143 @@ def parse_av_list_json():
             video_L.append(video_info_D)
     return video_L
 
-if __name__ == '__main__':
 
+# ========================= Fetch floors and replies ========================= #
+
+# https://m.bilibili.com/video/av667592495
+# http://api.bilibili.com/x/v2/reply?oid=667592495&pn=1&ps=49&type=1&nohot=1&sort=0
+# url_body = "http://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=0"
+# BV1Qx411J7ER <-> 13592834 傅里叶
+# uid: 546195
+
+
+reply_url_next = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&next={}&ps={}"
+reply_url_prev = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&prev={}&ps={}"
+
+reply_path_body = "./mid-546195/oid-{:0>12}/"
+floor_margin = 1000
+video_cnt, total_video_cnt = 0,0
+def fetch_floors(oid,prev_floor=0,ps=1):
+    print("> {:>3}/{:>3} oid={:<10} prev={:<7} ps={:<4}".format(video_cnt,total_video_cnt,oid,prev_floor,ps))
+    reply_path = reply_path_body.format(oid)
+
+    t1 = time.time()
+    if prev_floor==0:
+        filename = "reply-{:0>6}-{:0>4}.json".format(prev_floor,floor_margin)
+    else:
+        filename = "reply-{:0>6}-{:0>4}.json".format(prev_floor,ps)
+
+    status_code = -1
+    while status_code != 200:
+        try:
+            with eventlet.Timeout(4.0):
+                if prev_floor == 0:
+                    req = requests.get(reply_url_next.format(oid,floor_margin,floor_margin), headers=headers())
+                else:
+                    req = requests.get(reply_url_prev.format(oid,prev_floor,ps), headers=headers())
+                status_code = req.status_code
+        except:
+            time.sleep(0.5)
+            continue
+
+    t2 = time.time()
+
+    flag_200 = "+++" if req.status_code==200 else "xxx"
+    print("{} {}  {}s".format(flag_200, req.status_code, round(t2-t1,1)))
+
+    data = json.loads(req.content.decode("utf-8"))
+
+    # Here often occurs: Keyerror: 'data' ...
+    # Restart (several trials) the program solves it.
+    # Still don't know why.
+
+    # if not data["data"]["replies"]:
+    if not data["data"]["cursor"]["is_begin"]:
+        with open(reply_path+filename, "wb") as wf:
+            wf.write(req.content)
+    # print(*list(map(lambda i: data["data"]["cursor"][i], ["prev","next","is_begin","is_end"])))
+
+    floor_info_L = []
+    for key in ["all_count","prev","next","is_begin","is_end"]:
+        floor_info_L.append(data["data"]["cursor"][key])
+
+    return floor_info_L
+
+
+def fetch_replies(oid,is_overwrite=True):
+    reply_path = reply_path_body.format(oid)
+    if not os.path.exists(reply_path):
+        os.makedirs(reply_path)
+
+    old_prev_floor = 0
+    page_floor_size = 1000
+
+    if os.listdir(reply_path) == []:
+        pass
+    else:
+        if is_overwrite or len(os.listdir(reply_path))<=1:
+            shutil.rmtree(reply_path)
+            os.makedirs(reply_path)
+        else:
+            # print(os.listdir(reply_path))
+            os.remove(reply_path+os.listdir(reply_path)[-1])
+            last_filename = os.listdir(reply_path)[-1]
+            with open(reply_path+last_filename,mode="r",encoding="utf-8") as rf:
+                data = json.load(rf)
+            old_prev_floor = data["data"]["cursor"]["prev"]
+
+    all_count, new_prev_floor, next_floor, is_begin, is_end = fetch_floors(oid, old_prev_floor,page_floor_size)
+
+
+    # max_floor = 3500
+    # while not (is_begin or new_prev_floor==old_prev_floor or new_prev_floor > max_floor):
+    while not (is_begin or new_prev_floor==old_prev_floor):
+        old_prev_floor = new_prev_floor
+        time.sleep(0.5)
+        all_count, new_prev_floor, next_floor, is_begin, is_end = fetch_floors(oid,new_prev_floor,page_floor_size)
+
+def fetch_all_av_replies(video_L):
+    global video_cnt, total_video_cnt
+    total_video_cnt = len(video_L)
+    start_cnt = 0
+    for i, video in enumerate(video_L[start_cnt:]):
+        video_cnt = start_cnt+i+1
+        t1 = time.time()
+        print("Fetching  oid={:<10} {}".format(video["aid"], video["title"]))
+        fetch_replies(video["aid"],is_overwrite=False)
+        t2 = time.time()
+        print("=== {:>3}/{:>3} Elapsed time: {}s".format(video_cnt, total_video_cnt, round(t2-t1,1)))
+
+# xxxxxxxxxxxxxxxxxxxxxx End of Fetch floors and replies xxxxxxxxxxxxxxxxxxxxxx #
+
+def parse_reply_json():
+    # filename = "./mid-546195/oid-000667592495/reply-0001000-1000.json"
+    # filename = "./mid-546195/oid-000667592495/reply-0000000-0001.json"
+    # filename = "./mid-546195/oid-000667592495/reply-0000000-1000.json"
+
+    with open(filename,mode="r",encoding="utf-8") as rf:
+        data = json.load(rf)
+
+    # print(data.keys())
+    # print(data["data"].keys())
+    # print(len(data["data"]["replies"]))
+    # print(data["data"]["replies"][0])
+    # print(data["data"]["cursor"].keys())
+    # print(data["data"]["cursor"]["prev"])
+    # print(data["data"]["cursor"]["next"])
+    # print(*list(map(lambda i: data["data"]["cursor"][i], ["prev","next","is_begin","is_end"])))
+    all_count, prev_floor, next_floor, is_begin, is_end = list(map(lambda i: data["data"]["cursor"][i], ["all_count","prev","next","is_begin","is_end"]))
+    # prev_floor = 
+    print(all_count, prev_floor, next_floor, is_begin, is_end)
+
+
+if __name__ == '__main__':
+    # global video_cnt, total_video_cnt
     t0 = time.time()
     # parse_reply_json()
     # fetch_replies(667592495)
     # fetch_upper_av_list(546195)
     video_L = parse_av_list_json()
-    for video in video_L[:1]:
-        t1 = time.time()
-        print("Fetching  oid={:<10} {}".format(video["aid"], video["title"]))
-        fetch_replies(video["aid"],is_overwrite=False)
-        t2 = time.time()
-        print("Elapsed time: {}s".format(round(t2-t1,1)))
-
+    fetch_all_av_replies(video_L)
     t3 = time.time()
     print("Total elapsed time: {}s".format(round(t3-t0,1)))
