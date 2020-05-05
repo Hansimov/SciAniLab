@@ -405,7 +405,6 @@ def fetch_nima_daili():
 
 # xxxxxxxxxxxxxxxxxxxxxx End of Fetch proxy from sites xxxxxxxxxxxxxxxxxxxxxx #
 
-
 valid_proxy_L, invalid_proxy_L = [], []
 
 def is_any_thread_alive(threads):

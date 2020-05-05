@@ -9,7 +9,7 @@ import shutil
 import sys
 import json
 # import socket
-# import threading
+import threading
 # import pickle
 import eventlet
 eventlet.monkey_patch(thread=False)
@@ -50,7 +50,7 @@ av_url_body = 'https://space.bilibili.com/ajax/member/getSubmitVideos?mid={}&pag
 # http://api.bilibili.com/x/space/arc/search?pn=2&ps=100&mid=546195
 # av_url_body = "http://api.bilibili.com/x/space/arc/search?ps={}&pn={}&mid={}"
 
-def fetch_av_page(mid,page,pagesize=100):
+def fetch_video_page(mid,page,pagesize=100):
     print("> Fetching av page {}".format(page))
     req  = requests.get(av_url_body.format(mid,page,pagesize))
     data = req.json()
@@ -58,12 +58,12 @@ def fetch_av_page(mid,page,pagesize=100):
     return data, page_num
 
 
-av_path = "./avs/"
-av_list_json_filename = "laofanqie_av_list.json"
-def fetch_upper_av_list(mid):
+video_path = "./videos/"
+video_list_json_filename = "laofanqie_video_list.json"
+def fetch_upper_video_list(mid):
     page, pagesize = 1, 100
     data_L = []
-    data, page_num = fetch_av_page(mid,page,pagesize)
+    data, page_num = fetch_video_page(mid,page,pagesize)
     data_L.append(data)
 
     for i in range(2, page_num+1):
@@ -71,13 +71,13 @@ def fetch_upper_av_list(mid):
         data, _ = fetch_av_page(mid,i,pagesize)
         data_L.append(data)
 
-    if not os.path.exists(av_path):
-        os.mkdir(av_path)
-    with open(av_path+av_list_json_filename, mode="w", encoding="utf-8") as wf:
+    if not os.path.exists(video_path):
+        os.mkdir(video_path)
+    with open(video_path+video_list_json_filename, mode="w", encoding="utf-8") as wf:
         json.dump(data_L, wf)
 
-def parse_av_list_json():
-    with open(av_path+av_list_json_filename, mode="r", encoding="utf-8") as rf:
+def parse_video_list_json():
+    with open(video_path+video_list_json_filename, mode="r", encoding="utf-8") as rf:
         data_L = json.load(rf)
     video_L = []
     cover_L = []
@@ -96,18 +96,18 @@ def parse_av_list_json():
 # https://m.bilibili.com/video/av667592495
 # http://api.bilibili.com/x/v2/reply?oid=667592495&pn=1&ps=49&type=1&nohot=1&sort=0
 # url_body = "http://api.bilibili.com/x/v2/reply?pn={}&type=1&oid={}&nohot=1&sort=0"
+# http://api.bilibili.com/x/v2/reply/main?oid=667592495&type=1&mode=2&next=10&ps=10
 # BV1Qx411J7ER <-> 13592834 傅里叶
 # uid: 546195
-
 
 reply_url_next = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&next={}&ps={}"
 reply_url_prev = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&prev={}&ps={}"
 
 reply_path_body = "./mid-546195/oid-{:0>12}/"
 floor_margin = 1000
-video_cnt, total_video_cnt = 0,0
-def fetch_floors(oid,prev_floor=0,ps=1):
-    print("> {:>3}/{:>3} oid={:<10} prev={:<7} ps={:<4}".format(video_cnt,total_video_cnt,oid,prev_floor,ps))
+total_video_cnt = 0
+def fetch_floors(oid,prev_floor=0,ps=1,video_cnt=-1,proxies={}):
+    print("> {:>3}/{:>3} oid={:<10} prev={:<7} ps={:<4}".format(video_cnt, total_video_cnt,oid,prev_floor,ps))
     reply_path = reply_path_body.format(oid)
 
     t1 = time.time()
@@ -121,9 +121,9 @@ def fetch_floors(oid,prev_floor=0,ps=1):
         try:
             with eventlet.Timeout(4.0):
                 if prev_floor == 0:
-                    req = requests.get(reply_url_next.format(oid,floor_margin,floor_margin), headers=headers())
+                    req = requests.get(reply_url_next.format(oid,floor_margin,floor_margin), headers=headers(),proxies=proxies)
                 else:
-                    req = requests.get(reply_url_prev.format(oid,prev_floor,ps), headers=headers())
+                    req = requests.get(reply_url_prev.format(oid,prev_floor,ps), headers=headers(),proxies=proxies)
                 status_code = req.status_code
         except:
             time.sleep(0.5)
@@ -152,8 +152,11 @@ def fetch_floors(oid,prev_floor=0,ps=1):
 
     return floor_info_L
 
+def fetch_replies(oid, is_overwrite=False, fetch_replies_sema=None, fetch_replies_lock=None, video_cnt=-1,proxies={}):
+    if fetch_replies_sema:
+        fetch_replies_sema.acquire()
+        fetch_replies_lock.acquire()
 
-def fetch_replies(oid,is_overwrite=True):
     reply_path = reply_path_body.format(oid)
     if not os.path.exists(reply_path):
         os.makedirs(reply_path)
@@ -175,27 +178,54 @@ def fetch_replies(oid,is_overwrite=True):
                 data = json.load(rf)
             old_prev_floor = data["data"]["cursor"]["prev"]
 
-    all_count, new_prev_floor, next_floor, is_begin, is_end = fetch_floors(oid, old_prev_floor,page_floor_size)
-
+    all_count, new_prev_floor, next_floor, is_begin, is_end = fetch_floors(oid, old_prev_floor,page_floor_size,video_cnt,proxies)
 
     # max_floor = 3500
     # while not (is_begin or new_prev_floor==old_prev_floor or new_prev_floor > max_floor):
     while not (is_begin or new_prev_floor==old_prev_floor):
         old_prev_floor = new_prev_floor
-        time.sleep(0.5)
-        all_count, new_prev_floor, next_floor, is_begin, is_end = fetch_floors(oid,new_prev_floor,page_floor_size)
+        time.sleep(0.2)
+        all_count, new_prev_floor, next_floor, is_begin, is_end = fetch_floors(oid,new_prev_floor,page_floor_size,video_cnt,proxies)
 
-def fetch_all_av_replies(video_L):
-    global video_cnt, total_video_cnt
+    if fetch_replies_sema:
+        fetch_replies_lock.release()
+        fetch_replies_sema.release()
+
+def fetch_all_video_replies(video_L,is_overwrite=False):
+    global total_video_cnt
     total_video_cnt = len(video_L)
     start_cnt = 0
+    # for i, video in enumerate(reversed(video_L)[start_cnt:]):
     for i, video in enumerate(video_L[start_cnt:]):
         video_cnt = start_cnt+i+1
         t1 = time.time()
         print("Fetching  oid={:<10} {}".format(video["aid"], video["title"]))
-        fetch_replies(video["aid"],is_overwrite=False)
+        fetch_replies(video["aid"],is_overwrite=is_overwrite,video_cnt=video_cnt)
         t2 = time.time()
         print("=== {:>3}/{:>3} Elapsed time: {}s".format(video_cnt, total_video_cnt, round(t2-t1,1)))
+
+
+def is_any_thread_alive(thread_L):
+    return True in [t.is_alive() for t in thread_L]
+
+def fetch_all_video_replies_multi(video_L,is_overwrite=False):
+    global video_cnt, total_video_cnt
+    total_video_cnt = len(video_L)
+
+    fetch_replies_sema = threading.BoundedSemaphore(5)
+    fetch_replies_lock = threading.Lock()
+
+    start_cnt = 0
+    thread_L = []
+    for i, video in enumerate(video_L[start_cnt:]):
+        video_cnt = start_cnt+i+1
+        tmp_thread = threading.Thread(target=fetch_replies,args=(video["aid"],False,fetch_replies_sema,fetch_replies_lock,video_cnt))
+        thread_L.append(tmp_thread)
+    for tmp_thread in thread_L:
+        tmp_thread.start()
+
+    while is_any_thread_alive(thread_L):
+        time.sleep(0)
 
 # xxxxxxxxxxxxxxxxxxxxxx End of Fetch floors and replies xxxxxxxxxxxxxxxxxxxxxx #
 
@@ -225,8 +255,9 @@ if __name__ == '__main__':
     t0 = time.time()
     # parse_reply_json()
     # fetch_replies(667592495)
-    # fetch_upper_av_list(546195)
-    video_L = parse_av_list_json()
-    fetch_all_av_replies(video_L)
+    # fetch_upper_video_list(546195)
+    video_L = parse_video_list_json()
+    fetch_all_video_replies(video_L)
+    # fetch_all_video_replies_multi(video_L)
     t3 = time.time()
     print("Total elapsed time: {}s".format(round(t3-t0,1)))
