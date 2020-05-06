@@ -103,7 +103,8 @@ def parse_video_list_json():
 reply_url_next = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&next={}&ps={}"
 reply_url_prev = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&prev={}&ps={}"
 
-reply_path_body = "./mid-546195/oid-{:0>12}/"
+up_mid = 546195
+reply_path_body = "./mid-"+str(up_mid)+"/oid-{:0>12}/"
 floor_margin = 1000
 total_video_cnt = 0
 def fetch_floors(oid,prev_floor=0,ps=1,video_cnt=-1,proxies={}):
