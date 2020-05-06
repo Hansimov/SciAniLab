@@ -6,6 +6,8 @@ import time
 import re
 import collections
 import pickle
+from matplotlib import pyplot as plt
+# import numpy as np
 
 
 # 2013.10.05 -> 2020.05.05 = 2404 (days)
@@ -36,10 +38,9 @@ def dt2str(dt):
     return dt.strftime("%Y-%m-%d-%H-%M-%S")
 
 
-up_mid = 546195
-root = "./mid-{}/".format(up_mid)
-
 def parse_reply_info():
+    up_mid = 546195
+    root = "./mid-{}/".format(up_mid)
     rinfo_D = {}
     t0 = time.time()
     folder_L = os.listdir(root)[:]
@@ -53,9 +54,10 @@ def parse_reply_info():
                 data = json.load(rf)
                 for reply in data["data"]["replies"]:
                     finfo_L.append([reply["floor"],reply["ctime"]])
+        finfo_L = sorted(finfo_L, key=lambda v:v[0])
         rinfo_D[oid]= finfo_L
         print("{:>3}/{:<3} | {:<10} {:<6} | {}s".format(i+1, len(folder_L), oid, len(finfo_L), round(time.time()-t1,1)))
-    with open(join_path(root,"rinfo.pkl"), "wb") as wf:
+    with open("rinfo.pkl", "wb") as wf:
         pickle.dump(rinfo_D, wf)
     print("Total elapsed time: {}s".format(round(time.time()-t0,1)))
 
@@ -63,16 +65,10 @@ def parse_reply_info():
 def parse_vlist_info():
     vinfo_L = []
     vlist_file = "vlist.json"
-    # print(vlist_file)
     with open(vlist_file,"r",encoding="utf-8") as rf:
         data_L = json.load(rf)
-        # print(data_L.__len__())
         for data in data_L[:]:
-            # print(data["data"].keys())
-            # print(data["data"]["vlist"].__len__())
-            # print(data["data"]["vlist"][0].keys())
             for video in data["data"]["vlist"][:]:
-                # print(video["title"])
                 vinfo = [video["aid"],video["created"],video["length"],video["title"]]
                 vinfo_L.append(vinfo)
 
@@ -83,22 +79,44 @@ def parse_vlist_info():
     with open("vinfo.pkl","wb") as wf:
         pickle.dump(vinfo_L, wf)
 
-# dict of list of [floor,ctime] pairs
-with open("rinfo.pkl", "rb") as rf:
-    rinfo_D = pickle.load(rf)
-# list of [aid,created,length,title]
-with open("vinfo.pkl", "rb") as rf:
-    vinfo_L = pickle.load(rf)
 
-# for vinfo in vinfo_L:
-#     aid = vinfo[0]
-#     print(aid, len(rinfo_D[aid]))
+def load_info():
+    # list of [aid,created,length,title]
+    with open("vinfo.pkl", "rb") as rf:
+        vinfo_L = pickle.load(rf)
+    # # dict of {oid: list of [floor,ctime]}
+    with open("rinfo.pkl", "rb") as rf:
+        rinfo_D = pickle.load(rf)
+    return vinfo_L, rinfo_D
 
-def calc_video_heat(oid):
+# def calc_heat(rinfo):
+#     heat_L = []
+#     [,ctime]
+
+def get_col(list_2d, col_num):
+    return [row[col_num] for row in list_2d]
+
+def calc_video_heat():
+    # pass
+    vinfo_L, rinfo_D = load_info()
+    oid = vinfo_L[-10][0]
+    rinfo = rinfo_D[oid]
+    # calc_heat(rinfo)
+    floor_L = get_col(rinfo,0)
+    ctime_L = get_col(rinfo,1)
+    dtime_L = list(map(ct2dt,ctime_L))
+    # plt.plot(ctime_L,floor_L)
+    plt.plot(dtime_L,floor_L)
+    plt.show()
+    # # print(rinfo.__len__())
+    # for reply in rinfo:
+    #     print(reply[0], reply[1])
 
 
 
 if __name__ == '__main__':
+
     pass
-    # parse_vlist_info()
     # parse_reply_info()
+    # parse_vlist_info()
+    calc_video_heat()
