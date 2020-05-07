@@ -42,8 +42,6 @@ def headers():
     return { "user-agent": "botnet - {}".format(random.random()) }
 
 
-
-
 # https://api.bilibili.com/x/article/archives?ids=2,3,4 # Get pubdate
 # http://space.bilibili.com/ajax/member/getSubmitVideos?mid=546195&page=1&pagesize=100
 av_url_body = 'https://space.bilibili.com/ajax/member/getSubmitVideos?mid={}&page={}&pagesize={}'
