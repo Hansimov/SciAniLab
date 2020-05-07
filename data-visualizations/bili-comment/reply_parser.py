@@ -7,6 +7,8 @@ import re
 import collections
 import pickle
 from matplotlib import pyplot as plt
+plt.rcParams['font.sans-serif'] = ['SimHei'] # 正常显示中文标签
+plt.rcParams['axes.unicode_minus'] = False   # 正常显示负号
 # import numpy as np
 
 
@@ -31,11 +33,21 @@ from matplotlib import pyplot as plt
 def join_path(*args):
     return os.path.join(*args).replace("\\","/")
 
-def ct2dt(ctime):
-    return datetime.datetime.fromtimestamp(ctime)
+
+def dt2ct(dt):
+    return datetime.datetime.timestamp(dt)
+
+def ct2dt(ct):
+    return datetime.datetime.fromtimestamp(ct)
 
 def dt2str(dt):
     return dt.strftime("%Y-%m-%d-%H-%M-%S")
+
+def dt2dt0(dt,hour=0):
+    return datetime.datetime(dt.year,dt.month,dt.day,hour,0,0)
+
+def ct2dt0(ct):
+    return dt2dt0(ct2dt(ct))
 
 
 def parse_reply_info():
@@ -89,34 +101,128 @@ def load_info():
         rinfo_D = pickle.load(rf)
     return vinfo_L, rinfo_D
 
-# def calc_heat(rinfo):
-#     heat_L = []
-#     [,ctime]
 
 def get_col(list_2d, col_num):
     return [row[col_num] for row in list_2d]
 
-def calc_video_heat():
+plot_path = "./plots/"
+if not os.path.exists(plot_path):
+    os.mkdir(plot_path)
+
+
+def customize_plt(title="",xlabel="",ylabel="",grid=False,size=None,tight_layout=False,cla=False,save_path=None, show=False):
+    if size:
+        fig = plt.gcf()
+        mydpi = 100
+        fig.set_size_inches((size[0]/mydpi,size[1]/mydpi))
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    if grid:
+        plt.grid(True)
+    if tight_layout:
+        plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
+    if cla:
+        plt.cla()
+    if show:
+        plt.show()
+
+def plot_replies():
     # pass
     vinfo_L, rinfo_D = load_info()
-    oid = vinfo_L[-10][0]
-    rinfo = rinfo_D[oid]
-    # calc_heat(rinfo)
-    floor_L = get_col(rinfo,0)
-    ctime_L = get_col(rinfo,1)
-    dtime_L = list(map(ct2dt,ctime_L))
-    # plt.plot(ctime_L,floor_L)
-    plt.plot(dtime_L,floor_L)
-    plt.show()
-    # # print(rinfo.__len__())
-    # for reply in rinfo:
-    #     print(reply[0], reply[1])
+
+    mydpi = 96
+    fig = plt.figure(figsize=(1280/mydpi,720/mydpi),dpi=mydpi)
+    for i,vinfo in enumerate(vinfo_L[:]):
+        # vinfo: [aid, created, length, title]
+        oid, created, _, title = vinfo
+        print("{:>3}/{} {}".format(i+1, len(vinfo_L),title))
+        rinfo = rinfo_D[oid]
+        # calc_heat(rinfo)
+        floor_L = get_col(rinfo,0)
+        ctime_L = get_col(rinfo,1)
+        dtime_L = list(map(ct2dt,ctime_L))
+        # plt.plot(ctime_L,floor_L)
+        plt.plot(dtime_L,floor_L)
+        # plt.title("{}\n{}".format(title,ct2dt(created)))
+        # plt.xlabel("时间")
+        # plt.ylabel("评论数")
+        # plt.grid(True)
+        # plt.tight_layout()
+        # plt.savefig(plot_path+"{:0>3}".format(i+1))
+        # plt.cla()
+        # plt.show()
+        # # print(rinfo.__len__())
+        # for reply in rinfo:
+        #     print(reply[0], reply[1])
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(plot_path+"{:0>3}".format(0))
 
 
+def create_dt_list():
+    # vinfo: [aid, created, length, title]
+    # rinfo: key=oid , val=list of [floor,ctime]
+    vinfo_L, rinfo_D = load_info()
+
+    date_L = []
+    start_ct = vinfo_L[0][1]
+    end_ct = time.time()
+    start_dt0 = ct2dt0(start_ct)
+    end_dt0 = ct2dt0(end_ct)+datetime.timedelta(days=1)
+
+    # print(start_dt0)
+    # print(end_dt0)
+
+    delta_days = (end_dt0 - start_dt0).days
+
+    day_divi = 3
+    hour_L = [i*(24//day_divi) for i in range(day_divi)]
+
+    dt_L = []
+    ct_L = []
+    # print(hour_L) # 0,8,16
+    for i in range(delta_days+1):
+        tmp_dt = start_dt0+datetime.timedelta(days=i)
+        # print(new_dt)
+        # tmp_dt 
+        for hour in hour_L:
+            # dt_L.append(dt2dt0(tmp_dt,hour))
+            ct_L.append(dt2ct(dt2dt0(tmp_dt,hour)))
+    # print(len(ct_L))
+
+    heat_path = "./heats/"
+    if not os.path.exists(heat_path):
+        os.mkdir(heat_path)
+    for i,vinfo in enumerate(vinfo_L[30:31]):
+        oid, created, length, title = vinfo
+        rinfo = rinfo_D[oid]
+        heat_L = []
+        r_p = 0
+        for i,ct in enumerate(ct_L[:-1]): # -1 here used to avoid i+1 overflow
+            heat = 0
+            while r_p < len(rinfo) and rinfo[r_p][1] >= ct and rinfo[r_p][1] < ct_L[i+1]:
+                heat += 1
+                r_p += 1
+                # print(r_p,heat)
+            # print(ct2dt(ct),heat)
+            heat_L.append([ct2dt(ct), heat])
+        # print(len(heat_L))
+    tmp_ct_L = [row[0] for row in heat_L]
+    tmp_heat_L = [row[1] for row in heat_L]
+    plt.plot(tmp_ct_L, tmp_heat_L)
+    customize_plt(title="{}\n{}".format(title,ct2dt(created)),xlabel="时间",ylabel="评论数",grid=True,size=(1280,720),tight_layout=False,save_path=join_path(heat_path,"0001.png"))
+    # plt.show()
+    # plt.savefig()
 
 if __name__ == '__main__':
-
     pass
+    t0 = time.time()
     # parse_reply_info()
     # parse_vlist_info()
-    calc_video_heat()
+    # plot_replies()
+    create_dt_list()
+
+    print("Total elapsed time: {}s".format(round(time.time()-t0,1)))
