@@ -40,7 +40,6 @@ def headers():
 def join_path(*args):
     return os.path.join(*args).replace("\\","/")
 
-
 def dt2ct(dt):
     return datetime.datetime.timestamp(dt)
 
