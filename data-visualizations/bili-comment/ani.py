@@ -7,15 +7,6 @@ from operator import add, sub
 
 from reply_parser import *
 
-# * fetch vlist of certain mid
-#   * parse vlist to get all [oid, created, title, pic_url, length]
-#     * get all video covers with pic_url
-#     * fetch replies of all videos with oid
-#       * parse replies to get list of [floor, ctime] and dump to rinfo.pkl (replies_info)
-#         * use rinfo.pkl to create ctime list and accumulated floor cnt of each video, dump to ninfo.pkl (num_info)
-#         * use ninfo.pkl to sort the rank of videos (oid) with accumulated floor cnt at each ctime point, and dump to ninfo_rank.pkl
-#         * use ninfo_rank.pkl to create bar chart animation
-
 t0 = time.time()
 
 img_path = "./frames/"
