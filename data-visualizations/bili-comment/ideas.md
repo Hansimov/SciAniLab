@@ -37,15 +37,13 @@ The num 7224 below is not a real num, just represent the num of divided/grouped 
 
 ---
 
-Animation flows:
+Animation flows: (See "ideas.pptx")
 
 * top 15 videos rank changes
   * cover, bar, title, acc_flr_cnt, aid, idx
 * newest video cover
 
 - find dominant color (color-thief-py)
-  - blur and pickup
-  - maxfilter and pick up
 - if hottest and newest is the same one
-  - the below fly to the above and combined and faded
+  - the below fly to the above, combined and faded
 
