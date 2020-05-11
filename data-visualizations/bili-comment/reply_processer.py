@@ -1,3 +1,4 @@
+import collections
 import datetime
 import eventlet
 eventlet.monkey_patch(thread=False)
@@ -88,7 +89,7 @@ def is_any_thread_alive(thread_L):
 """
 
 info_path = "./infos/"
-vlist_fname = "{}-vlist.json".format(mid)
+vlist_fname = info_path+"{}-vlist.json".format(mid)
 
 def fetch_vpage(mid, page, pagesize=100):
     av_url_body = "https://space.bilibili.com/ajax/member/getSubmitVideos?mid={}&page={}&pagesize={}"
@@ -109,7 +110,7 @@ def fetch_vlist(mid=mid):
 
     if not os.path.exists(info_path):
         os.mkdir(info_path)
-    with open(info_path+vlist_fname, mode="w", encoding="utf-8") as wf:
+    with open(vlist_fname, mode="w", encoding="utf-8") as wf:
         data = jsn["data"]
         json.dump(jsn["data"], wf)
 
@@ -125,27 +126,55 @@ def fetch_vlist(mid=mid):
             sorted by aid
 """
 
-vinfo_fname = "{}-vinfo.pkl".format(mid)
+vinfo_fname = info_path+"{}-vinfo.pkl".format(mid)
 
 def parse_vlist(mid=mid):
-    with open(info_path+vlist_fname, mode="r", encoding="utf-8") as rf:
+    with open(vlist_fname, mode="r", encoding="utf-8") as rf:
         data = json.load(rf)
-    video_L = []
+    vinfo_L = []
     cover_L = []
     for i,video in enumerate(data["vlist"]):
         # print("{:>3}/{} {:<10} {}  {}".format(i+1,len(data["vlist"]),video["aid"], datetime.datetime.fromtimestamp(int(video["created"])), video["title"]))
         vinfo_D = {}
         for key in ["aid", "title","created","length","pic"]:
             vinfo_D[key] = video[key]
-        video_L.append(vinfo_D)
+        vinfo_L.append(vinfo_D)
 
-    video_L = sorted(video_L, key=lambda k:k["created"])
-    for i,video in enumerate(video_L):
-        print("{:>3}/{} {:>10} {}  {}".format(i+1,len(video_L), video["aid"], datetime.datetime.fromtimestamp(int(video["created"])), video["title"]))
-    with open(info_path+vinfo_fname, "w") as wf:
-        json.dump(video_L, wf)
+    vinfo_L = sorted(vinfo_L, key=lambda k:k["created"])
+    for i,video in enumerate(vinfo_L):
+        print("{:>3}/{} {:>10} {}  {}".format(i+1,len(vinfo_L), video["aid"], datetime.datetime.fromtimestamp(int(video["created"])), video["title"]))
+    with open(vinfo_fname, "wb") as wf:
+        pickle.dump(vinfo_L, wf)
 
 # parse_vlist(mid)
+
+cover_path = "./covers/mid-{}/".format(mid)
+def fetch_covers():
+    if not os.path.exists(cover_path):
+        os.makedirs(cover_path)
+    with open(vlist_fname, "r", encoding="utf-8") as rf:
+        data = json.load(rf)
+        pic_L = []
+        for video in data["vlist"][:]:
+            aid, url, title = [video["aid"], "http:"+video["pic"], video["title"]]
+            pic_L.append([aid, url, title])
+
+        start = 0
+        for i,pic in enumerate(pic_L[start:]):
+            aid, url, title = pic
+            print("{:>3}/{} {}: {}".format(start+i+1,len(pic_L),aid,title))
+            req = req_get(url, headers=headers(), timeout=6.0)
+
+            name,ext = os.path.splitext(url)
+            img_name = "{}{}".format(aid,ext)
+            with open(join_path(cover_path,img_name), "wb") as wf:
+                wf.write(req.content)
+
+            if ext != ".jpg":
+                jpg_name = "{}.jpg".format(aid)
+                os.system("magick convert \"{}\" \"{}\"".format(cover_path+img_name, cover_path+jpg_name))
+
+# fetch_covers()
 
 
 """ Fetch replies
@@ -237,9 +266,8 @@ def fetch_replies(aid, is_overwrite=False, fetch_replies_sema=None, video_cnt=-1
 
 def fetch_all_video_replies(mid=mid,is_overwrite=False):
     global total_video_cnt
-    vinfo_fname = "{}-vinfo.pkl".format(mid)
-    with open(info_path+vinfo_fname, "r") as rf:
-        video_L = json.load(rf)
+    with open(vinfo_fname, "rb") as rf:
+        video_L = pickle.load(rf)
 
     total_video_cnt = len(video_L)
     start_cnt = 0
@@ -286,7 +314,9 @@ def fetch_all_video_replies_multi(video_L,is_overwrite=False):
                         ctime:   timestamp of floor
 """
 
-def parse_replies(mid=mid):
+finfo_fname = info_path+"{}-finfo.pkl".format(mid)
+
+def parse_replies():
     root = "./replies/mid-{}/".format(mid)
     finfo_D = {}
     t0 = time.time()
@@ -304,25 +334,75 @@ def parse_replies(mid=mid):
         finfo_D[aid]= finfo_L
         print("{:>3}/{:<3} | {:<10} {:<6} | {}s".format(i+1, len(folder_L), aid, len(finfo_L), round(time.time()-t1,1)))
 
-    with open(info_path+"finfo.pkl", "wb") as wf:
+    with open(finfo_fname, "wb") as wf:
         pickle.dump(finfo_D, wf)
     print("Total elapsed time: {}s".format(round(time.time()-t0,1)))
 
 # parse_replies(mid)
 
-""" Accumulate replies
-# func:  accum_replies(mid)
+""" Calc accumulative floor count
+# func:  calc_accum_flr_cnt(mid)
 # retn:  ---
 # open:  "./infos/{mid}-finfo.pkl"
 # dump:  "./infos/{mid}-tinfo.pkl", "./infos/{mid}-ninfo.pkl"
-        tinfo: list of ctime (1 x ct_group_cnt)
-        ninfo: 2d list (video_num x ct_group_cnt)
-            each row: list, accumulate floor nums of all ctime groups
+        ct_L(tinfo): list of ctime (1 x ct_group_cnt)
+        ninfo_L: 2d list (video_num x ct_group_cnt)
+            each row: list of accumulate floor count of all ctime groups
 """
 
+tinfo_fname = info_path+"{}-tinfo.pkl".format(mid)
 
-""" Sort replies with ctime
-# func:  sort_replies(mid)
+def create_ct_list(day_divi=3):
+    with open(vinfo_fname, "rb") as rf:
+        vinfo_L = pickle.load(rf)
+
+    date_L = []
+    start_ct = vinfo_L[0]["created"]
+    end_ct = time.time()
+    start_dt0 = ct2dt0(start_ct)
+    end_dt0 = ct2dt0(end_ct)+datetime.timedelta(days=1)
+
+    delta_days = (end_dt0 - start_dt0).days
+
+    hour_L = [i*(24//day_divi) for i in range(day_divi)]
+
+    ct_L = []
+    for i in range(delta_days+1):
+        tmp_dt = start_dt0+datetime.timedelta(days=i)
+        for hour in hour_L:
+            ct_L.append(dt2ct(dt2dt0(tmp_dt,hour)))
+    with open(tinfo_fname,"wb") as wf:
+        pickle.dump(ct_L, wf)
+
+ninfo_fname = info_path+"{}-ninfo.pkl".format(mid)
+def calc_accum_flr_cnt():
+    with open(vinfo_fname, "rb") as rf:
+        vinfo_L = pickle.load(rf)
+    with open(finfo_fname, "rb") as rf:
+        finfo_D = pickle.load(rf)
+    with open(tinfo_fname, "rb") as rf:
+        ct_L = pickle.load(rf)
+
+    ninfo_L = []
+    for i,vinfo in enumerate(vinfo_L):
+        finfo = finfo_D[vinfo["aid"]]
+        fp = 0
+        print("{:>3}/{} calc accum flr cnt of {}".format(i+1,len(vinfo_L),vinfo["title"]))
+
+        accum_flr_cnt = 0
+        accum_flr_cnt_L = []
+        for j,ct in enumerate(ct_L[:]):
+            while fp < len(finfo) and finfo[fp][1] < ct_L[j]:
+                accum_flr_cnt = finfo[fp][0]
+                fp += 1
+            accum_flr_cnt_L.append(accum_flr_cnt)
+        ninfo_L.append(accum_flr_cnt_L)
+    with open(ninfo_fname, "wb") as wf:
+        pickle.dump(ninfo_L, wf)
+
+
+""" Sort accumulated floor counts with ctime
+# func:  sort_accum_flr_cnt(mid)
 # retn:  ---
 # open:  "./infos/{mid}-tinfo.pkl", "./infos/{mid}-ninfo.pkl"
 # dump:  "./infos/{mid}-sinfo.pkl"
@@ -330,6 +410,43 @@ def parse_replies(mid=mid):
             each row: list (1 x k), top k aids ranked by accumulated floor nums at each ctime group
 """
 
+sinfo_fname = info_path+"{}-sinfo.pkl".format(mid)
+def sort_accum_flr_cnt(topk=20):
+    with open(vinfo_fname, "rb") as rf:
+        vinfo_L = pickle.load(rf)
+    with open(ninfo_fname, "rb") as rf:
+        ninfo_L = pickle.load(rf)
+    with open(tinfo_fname, "rb") as rf:
+        ct_L = pickle.load(rf)
+    
+    sorted_idx_col_L = []
+    for i in range(len(ct_L)):
+        col = [row[i] for row in ninfo_L]
+        sorted_idx_col = sorted(range(len(col)), key=lambda k: col[k], reverse=True)
+        # print(sorted_idx_col[0:4])
+        sorted_idx_col_L.append(sorted_idx_col[:topk])
+        # sorted_idx_col_L.extend(sorted_idx_col[:1]) # use this to counter
+
+    # print(sorted_idx_col_L[-10])
+    # print([row[-1] for row in ninfo_L])
+    # counter = collections.Counter(sorted_idx_col_L)
+    # counter = {k: v for k, v in sorted(counter.items(), key=lambda item: item[1], reverse=True)}
+    # for key,val in counter.items():
+    #     print("{:>4}".format(val), vinfo_L[key][3])
+    # print(counter)
+    with open(sinfo_fname,"wb") as wf:
+        pickle.dump(sorted_idx_col_L, wf)
 
 """ [Not in this file] Animation """
+
+if __name__ == '__main__':
+    pass
+    # fetch_vlist()
+    # parse_vlist()
+    # fetch_covers()
+    # fetch_all_video_replies()
+    # parse_replies()
+    # create_ct_list(day_divi=3)
+    # calc_accum_flr_cnt()
+    # sort_accum_flr_cnt()
 
