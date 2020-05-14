@@ -54,34 +54,49 @@ rw,rh = 50,50
 class Bar:
     def __init__(self,x=rx,y=ry,w=rw,h=rh):
         self.x, self.y, self.w, self.h = x, y, w, h
+
         self.x_align = "l"
         self.y_align = "c"
+
         self.is_fill = True
         self.fill_rgb = [255,255,255]
-        self.is_stroke = True
+
+        self.is_stroke = False
         self.stroke_rgb = [255,0,255]
         self.stroke_weight = 1
+
+        self.is_rect = True
+
+        self.str = "hello"
+        self.is_text = True
+
         self.is_disp = True
 
-    def get_disp_x(self):
-        disp_x_D = {
+    @property
+    def xy(self):
+        return [self.x, self.y]
+
+    def get_rect_x(self):
+        rect_x_D = {
             "l": self.x,
             "c": self.x-self.w/2,
             "r": self.x-self.w
         }
-        return disp_x_D[self.x_align]
+        return rect_x_D[self.x_align]
 
-    def get_disp_y(self):
-        disp_y_D = {
+    def get_rect_y(self):
+        rect_y_D = {
             "t": self.y,
             "c": self.y-self.h/2,
             "b": self.y-self.h
         }
-        return disp_y_D[self.y_align]
+        return rect_y_D[self.y_align]
 
-    def disp(self):
-        if self.is_disp:
+    def rect(self):
+        if self.is_rect:
             with pf.push_style():
+                if not self.is_stroke and not self.is_fill:
+                    return
                 pf.color_mode("RGB")
                 if self.is_fill:
                     pf.fill(*self.fill_rgb)
@@ -92,12 +107,25 @@ class Bar:
                     pf.stroke(*self.stroke_rgb)
                 else:
                     pf.no_stroke()
-                pf.rect((self.get_disp_x(),self.get_disp_y()), self.w, self.h)
+                pf.rect([self.get_rect_x(),self.get_rect_y()], self.w, self.h)
+
+    def text(self):
+        if self.is_text:
+            with pf.push_style():
+                pf.text(self.str, (self.x, self.y+30))
+                print(pf.text_ascent(), pf.text_descent(), pf.text_width(self.str))
+                pf.no_fill()
+                pf.stroke(*self.stroke_rgb)
+                pf.rect((self.x,self.y+30), pf.text_width(self.str), pf.text_ascent()+pf.text_descent(), mode="CORNER")
+    def disp(self):
+        self.rect()
+        self.text()
 
 def setup():
     ratio = 1.8
     pf.size(1280/ratio,720/ratio)
     pf.text_font(font)
+    pf.text_size(50)
     pf.no_stroke()
     pf.no_loop()
 
@@ -105,17 +133,13 @@ def draw():
     pf.background(0)
     pf.rect_mode("CORNER")
     b = Bar(100,50)
-    b.is_fill = False
-    c = Bar(100,50+b.h+1)
+    # b.is_fill = False
+    b.str = "Hello，老番茄"
     b.disp()
-    c.disp()
+    # c = Bar(100,50+b.h+1)
+    # c.disp()
     # pf.save_frame(img_path + "screen_.png")
 
-
-def main():
-    run(frame_rate = 30)
-    pass
-
 if __name__ == '__main__':
-    main()
+    run(frame_rate = 30)
     print("Total elapsed time: {}s".format(round(time.time()-t0,1)))
