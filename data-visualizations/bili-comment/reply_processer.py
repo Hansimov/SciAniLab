@@ -15,7 +15,6 @@ import threading
 import time
 
 
-
 """ Global variables """
 mid = 546195 # 老番茄
 
@@ -423,7 +422,6 @@ def sort_accum_flr_cnt(topk=20):
     for i in range(len(ct_L)):
         col = [row[i] for row in ninfo_L]
         sorted_idx_col = sorted(range(len(col)), key=lambda k: col[k], reverse=True)
-        # print(sorted_idx_col[0:4])
         sorted_idx_col_L.append(sorted_idx_col[:topk])
         # sorted_idx_col_L.extend(sorted_idx_col[:1]) # use this to counter
 

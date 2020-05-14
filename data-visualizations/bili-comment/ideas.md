@@ -15,6 +15,8 @@ Whole processes of reply data visualization:
 
 ---
 
+The filenames below might be modified through programming, all should  be in accordance with the docstring in the python scripts.
+
 All data that chart animation needed are:
 
 * `vinfo.pkl` (to use oid, created, title and length)
