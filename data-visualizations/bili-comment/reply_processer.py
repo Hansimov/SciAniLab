@@ -14,10 +14,11 @@ import sys
 import threading
 import time
 
+t0 = time.time()
 
 """ Global variables """
 mid = 546195 # 老番茄
-
+root = "./ups/mid-{}/".format(mid)
 
 """ Assitant functions """
 
@@ -84,11 +85,11 @@ def is_any_thread_alive(thread_L):
 """ Fetch vlist
 # func:  fetch_vlist(mid)
 # retn:  ---
-# dump:  "./infos/{mid}-vlist.json"
+# dump:  "./ups/mid-{mid}/infos/vlist.json"
 """
 
-info_path = "./infos/"
-vlist_fname = info_path+"{}-vlist.json".format(mid)
+info_path = root+"infos/"
+vlist_fname = info_path+"vlist.json"
 
 def fetch_vpage(mid, page, pagesize=100):
     av_url_body = "https://space.bilibili.com/ajax/member/getSubmitVideos?mid={}&page={}&pagesize={}"
@@ -116,18 +117,18 @@ def fetch_vlist(mid=mid):
 # fetch_vlist(mid)
 
 """ Parse vlist
-# func:  parse_vlist(mid)
+# func:  parse_vlist(mid), fetch_covers()
 # retn:  ---
-# open:  "./infos/{mid}-vlist.json"
-# dump:  "./infos/{mid}-vinfo.pkl"
+# open:  "./ups/mid-{}/infos/vlist.json"
+# dump:  "./ups/mid-{}/infos/vinfo.pkl"
          vinfo_L: list of dict (video_num x col_num)
             each row: {aid: *, created: *, title: *, pic_url: *, length: *}
             sorted by aid
 """
 
-vinfo_fname = info_path+"{}-vinfo.pkl".format(mid)
+vinfo_fname = info_path+"vinfo.pkl"
 
-def parse_vlist(mid=mid):
+def parse_vlist():
     with open(vlist_fname, mode="r", encoding="utf-8") as rf:
         data = json.load(rf)
     vinfo_L = []
@@ -147,7 +148,7 @@ def parse_vlist(mid=mid):
 
 # parse_vlist(mid)
 
-cover_path = "./covers/mid-{}/".format(mid)
+cover_path = root+"covers/"
 def fetch_covers():
     if not os.path.exists(cover_path):
         os.makedirs(cover_path)
@@ -177,7 +178,7 @@ def fetch_covers():
 
 
 """ Fetch replies
-# func:  fetch_replies(mid)
+# func:  fetch_replies()
 # retn:  ---
 # open:  "./infos/{mid}-vinfo.pkl"
 # save:  "./replies/mid-{mid}/aid-{*}/reply-{*}-{size}.json"
@@ -186,7 +187,7 @@ def fetch_covers():
 reply_url_next = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&next={}&ps={}"
 reply_url_prev = "http://api.bilibili.com/x/v2/reply/main?oid={}&type=1&mode=2&prev={}&ps={}"
 
-reply_path_body = "./replies/mid-"+str(mid)+"/aid-{:0>12}/"
+reply_path_body = root+"replies/aid-{:0>12}/"
 floor_margin = 1000
 video_cnt, total_video_cnt = -1, -1
 
@@ -263,7 +264,7 @@ def fetch_replies(aid, is_overwrite=False, fetch_replies_sema=None, video_cnt=-1
     if fetch_replies_sema:
         fetch_replies_sema.release()
 
-def fetch_all_video_replies(mid=mid,is_overwrite=False):
+def fetch_all_video_replies(is_overwrite=False):
     global total_video_cnt
     with open(vinfo_fname, "rb") as rf:
         video_L = pickle.load(rf)
@@ -279,7 +280,7 @@ def fetch_all_video_replies(mid=mid,is_overwrite=False):
         t2 = time.time()
         print("=== {:>3}/{:>3} Elapsed time: {}s".format(video_cnt, total_video_cnt, round(t2-t1,1)))
 
-# fetch_all_video_replies(mid=mid)
+# fetch_all_video_replies()
 
 def fetch_all_video_replies_multi(video_L,is_overwrite=False):
     global video_cnt, total_video_cnt
@@ -300,10 +301,10 @@ def fetch_all_video_replies_multi(video_L,is_overwrite=False):
         time.sleep(0)
 
 """ Parse replies
-# func:  parse_replies(mid)
+# func:  parse_replies()
 # retn:  ---
-# open:  "./replies/mid-{mid}/aid-{*}/reply-{*}-{size}.json"
-# dump:  "./infos/{mid}-finfo.pkl"
+# open:  "./ups/mid-{mid}/replies/aid-{*}/reply-{*}-{size}.json"
+# dump:  "./ups/mid-{mid}/infos/finfo.pkl"
          finfo_D: dict of list (1 x video_num)
             each key,val: {aid: flr_ct_L}
                 flr_ct_L: 2d list (flr_num x 2)
@@ -313,19 +314,19 @@ def fetch_all_video_replies_multi(video_L,is_overwrite=False):
                         ctime:   timestamp of floor
 """
 
-finfo_fname = info_path+"{}-finfo.pkl".format(mid)
+finfo_fname = info_path+"finfo.pkl"
 
 def parse_replies():
-    root = "./replies/mid-{}/".format(mid)
+    reply_root = root+"replies/"
     finfo_D = {}
     t0 = time.time()
-    folder_L = os.listdir(root)[:]
+    folder_L = os.listdir(reply_root)[:]
     for i,folder in enumerate(folder_L):
         t1 = time.time()
         aid = int(re.findall(r"aid-(\d+)",folder)[0])
         finfo_L = []
-        for fname in os.listdir(root+folder)[:]:
-            with open(join_path(root,folder,fname),"r",encoding="utf-8") as rf:
+        for fname in os.listdir(reply_root+folder)[:]:
+            with open(join_path(reply_root,folder,fname),"r",encoding="utf-8") as rf:
                 jsn = json.load(rf)
                 for reply in jsn["data"]["replies"]:
                     finfo_L.append([reply["floor"],reply["ctime"]])
@@ -340,16 +341,16 @@ def parse_replies():
 # parse_replies(mid)
 
 """ Calc accumulative floor count
-# func:  calc_accum_flr_cnt(mid)
+# func:  calc_accum_flr_cnt()
 # retn:  ---
-# open:  "./infos/{mid}-finfo.pkl"
-# dump:  "./infos/{mid}-tinfo.pkl", "./infos/{mid}-ninfo.pkl"
+# open:  "./ups/mid-{mid}/infos/finfo.pkl"
+# dump:  "./ups/mid-{mid}/infos/tinfo.pkl", "./ups/mid-{mid}/infos/ninfo.pkl"
         ct_L(tinfo): list of ctime (1 x ct_group_cnt)
         ninfo_L: 2d list (video_num x ct_group_cnt)
             each row: list of accumulate floor count of all ctime groups
 """
 
-tinfo_fname = info_path+"{}-tinfo.pkl".format(mid)
+tinfo_fname = info_path+"tinfo.pkl"
 
 def create_ct_list(day_divi=3):
     with open(vinfo_fname, "rb") as rf:
@@ -373,7 +374,7 @@ def create_ct_list(day_divi=3):
     with open(tinfo_fname,"wb") as wf:
         pickle.dump(ct_L, wf)
 
-ninfo_fname = info_path+"{}-ninfo.pkl".format(mid)
+ninfo_fname = info_path+"ninfo.pkl"
 def calc_accum_flr_cnt():
     with open(vinfo_fname, "rb") as rf:
         vinfo_L = pickle.load(rf)
@@ -409,7 +410,7 @@ def calc_accum_flr_cnt():
             each row: list (1 x k), top k aids ranked by accumulated floor nums at each ctime group
 """
 
-sinfo_fname = info_path+"{}-sinfo.pkl".format(mid)
+sinfo_fname = info_path+"sinfo.pkl"
 def sort_accum_flr_cnt(topk=20):
     with open(vinfo_fname, "rb") as rf:
         vinfo_L = pickle.load(rf)
@@ -447,4 +448,5 @@ if __name__ == '__main__':
     # create_ct_list(day_divi=3)
     # calc_accum_flr_cnt()
     # sort_accum_flr_cnt()
+    print("Total elapsed time: {}s".format(round(time.time()-t0,1)))
 
