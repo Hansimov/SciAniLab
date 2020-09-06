@@ -48,24 +48,28 @@ def fetchUser(mid):
     #         sleep(10)
     #     fetch_count = 0
 
-    sleep(0.25)
 
-    url = 'https://space.bilibili.com/ajax/member/GetInfo'
+
+    # url = 'https://space.bilibili.com/ajax/member/GetInfo'
+    url = "https://api.bilibili.com/x/space/acc/info?mid={}"
     headers = {
         'Referer':'https://space.bilibili.com/'
     }
     mid_str = str(mid)
-    data = {
-        'mid':mid_str
-    }
+    # data = {
+    #     'mid':mid_str
+    # }
     is_mid_valid = False
     req_accepted = False
     while not req_accepted:
         printLog('{} {:0>10s}'.format('>>> Fetching :', mid_str))
         try:
-            req_info = requests.post(url,headers=headers,data=data)
+            # req_info = requests.post(url,headers=headers,data=data)
+            req_info = requests.get(url.format(mid), headers=headers)
+            print("Request Status: {}".format(req_info.status_code))
             req_json = req_info.json()
             req_json_data = req_json.get('data')
+            # print(req_json_data)
             req_accepted = True
         except: # request is not accepted
             printLog('{} {:0>10s}'.format('--- Request denied, retry:',mid_str))
@@ -92,6 +96,7 @@ def fetchUser(mid):
 
         try:
             user_timestamp = req_json_data.get('regtime')
+            # user_timestamp = req_json_data.get('jointime')
             user_timelocal = datetime.fromtimestamp(user_timestamp)
         except: # the regtime is hidden
             printLog('{} {:0>10s}'.format('--- Regtime is hidden:',mid_str))
@@ -106,6 +111,7 @@ def fetchUser(mid):
     user = User(user_mid, user_name, user_timestamp)
     userstr = '{:0>10} {} {} {}'.format(user_mid, user_timestamp,user.timelocal,user_name)
     printLog(userstr)
+    sleep(5)
     return user
 
 def guessMid():
@@ -203,7 +209,7 @@ def printLog(str):
 
 def recordUser(user):
     global target_day, target_date
-    with open('user.txt','a') as userfile:
+    with open('user.txt',mode='a', encoding="utf-8") as userfile:
     # userfile = open('user_test.txt','a')
         if user == 0:
             userstr = '{} {:0>10d} {:0>10s} {} {}'.format(target_day, 0, '0', '0000-00-00 00:00:00', '*')
@@ -217,11 +223,11 @@ def initAll():
     global user_left, user_righ, target_date, target_day, guess_step, guess_mid, invalid_mids, guessed_mids, final_day, fetch_count
     invalid_mids = []
     guessed_mids = []
-    final_day = 20180726
+    final_day = 20200906
     guess_step = 1
     fetch_count = 0
     # target_date = date(2018,4,27)
-    with open('user.txt', 'r') as userfile:
+    with open('user.txt', mode='r', encoding="utf-8") as userfile:
         for line in userfile:
             pass
         lastline = line.strip()
