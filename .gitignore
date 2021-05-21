@@ -15,8 +15,11 @@ log.txt
 
 *.pdf
 
+*.mp3
 *.mp4
 
 *.aux
 *.log
 *.fmt
+
+*.blend1
