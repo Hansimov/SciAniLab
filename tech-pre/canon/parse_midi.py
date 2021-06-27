@@ -1,1 +1,0 @@
-print("=== script from vsc ===")
